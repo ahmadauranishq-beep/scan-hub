@@ -1,0 +1,27 @@
+name: "طلب فحص أمني لمشروع"
+description: "أدخل رابط مستودع GitHub لفحصه أمنياً"
+title: "[فحص]: "
+labels: ["scan-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        مرحباً بك! أدخل بيانات المشروع أدناه وسيقوم النظام بفحصه تلقائياً بواسطة (Gitleaks, Semgrep, Trivy).
+
+  - type: input
+    id: repo_url
+    attributes:
+      label: رابط المستودع (Repo URL)
+      description: ضع رابط مستودع GitHub العام الذي تريد فحصه
+      placeholder: https://github.com/owner/repository
+    validations:
+      required: true
+
+  - type: input
+    id: branch
+    attributes:
+      label: اسم الفرع (Branch)
+      description: اتركها main أو master إذا لم تكن متأكداً
+      placeholder: main
+    validations:
+      required: false
