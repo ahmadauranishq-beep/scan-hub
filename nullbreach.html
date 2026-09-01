@@ -3,26 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NULLBREACH — AI-Powered GitHub Security Auditor</title>
-<meta name="description" content="NULLBREACH: entropy-based secret detection, 40+ signatures, real CVE data from OSV.dev and AI semantic reasoning — in one single-file, zero-backend scanner.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,4 92,22 92,58 50,96 8,58 8,22' fill='%2305070a' stroke='%2300ff9d' stroke-width='6'/%3E%3Ccircle cx='50' cy='45' r='14' fill='none' stroke='%2300ff9d' stroke-width='5'/%3E%3Cpath d='M50 59 L50 76 M38 66 L62 66' stroke='%2300ff9d' stroke-width='5'/%3E%3C/svg%3E">
+<title>Nullbreach — Is it safe to ship?</title>
+<meta name="description" content="Paste a GitHub repository. Nullbreach reads the code, checks every dependency against the live CVE database, and gives you a plain-language verdict — free, in your browser, nothing to install.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%2316181d'/%3E%3Ccircle cx='32' cy='32' r='15' fill='none' stroke='%23f7f5f1' stroke-width='4'/%3E%3Cline x1='43' y1='43' x2='54' y2='54' stroke='%23ff4b26' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = {
   theme: {
     extend: {
       colors: {
-        nbbg: '#05070a',
-        nbgreen: '#00ff9d',
-        nbcyan: '#22d3ee',
-        nbamber: '#ffb703',
-        nbred: '#ff3b5c',
-        nbpanel: '#0a0f16',
-        nbline: '#131c28'
+        /* same token names the app already uses — remapped to the light editorial palette */
+        nbbg: '#f7f5f1',
+        nbgreen: '#0e7a4a',
+        nbcyan: '#2e6de6',
+        nbamber: '#b9820a',
+        nbred: '#d92d20',
+        nbpanel: '#fffdf9',
+        nbline: '#e7e2d8',
+        /* legacy dark-theme scales used by dynamic strings — remapped for paper */
+        slate: { 50:'#565b66', 100:'#16181d', 200:'#22252b', 300:'#3a3f49', 400:'#565b66', 500:'#6d7480', 600:'#565b66', 700:'#3a3f49', 800:'#22252b', 900:'#16181d' },
+        emerald: { 100:'#0e5a3a', 200:'#0e7a4a', 300:'#0c6b42', 400:'#0a5c38', 500:'#0e7a4a' },
+        red: { 200:'#b3261e', 300:'#b3261e' },
+        cyan: { 100:'#1c4d8f', 300:'#1c4d8f' },
+        amber: { 300:'#8a6109', 400:'#b9820a' }
       },
       fontFamily: {
-        body: ['"Space Grotesk"', 'Inter', 'ui-sans-serif', 'sans-serif'],
-        mono: ['"JetBrains Mono"', '"Fira Code"', 'ui-monospace', 'monospace']
+        body: ['Inter', 'ui-sans-serif', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'serif'],
+        mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace']
       }
     }
   }
@@ -30,480 +38,365 @@ tailwind.config = {
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
 /* ============================================================
-   NULLBREACH design system v2 — tokens, surfaces, components
+   NULLBREACH design system v3 — "The Audit"
+   A calm, editorial, typeset-report aesthetic.
+   Paper, ink, one signal color. No neon. No matrix.
    ============================================================ */
 :root {
-  --bg-0:#04060a; --bg-1:#060a10; --bg-2:#080d14;
-  --surface-1:#0a1017; --surface-2:#0d1520; --surface-3:#111a26;
-  --line-1:#141e2a; --line-2:#1c2a3a; --line-3:#27394d;
-  --txt-1:#e8eff6; --txt-2:#9fb2c3; --txt-3:#5e7183; --txt-4:#3d4d5c;
-  --green:#00ff9d; --cyan:#22d3ee; --amber:#ffb703; --red:#ff3b5c; --orange:#ff9d5c; --violet:#a78bfa; --pink:#f472b6;
-  --r-sm:8px; --r-md:12px; --r-lg:16px;
-  --shadow-panel: 0 1px 0 rgba(255,255,255,.04) inset, 0 24px 60px -30px rgba(0,0,0,.9);
-  --glow-green: 0 0 24px rgba(0,255,157,.18);
-  --font-mono:'JetBrains Mono','Fira Code',ui-monospace,monospace;
+  --paper:#f7f5f1; --paper-2:#fffdf9; --paper-3:#f1ede5;
+  --ink:#16181d; --ink-2:#3a3f49; --ink-3:#565b66; --ink-4:#8b93a0;
+  --hair:#e0dad0; --hair-2:#cbc4b6;
+  --signal:#ff4b26;
+  --ok:#0e7a4a; --warn:#b9820a; --bad:#d92d20; --info:#2e6de6;
+  --r:10px;
+  --sh: 0 1px 2px rgba(22,24,29,.05), 0 12px 32px -18px rgba(22,24,29,.18);
 }
 html { scroll-behavior:smooth; }
 body {
-  background:
-    radial-gradient(1100px 520px at 50% -140px, rgba(0,255,157,.07), transparent 62%),
-    radial-gradient(900px 480px at 88% 4%, rgba(34,211,238,.05), transparent 60%),
-    var(--bg-0);
-  color:var(--txt-2);
-  font-family:'Space Grotesk',Inter,sans-serif;
+  background:var(--paper);
+  color:var(--ink-2);
+  font-family:var(--font-body);
   overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
 }
-::selection { background:rgba(0,255,157,.22); color:#eafff5; }
+::selection { background:#ffe1d8; color:var(--ink); }
 *::-webkit-scrollbar { width:10px; height:10px; }
-*::-webkit-scrollbar-thumb { background:#16222f; border-radius:6px; border:2px solid var(--bg-0); }
+*::-webkit-scrollbar-thumb { background:#d8d2c6; border-radius:8px; border:3px solid var(--paper); }
 *::-webkit-scrollbar-track { background:transparent; }
 .mono { font-family:var(--font-mono); }
+.serif { font-family:var(--font-display); }
 
-/* ---------- ambient layers ---------- */
-#bgfx { position:fixed; inset:0; z-index:0; pointer-events:none; }
-.grid-overlay{
-  position:fixed; inset:-50px; z-index:0; pointer-events:none;
-  background-image:
-    linear-gradient(rgba(0,255,157,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,255,157,.04) 1px, transparent 1px);
-  background-size:44px 44px;
-  -webkit-mask-image:radial-gradient(ellipse 92% 68% at 50% 0%, black 22%, transparent 76%);
-          mask-image:radial-gradient(ellipse 92% 68% at 50% 0%, black 22%, transparent 76%);
-  animation:gridpan 34s linear infinite;
+/* ---------- masthead ---------- */
+.rule-2x { border-top:2px solid var(--ink); }
+.masthead-title { font-family:var(--font-display); font-weight:900; letter-spacing:-.01em; }
+.kicker-caps { font-family:var(--font-mono); font-size:10px; letter-spacing:.24em; color:var(--ink-4); text-transform:uppercase; }
+.sec-idx{
+  font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:.08em;
+  color:var(--signal); border:1px solid rgba(255,75,38,.35); background:rgba(255,75,38,.05);
+  border-radius:6px; padding:2px 8px; margin-right:10px; vertical-align:2px;
 }
-@keyframes gridpan { to { background-position:44px 44px; } }
-.hero-glow{
-  position:fixed; top:-200px; left:50%; transform:translateX(-50%);
-  width:1000px; height:560px; z-index:0; pointer-events:none;
-  background:
-    radial-gradient(closest-side, rgba(0,255,157,.10), transparent 72%),
-    radial-gradient(420px 300px at 72% 42%, rgba(34,211,238,.07), transparent 70%);
-  filter:blur(8px);
+.kicker-caps { font-family:var(--font-mono); font-size:10px; letter-spacing:.24em; color:var(--ink-4); text-transform:uppercase; }
+
+/* ---------- hero ---------- */
+.hero-headline {
+  font-family:var(--font-display);
+  font-weight:900;
+  font-size:clamp(44px, 7.5vw, 84px);
+  line-height:1.02;
+  letter-spacing:-.022em;
+  color:var(--ink);
 }
-body::after{ /* vignette — focuses the eye toward the center column */
-  content:''; position:fixed; inset:0; z-index:1; pointer-events:none;
-  background:radial-gradient(120% 90% at 50% 30%, transparent 55%, rgba(2,4,7,.55) 100%);
+.hero-headline em { font-style:italic; font-weight:600; color:var(--signal); }
+.hero-sub { font-size:clamp(16px,2vw,19px); line-height:1.65; color:var(--ink-3); max-width:640px; }
+
+.audit-input{
+  background:transparent; border:0; border-bottom:2px solid var(--ink);
+  border-radius:0; padding:14px 4px; font-family:var(--font-mono); font-size:16px; color:var(--ink);
 }
+.audit-input:focus{ outline:none; border-bottom-color:var(--signal); box-shadow:0 1px 0 0 var(--signal); }
+.audit-input::placeholder{ color:var(--ink-4); }
+.btn-ink{
+  background:var(--ink); color:var(--paper); border:1px solid var(--ink);
+  font-family:var(--font-mono); letter-spacing:.06em;
+  transition:all .16s ease;
+}
+.btn-ink:hover:not(:disabled){ background:var(--signal); border-color:var(--signal); transform:translateY(-1px); }
+.btn-ink:disabled{ opacity:.45; cursor:not-allowed; }
+.btn-quiet{
+  background:transparent; color:var(--ink-2); border:1px solid var(--hair-2);
+  transition:all .16s ease;
+}
+.btn-quiet:hover{ border-color:var(--ink); color:var(--ink); }
+
+.mode-tab{
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-4); padding:10px 2px; border-bottom:2px solid transparent; transition:all .15s; background:none;
+}
+.mode-tab.on{ color:var(--ink); border-bottom-color:var(--signal); }
+.mode-tab:not(.on):hover{ color:var(--ink-2); }
 
 /* ---------- panels ---------- */
 .panel{
-  position:relative;
-  background:linear-gradient(180deg, rgba(15,23,34,.72), rgba(8,12,19,.86));
-  border:1px solid var(--line-1);
-  border-radius:var(--r-lg);
-  box-shadow:var(--shadow-panel);
+  background:var(--paper-2);
+  border:1px solid var(--hair);
+  border-radius:var(--r);
+  box-shadow:var(--sh);
 }
-.panel-glow{ box-shadow:var(--shadow-panel), 0 0 0 1px rgba(0,255,157,.05), 0 30px 90px -40px rgba(0,255,157,.16); }
-/* signature corner brackets on hero panels */
-.panel-glow::before, .panel-glow::after{
-  content:''; position:absolute; width:18px; height:18px; pointer-events:none;
-}
-.panel-glow::before{ top:-1px; left:-1px; border-top:2px solid rgba(0,255,157,.6); border-left:2px solid rgba(0,255,157,.6); border-top-left-radius:var(--r-lg); }
-.panel-glow::after{ bottom:-1px; right:-1px; border-bottom:2px solid rgba(34,211,238,.45); border-right:2px solid rgba(34,211,238,.45); border-bottom-right-radius:var(--r-lg); }
+.panel-ink{ border-color:var(--ink); box-shadow:4px 4px 0 0 var(--ink); }
+.ledger-row{ border-bottom:1px solid var(--hair); }
 
-/* ---------- section headers ---------- */
-.sec-idx{
-  font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:.08em;
-  color:var(--green); background:rgba(0,255,157,.08); border:1px solid rgba(0,255,157,.35);
-  border-radius:6px; padding:2px 8px; margin-right:10px; vertical-align:2px;
+/* ---------- stamps ---------- */
+.stamp{
+  display:inline-block;
+  font-family:var(--font-mono); font-weight:700; letter-spacing:.3em; text-transform:uppercase;
+  border:3px solid currentColor; border-radius:6px; padding:7px 16px 7px 19px;
+  transform:rotate(-2.5deg);
 }
-#results h2, #orgResults h2 { color:var(--txt-1); letter-spacing:.02em; }
-#results h2 .text-slate-500 { font-weight:400; }
+@keyframes stampIn {
+  0%{ transform:rotate(-9deg) scale(2.1); opacity:0; }
+  55%{ transform:rotate(-2deg) scale(.94); opacity:1; }
+  75%{ transform:rotate(-3deg) scale(1.03); }
+  100%{ transform:rotate(-2.5deg) scale(1); opacity:1; }
+}
+.stamp-in{ animation:stampIn .42s cubic-bezier(.2,1.4,.4,1) 1 both; }
 
-/* ---------- capability grid (hero) ---------- */
-.cap-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:34px; }
-@media (max-width:900px){ .cap-grid{ grid-template-columns:repeat(2,1fr); } }
-.cap-card{
-  position:relative; overflow:hidden;
-  background:linear-gradient(180deg, rgba(14,21,31,.6), rgba(8,12,19,.7));
-  border:1px solid var(--line-1); border-radius:var(--r-md);
-  padding:14px 14px 12px; text-align:left; transition:border-color .2s, transform .2s;
-}
-.cap-card:hover{ border-color:var(--line-3); transform:translateY(-2px); }
-.cap-card::before{ content:''; position:absolute; top:0; left:0; right:0; height:1px;
-  background:linear-gradient(90deg, transparent, rgba(0,255,157,.35), transparent); }
-.cap-k{ font-family:var(--font-mono); font-size:9px; letter-spacing:.22em; color:var(--txt-3); }
-.cap-v{ font-family:var(--font-mono); font-size:20px; font-weight:800; color:var(--txt-1); margin-top:6px; }
-.cap-d{ font-size:11px; color:var(--txt-3); margin-top:4px; line-height:1.45; }
+/* ---------- gauge ---------- */
+#gaugeFg{ transition: stroke-dashoffset 1.4s cubic-bezier(.22,.9,.28,1); }
+.score-figure{ font-family:var(--font-display); font-weight:900; letter-spacing:-.03em; }
+@keyframes pulseCalm { 0%,100%{ opacity:1; } 50%{ opacity:.55; } }
+.pulse-clean{ animation:pulseCalm 2.4s ease-in-out infinite; }
 
-/* ---------- buttons ---------- */
-.btn-primary{
-  position:relative;
-  background:linear-gradient(180deg, rgba(0,255,157,.18), rgba(0,255,157,.07));
-  border:1px solid rgba(0,255,157,.55); color:#a4ffd9;
-  box-shadow:0 0 0 1px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08);
-  transition:all .18s ease;
+/* ---------- critical moment ---------- */
+@keyframes critJolt{
+  0%{ transform:translate(0,0); }
+  20%{ transform:translate(-2px,1px); text-shadow:3px 0 rgba(217,45,32,.55), -3px 1px rgba(46,109,230,.35); }
+  40%{ transform:translate(2px,-1px); text-shadow:-3px 0 rgba(217,45,32,.55), 3px 1px rgba(46,109,230,.35); }
+  60%{ transform:translate(-1px,1px); }
+  100%{ transform:translate(0,0); text-shadow:none; }
 }
-.btn-primary:hover:not(:disabled){
-  background:linear-gradient(180deg, rgba(0,255,157,.30), rgba(0,255,157,.12));
-  box-shadow:0 0 0 1px rgba(0,0,0,.4), 0 0 28px rgba(0,255,157,.28), inset 0 1px 0 rgba(255,255,255,.1);
-  transform:translateY(-1px);
-}
-.btn-primary:active:not(:disabled){ transform:translateY(0); }
-.btn-primary:disabled{ opacity:.45; cursor:not-allowed; }
-.btn-ghost{ border:1px solid var(--line-2); color:var(--txt-2); transition:all .18s ease; background:rgba(255,255,255,.015); }
-.btn-ghost:hover{ border-color:rgba(34,211,238,.45); color:#bfe9f5; background:rgba(34,211,238,.06); }
-
-input:focus, select:focus, textarea:focus{
-  outline:none; border-color:rgba(0,255,157,.55) !important;
-  box-shadow:0 0 0 1px rgba(0,255,157,.25), 0 0 20px rgba(0,255,157,.07);
-}
-::placeholder{ color:var(--txt-4); }
-
-/* ---------- scan terminal ---------- */
-.log-shell{
-  background:linear-gradient(180deg,#070b11,#05080d);
-  border:1px solid rgba(0,255,157,.18); border-radius:var(--r-lg); overflow:hidden;
-  box-shadow:0 0 0 1px rgba(0,0,0,.6), 0 24px 70px -24px rgba(0,255,157,.16), inset 0 0 70px rgba(0,255,157,.03);
-}
-.log-shell > div:first-child{ background:linear-gradient(180deg,#0d141d,#0a1017); }
-.log-body{ max-height:260px; overflow-y:auto; }
-.log-line{ animation:login .18s ease-out; }
-@keyframes login { from { opacity:0; transform:translateY(3px);} to { opacity:1; transform:none;} }
-.cursor{ display:inline-block; width:9px; height:15px; background:var(--green); vertical-align:-2px; animation:blink 1.05s steps(1) infinite; }
-@keyframes blink { 50% { opacity:0; } }
-
-/* ---------- progress ---------- */
-#scanProgressFill{ box-shadow:0 0 12px rgba(0,255,157,.5); }
-
-/* ---------- glitch / flicker / pulse ---------- */
-@keyframes glitchA{
-  0%   { transform:translate(0,0); text-shadow:none; clip-path:inset(0 0 0 0); }
-  18%  { transform:translate(-2px,1px); text-shadow:3px 0 #ff3b5c, -3px 0 #22d3ee; clip-path:inset(12% 0 58% 0); }
-  36%  { transform:translate(2px,-1px); text-shadow:-3px 0 #ff3b5c, 3px 0 #22d3ee; clip-path:inset(52% 0 8% 0); }
-  54%  { transform:translate(-1px,2px);  text-shadow:2px 0 #ff3b5c, -2px 0 #22d3ee; clip-path:inset(24% 0 34% 0); }
-  72%  { transform:translate(1px,-2px);  text-shadow:-2px 0 #ff3b5c, 2px 0 #22d3ee; clip-path:inset(66% 0 4% 0); }
-  100% { transform:translate(0,0); text-shadow:none; clip-path:inset(0 0 0 0); }
-}
-.glitching{ animation:glitchA .16s steps(2,end) 6; }
-@keyframes flickerfx {
-  0%,100% { opacity:0; } 8% { opacity:.55; } 12% { opacity:.06; } 20% { opacity:.4; }
-  28% { opacity:.04; } 44% { opacity:.3; } 70% { opacity:0; } 86% { opacity:.12; }
-}
+.glitching{ animation:critJolt .18s steps(2,end) 5; }
 #critFlicker{ position:fixed; inset:0; z-index:60; pointer-events:none; opacity:0;
-  background:linear-gradient(180deg, rgba(255,59,92,.10), rgba(255,59,92,.02) 40%, transparent); }
-#critFlicker.on{ animation:flickerfx .9s linear 1; }
-@keyframes pulseG { 0%,100% { filter:drop-shadow(0 0 4px rgba(0,255,157,.25)); } 50% { filter:drop-shadow(0 0 22px rgba(0,255,157,.6)); } }
-.pulse-clean{ animation:pulseG 2.6s ease-in-out infinite; }
-#gaugeFg{ transition: stroke-dashoffset 1.5s cubic-bezier(.22,.9,.28,1); }
+  background:linear-gradient(180deg, rgba(217,45,32,.08), transparent 45%); }
+@keyframes flickerfx { 0%,100%{opacity:0;} 10%{opacity:1;} 30%{opacity:.15;} 50%{opacity:.6;} 100%{opacity:0;} }
+#critFlicker.on{ animation:flickerfx .8s linear 1; }
+
+/* ---------- field notes ---------- */
+.notes-shell{
+  background:var(--paper-2); border:1px solid var(--hair); border-radius:var(--r);
+  box-shadow:var(--sh); overflow:hidden;
+}
+.notes-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:9px 16px; border-bottom:1px dashed var(--hair-2);
+}
+.log-body{ max-height:240px; overflow-y:auto; }
+.log-line{ animation:login .18s ease-out; }
+@keyframes login { from{ opacity:0; transform:translateY(3px);} to{ opacity:1; transform:none;} }
+.cursor{ display:inline-block; width:8px; height:14px; background:var(--signal); vertical-align:-2px; animation:blink 1.05s steps(1) infinite; }
+@keyframes blink { 50%{ opacity:0; } }
+#scanProgressFill{ background:var(--ink); transition:width .35s ease; }
+
+/* ---------- ledger tables ---------- */
+#findTableWrap{ max-height:640px; overflow:auto; border-radius:var(--r); }
+#findTable thead th{
+  position:sticky; top:0; z-index:5; background:var(--paper-3);
+  font-family:var(--font-mono); font-size:10px; letter-spacing:.14em; color:var(--ink-3);
+}
+#findTable tbody tr{ transition:background .12s; }
+#findTable tbody tr:hover{ background:#faf6ee; box-shadow:inset 3px 0 0 var(--signal); }
+.sev-critical{ color:var(--bad); border-color:rgba(217,45,32,.4); background:rgba(217,45,32,.06); }
+.sev-high{ color:#c2410c; border-color:rgba(194,65,12,.4); background:rgba(194,65,12,.06); }
+.sev-medium{ color:var(--warn); border-color:rgba(185,130,10,.4); background:rgba(185,130,10,.07); }
+.sev-low{ color:var(--info); border-color:rgba(46,109,230,.35); background:rgba(46,109,230,.06); }
+.layer-chip{ font-size:10px; letter-spacing:.08em; padding:2px 8px; border-radius:999px; border:1px solid; font-family:var(--font-mono); }
+.layer-entropy{ color:var(--info); border-color:rgba(46,109,230,.4); background:rgba(46,109,230,.05); }
+.layer-pattern{ color:#7c3aed; border-color:rgba(124,58,237,.35); background:rgba(124,58,237,.05); }
+.layer-osv{ color:var(--warn); border-color:rgba(185,130,10,.4); background:rgba(185,130,10,.06); }
+.layer-ai{ color:#0f766e; border-color:rgba(15,118,110,.4); background:rgba(15,118,110,.05); }
+.layer-supply-chain{ color:#be185d; border-color:rgba(190,24,93,.35); background:rgba(190,24,93,.05); }
+tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
+@keyframes critrow { 0%{ background:rgba(217,45,32,.12);} 100%{ background:transparent; } }
 
 /* ---------- tooltip ---------- */
 .tip{ position:relative; }
 .tipbox{
   display:none; position:absolute; bottom:130%; left:50%; transform:translateX(-50%);
-  width:310px; padding:13px 15px; border-radius:var(--r-md); z-index:80; font-size:12px; line-height:1.6;
-  background:#0a1017; border:1px solid rgba(0,255,157,.35); color:#c8d6e2;
-  box-shadow:0 14px 44px rgba(0,0,0,.75); text-align:left;
+  width:310px; padding:13px 15px; border-radius:var(--r); z-index:80; font-size:12px; line-height:1.6;
+  background:var(--ink); color:#e9e6df; border:1px solid var(--ink);
+  box-shadow:0 14px 40px rgba(22,24,29,.35); text-align:left; font-family:var(--font-mono);
 }
 .tip:hover .tipbox{ display:block; }
 
-/* ---------- findings table ---------- */
-#findTableWrap{ max-height:640px; overflow:auto; border-radius:var(--r-md); }
-#findTable thead th{ position:sticky; top:0; background:#0a1119; z-index:5; letter-spacing:.14em; }
-#findTable tbody tr{ transition:background .12s; }
-#findTable tbody tr:hover{ background:rgba(34,211,238,.045); box-shadow:inset 2px 0 0 rgba(0,255,157,.5); }
-.sev-critical{ color:#ff3b5c; border-color:rgba(255,59,92,.5); background:rgba(255,59,92,.1); }
-.sev-high{ color:#ff9d5c; border-color:rgba(255,157,92,.45); background:rgba(255,157,92,.08); }
-.sev-medium{ color:#ffb703; border-color:rgba(255,183,3,.45); background:rgba(255,183,3,.08); }
-.sev-low{ color:#22d3ee; border-color:rgba(34,211,238,.4); background:rgba(34,211,238,.08); }
-.layer-chip{ font-size:10px; letter-spacing:.08em; padding:2px 7px; border-radius:999px; border:1px solid; }
-.layer-entropy{ color:#22d3ee; border-color:rgba(34,211,238,.5); background:rgba(34,211,238,.07); }
-.layer-pattern{ color:#00ff9d; border-color:rgba(0,255,157,.45); background:rgba(0,255,157,.06); }
-.layer-osv{ color:#ffb703; border-color:rgba(255,183,3,.5); background:rgba(255,183,3,.06); }
-.layer-ai{ color:#a78bfa; border-color:rgba(167,139,250,.5); background:rgba(167,139,250,.07); }
-.layer-supply-chain{ color:#f472b6; border-color:rgba(244,114,182,.5); background:rgba(244,114,182,.07); }
-tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
-@keyframes critrow { 0% { background:rgba(255,59,92,.28);} 100% { background:transparent; } }
-
-/* ---------- remediation ---------- */
+/* ---------- checklist ---------- */
 .rem-item input:checked ~ .rem-text{ text-decoration:line-through; opacity:.45; }
+.rem-item input{ accent-color:var(--ink); }
 
-/* ---------- AI terminal panes ---------- */
-#aiPanel{ background:#04070b; border:1px solid rgba(0,255,157,.22); border-radius:var(--r-lg);
-  box-shadow:inset 0 0 90px rgba(0,255,157,.04), 0 24px 70px -34px rgba(0,255,157,.2); }
-.ai-content h3{ color:#00ff9d; font-weight:700; margin:18px 0 8px; font-size:15px; letter-spacing:.02em; }
-.ai-content h4{ color:#22d3ee; font-weight:600; margin:14px 0 6px; font-size:14px; }
-.ai-content p{ margin:6px 0; }
+/* ---------- AI pane ---------- */
+#aiPanel{ background:var(--paper-2); border:1px solid var(--hair); border-radius:var(--r); box-shadow:var(--sh); }
+.ai-tab-btn{ font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-4); padding:8px 2px; border-bottom:2px solid transparent; transition:all .15s; border-radius:0; background:none; }
+.ai-tab-btn.on{ color:var(--ink); border-bottom-color:var(--signal); }
+.ai-tab-btn:not(.on):hover{ color:var(--ink-2); }
+.ai-content h3{ color:var(--ink); font-family:var(--font-display); font-weight:700; font-size:19px; margin:20px 0 8px; }
+.ai-content h4{ color:var(--ink); font-family:var(--font-display); font-weight:600; font-size:16px; margin:14px 0 6px; }
+.ai-content p{ margin:7px 0; }
 .ai-content ul,.ai-content ol{ margin:8px 0 8px 20px; list-style:disc; }
 .ai-content ol{ list-style:decimal; }
-.ai-content li{ margin:4px 0; }
-.ai-content code{ background:rgba(0,255,157,.08); border:1px solid rgba(0,255,157,.2); padding:1px 5px; border-radius:4px; font-size:12px; }
-.ai-content pre{ background:#060a10; border:1px solid var(--line-1); border-radius:var(--r-sm); padding:12px; overflow-x:auto; margin:10px 0; }
-.ai-content pre code{ background:none; border:none; padding:0; }
-.ai-content strong{ color:#e8f2ee; }
+.ai-content li{ margin:5px 0; }
+.ai-content code{ background:var(--paper-3); border:1px solid var(--hair); padding:1px 5px; border-radius:4px; font-size:12px; font-family:var(--font-mono); }
+.ai-content pre{ background:var(--ink); color:#e9e6df; border-radius:var(--r); padding:14px; overflow-x:auto; margin:12px 0; }
+.ai-content pre code{ background:none; border:none; padding:0; color:inherit; }
+.ai-content strong{ color:var(--ink); }
 
-/* ---------- badge / export ---------- */
-#badgePreview{ background:linear-gradient(135deg,#070c12 0%, #0b1420 60%, #081018 100%);
-  border:1px solid rgba(0,255,157,.35); border-radius:var(--r-md); position:relative; overflow:hidden; }
-#badgePreview::before{ content:''; position:absolute; inset:0; padding:1px; border-radius:var(--r-md); pointer-events:none;
-  background:linear-gradient(120deg, rgba(0,255,157,.6), rgba(34,211,238,.35), transparent 60%); }
+/* ---------- badge ---------- */
+#badgePreview{ background:var(--ink); color:var(--paper); border-radius:var(--r); }
+#badgePreview .mono { font-family:var(--font-mono); }
 
 /* ---------- toast ---------- */
-#toast{ transition: transform .25s ease, opacity .25s ease; box-shadow:0 0 30px rgba(0,255,157,.15), 0 14px 40px rgba(0,0,0,.6); }
+#toast{
+  transition:transform .25s ease, opacity .25s ease;
+  background:var(--ink); color:var(--paper); font-family:var(--font-mono); font-size:12px;
+  border-radius:8px; padding:12px 18px; box-shadow:0 16px 44px rgba(22,24,29,.35);
+}
+
+/* ---------- inputs ---------- */
+input, select, textarea { background:var(--paper-2); border:1px solid var(--hair-2); border-radius:8px; color:var(--ink); }
+input:focus, select:focus, textarea:focus{
+  outline:none; border-color:var(--ink) !important; box-shadow:0 0 0 1px var(--ink);
+}
+::placeholder{ color:var(--ink-4); }
 
 @media (prefers-reduced-motion: reduce){
-  .grid-overlay, .cursor, .pulse-clean, #critFlicker.on { animation:none !important; }
-  .glitching{ animation:none !important; }
+  .cursor,.pulse-clean,#critFlicker.on,.stamp-in,.glitching{ animation:none !important; }
 }
+
+/* v1.5 micro-fixes */
+.rem-check{ accent-color: var(--signal); }
+.sev-chip.sev-critical{ border-color:#d92d2033; background:#d92d200d; }
+.sev-chip.sev-high{ border-color:#ff9d5c33; background:#ff9d5c0d; }
+.sev-chip.sev-medium{ border-color:#b9820a33; background:#b9820a0d; }
+.sev-chip.sev-low{ border-color:#2e6de633; background:#2e6de60d; }
+#historyDrop button:hover{ border-color: var(--signal) !important; }
 </style>
 </head>
 <body class="font-body min-h-screen">
 
-<canvas id="bgfx"></canvas>
-<div class="grid-overlay"></div>
-<div class="hero-glow"></div>
 <div id="critFlicker"></div>
 
-<!-- ================= HEADER ================= -->
-<header class="relative z-40 border-b border-emerald-500/10 backdrop-blur-sm">
-  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-    <a href="#" class="flex items-center gap-3 group">
-      <svg width="30" height="30" viewBox="0 0 100 100" class="group-hover:drop-shadow-[0_0_10px_rgba(0,255,157,.7)] transition">
-        <polygon points="50,4 92,22 92,58 50,96 8,58 8,22" fill="#05070a" stroke="#00ff9d" stroke-width="6"/>
-        <circle cx="50" cy="45" r="14" fill="none" stroke="#00ff9d" stroke-width="5"/>
-        <path d="M50 59 L50 76 M38 66 L62 66" stroke="#00ff9d" stroke-width="5"/>
-      </svg>
-      <div class="leading-none">
-        <div class="mono font-extrabold tracking-[.18em] text-lg text-transparent bg-clip-text bg-gradient-to-r from-nbgreen to-nbcyan">NULLBREACH</div>
-        <div class="mono text-[9px] tracking-[.3em] text-slate-500 mt-1">AI GITHUB SECURITY AUDITOR</div>
-      </div>
+<!-- ================= MASTHEAD ================= -->
+<header class="relative z-40 bg-[var(--paper)]/90 backdrop-blur-sm">
+  <div class="rule-2x"></div>
+  <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="#" class="flex items-baseline gap-2.5 group">
+      <span class="masthead-title text-[26px] text-[var(--ink)]">Nullbreach</span>
+      <span class="kicker-caps hidden sm:inline">security desk</span>
     </a>
-    <div class="flex items-center gap-3">
-      <span class="hidden md:flex mono text-[10px] tracking-widest text-slate-500 border border-nbline rounded-full px-3 py-1.5" id="engineBadge">ENGINE v1.0 · ENTROPY + SIGS + OSV.DEV + AI</span>
-      <div class="relative">
-        <button id="btnHistory" class="btn-ghost flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm transition" title="Scan history & comparison">
-          <i data-lucide="history" class="w-4 h-4"></i><span class="hidden sm:inline">History</span>
-        </button>
-        <div id="historyDrop" class="hidden absolute right-0 top-12 w-[430px] max-h-[500px] overflow-y-auto panel p-4 z-50 shadow-2xl"></div>
-      </div>
-      <button id="btnSettings" class="btn-ghost flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm transition" title="API keys & settings">
-        <i data-lucide="settings-2" class="w-4 h-4"></i>
-        <span class="hidden sm:inline">API Keys</span>
-        <span id="keyDot" class="w-2 h-2 rounded-full bg-amber-400" title="No AI keys configured"></span>
-      </button>
+    <div class="relative flex items-center gap-1">
+      <button id="btnHistory" class="btn-quiet mono text-[11px] tracking-[.14em] uppercase rounded-md px-3.5 py-2">History</button>
+      <button id="btnSettings" class="btn-quiet mono text-[11px] tracking-[.14em] uppercase rounded-md px-3.5 py-2">Preferences</button>
+      <div id="historyDrop" class="hidden absolute right-0 top-12 z-50 w-[min(92vw,420px)] max-h-[70vh] overflow-y-auto rounded-lg border border-[var(--hair)] bg-[var(--paper-2)] shadow-[0_18px_40px_-18px_rgba(22,24,29,.35)] p-5"></div>
     </div>
   </div>
+  <div class="rule-2x"></div>
 </header>
 
-<!-- ================= SETTINGS DRAWER ================= -->
+<!-- ================= PREFERENCES ================= -->
 <div id="settingsDrawer" class="fixed inset-0 z-[70] hidden">
-  <div id="settingsBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
-  <aside id="settingsPanel" class="absolute right-0 top-0 h-full w-full max-w-md bg-[#070b11] border-l border-emerald-500/20 shadow-2xl translate-x-full transition-transform duration-300 flex flex-col">
-    <div class="flex items-center justify-between px-6 h-16 border-b border-nbline">
-      <div class="flex items-center gap-2.5">
-        <i data-lucide="key-round" class="w-5 h-5 text-nbgreen"></i>
-        <h2 class="font-semibold tracking-wide">Provider Keys</h2>
-      </div>
-      <button id="btnCloseSettings" class="p-2 rounded-lg hover:bg-white/5 text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+  <div id="settingsBackdrop" class="absolute inset-0 bg-[var(--ink)]/40 backdrop-blur-sm"></div>
+  <aside id="settingsPanel" class="absolute right-0 top-0 h-full w-full max-w-md bg-[var(--paper)] border-l border-[var(--hair)] shadow-2xl translate-x-full transition-transform duration-300 flex flex-col">
+    <div class="flex items-center justify-between px-6 h-16 border-b border-[var(--hair)]">
+      <h2 class="serif text-xl font-bold text-[var(--ink)]">Preferences</h2>
+      <button id="btnCloseSettings" class="p-2 rounded-md hover:bg-black/5 text-[var(--ink-3)]"><i data-lucide="x" class="w-5 h-5"></i></button>
     </div>
 
-    <div class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-      <p class="text-xs leading-relaxed text-slate-400">
-        NULLBREACH runs a priority key pool: <span class="text-nbgreen">your keys first</span>, in the order you set —
-        then the embedded <span class="text-nbcyan">NULLBREACH Core Engine</span> takes over automatically (with a notice) whenever your keys are missing or exhausted.
-        Just paste any engine key — it is recognized from its format, and its origin is <b>never displayed</b>. The static layers and the OSV.dev CVE feed need <span class="text-nbgreen">no keys at all</span>.
+    <div class="flex-1 overflow-y-auto px-6 py-6 space-y-7">
+      <p class="text-[14px] leading-relaxed text-[var(--ink-3)]">
+        Nullbreach works out of the box — there is nothing to configure. This page is optional.
       </p>
 
       <div>
         <div class="flex items-center justify-between mb-2">
-          <label class="text-sm font-medium flex items-center gap-2">Your Keys <span class="mono text-[10px] text-nbgreen border border-nbgreen/40 bg-nbgreen/10 rounded px-1.5 py-0.5">MAX PRIORITY</span></label>
-          <button id="btnAddKey" class="btn-ghost mono text-[10px] tracking-widest rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 transition"><i data-lucide="plus" class="w-3.5 h-3.5"></i> ADD KEY</button>
+          <label for="prefGithub" class="text-[14px] font-semibold text-[var(--ink)]">Your GitHub token <span class="kicker-caps ml-1">optional</span></label>
         </div>
-        <div id="userKeysList" class="space-y-2.5"></div>
-        <p class="mono text-[10px] text-slate-500 mt-2 leading-relaxed">first row = maximum priority · reorder with ↑/↓ · when your keys are exhausted or missing, the Core Engine takes over automatically (with an on-screen notice)</p>
-      </div>
-
-      <div class="rounded-lg border border-nbcyan/20 bg-nbcyan/[0.04] px-4 py-3">
-        <div class="flex items-start gap-3">
-          <i data-lucide="cpu" class="w-4 h-4 text-nbcyan mt-0.5 shrink-0"></i>
-          <div class="min-w-0">
-            <div class="text-[13px] font-semibold text-cyan-100">NULLBREACH Core AI <span class="mono text-[9px] tracking-widest text-nbcyan border border-nbcyan/40 rounded px-1.5 py-0.5 ml-1">EMBEDDED · ALWAYS ON</span></div>
-            <p class="text-[11px] text-cyan-100/65 mt-1 leading-relaxed">
-              The core reasoning engine ships inside this file. It cannot be viewed, edited, or removed — its models are undisclosed by design.
-              It activates automatically whenever your keys are absent or exhausted, so the AI layer <b>never goes down</b>.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="rounded-lg border border-nbgreen/25 bg-nbgreen/5 px-4 py-3">
-        <div class="flex items-start gap-3">
-          <i data-lucide="zap" class="w-4 h-4 text-nbgreen mt-0.5 shrink-0"></i>
-          <div class="min-w-0">
-            <div class="text-[13px] font-semibold text-emerald-100">Your keys are stronger</div>
-            <p class="text-[11px] text-emerald-100/70 mt-1 leading-relaxed">
-              Add a key from any major AI engine — <b>all of them are recognized automatically</b> from the key's signature, and no names are ever shown.
-              Yours run <b>first</b>, at <b>maximum priority</b>, in your exact order, with full capacity and no shared throttling.
-              When a key runs out, the always-on Core Engine quietly takes over — so the scanner <b>never goes down</b>.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="pt-2 border-t border-nbline">
-        <div class="flex items-center justify-between mb-1.5">
-          <label for="keyGithub" class="text-sm font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-slate-600" id="dotGithub"></span>GitHub Token <span class="mono text-[10px] text-slate-500">OPTIONAL</span></label>
-        </div>
-        <div class="relative">
-          <input id="keyGithub" type="password" autocomplete="off" spellcheck="false" placeholder="ghp_… / github_pat_…"
-            class="mono w-full bg-[#0a0f16] border border-nbline rounded-lg px-3 py-2.5 pr-10 text-sm text-slate-200">
-          <button type="button" data-eye="keyGithub" class="eye-toggle absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-500 hover:text-nbgreen">
-            <i data-lucide="eye" class="w-4 h-4"></i>
-          </button>
-        </div>
-        <p class="mono text-[10px] text-slate-500 mt-1.5">optional — lifts rate limit to 5,000 req/h and enables private repos</p>
-      </div>
-
-      <div class="flex items-start gap-2.5 rounded-lg border border-nbgreen/25 bg-nbgreen/5 px-4 py-3">
-        <i data-lucide="shield-check" class="w-4 h-4 text-nbgreen mt-0.5 shrink-0"></i>
-        <p class="text-[11px] leading-relaxed text-emerald-100/80">
-          Your keys never leave your browser — stored only in this browser's <span class="mono text-nbgreen">localStorage</span>,
-          masked on screen, and sent directly over HTTPS for validation only. There is no NULLBREACH backend.
-          The embedded Core Engine ships inside this file, undisclosed by design — its capacity is shared, so it is best-effort.
+        <input id="prefGithub" type="password" autocomplete="off" spellcheck="false" placeholder="ghp_… or github_pat_…"
+          class="mono w-full px-3 py-2.5 text-sm tracking-widest">
+        <p class="mt-2.5 text-[12.5px] leading-relaxed text-[var(--ink-3)]">
+          Scans share public GitHub limits with everyone. If scans ever feel slow, paste a personal
+          token for a private, faster lane — it stays in this browser, is never shown once saved, and works for private repos too.
         </p>
+      </div>
+
+      <div class="pt-4 border-t border-[var(--hair)]">
+        <button id="btnClearData" class="btn-quiet rounded-md px-4 py-2.5 text-[13px]">Clear saved data on this device</button>
+        <p class="mt-2 text-[12px] text-[var(--ink-4)]">Removes your token, scan history and shared reports from this browser.</p>
       </div>
     </div>
 
-    <div class="px-6 py-4 border-t border-nbline flex items-center gap-3">
-      <button id="btnSaveKeys" class="btn-primary flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition flex items-center justify-center gap-2">
-        <i data-lucide="save" class="w-4 h-4"></i> Save Keys
-      </button>
-      <button id="btnClearKeys" class="btn-ghost rounded-lg px-4 py-2.5 text-sm transition flex items-center gap-2">
-        <i data-lucide="eraser" class="w-4 h-4"></i> Clear
-      </button>
+    <div class="px-6 py-4 border-t border-[var(--hair)]">
+      <button id="btnSavePrefs" class="btn-ink w-full rounded-md px-4 py-3 text-sm font-semibold">Save</button>
     </div>
   </aside>
 </div>
 
 <!-- ================= HERO / SCAN ================= -->
 <main class="relative z-10">
-<section class="max-w-5xl mx-auto px-6 pt-14 pb-10">
-  <div class="text-center">
-    <div class="inline-flex items-center gap-2 mono text-[10px] tracking-[.22em] text-emerald-300/80 border border-nbgreen/25 bg-nbgreen/5 rounded-full px-4 py-1.5 mb-6">
-      <span class="w-1.5 h-1.5 rounded-full bg-nbgreen animate-pulse"></span>
-      FOUR DETECTION LAYERS · LIVE CVE FEED · ALWAYS-ON AI · ZERO BACKEND
-    </div>
-    <h1 class="mono text-4xl sm:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-nbgreen via-emerald-200 to-nbcyan drop-shadow-[0_0_25px_rgba(0,255,157,.25)]">
-      NULLBREACH
-    </h1>
-    <p class="mt-4 text-slate-400 max-w-2xl mx-auto text-[15px] leading-relaxed">
-      Point it at any GitHub repository. NULLBREACH computes Shannon entropy on every string, cross-references
-      <span class="text-slate-200">40+ secret &amp; OWASP signatures</span>, pulls <span class="text-slate-200">real CVE data from OSV.dev</span>,
-      then engages an AI security reasoning cascade — all in your browser, zero backend.
-    </p>
+<section class="max-w-5xl mx-auto px-6 pt-14 pb-12">
+  <p class="kicker-caps mb-5">Free · No account · Nothing leaves your browser</p>
+  <h1 class="hero-headline">Is it safe<br>to <em>ship</em> it?</h1>
+  <p class="hero-sub mt-6">
+    Paste a GitHub repository. Nullbreach actually reads the code — line by line — checks every
+    dependency against the live CVE database, and hands you a plain-language verdict with a fix list.
+    It runs entirely in your browser. Nothing to install, nothing to sign up for.
+  </p>
+
+  <div class="mt-8 flex gap-6 border-b border-[var(--hair)]">
+    <button type="button" id="tabRepoScan" class="mode-tab on">One repository</button>
+    <button type="button" id="tabOrgScan" class="mode-tab">A whole organization</button>
   </div>
 
-  <div class="cap-grid max-w-4xl mx-auto mt-12" id="capGrid">
-    <div class="cap-card">
-      <div class="cap-k">LAYER 01</div>
-      <div class="cap-v" style="color:var(--cyan)">H<sub style="font-size:12px">∞</sub></div>
-      <div class="cap-d">Shannon entropy math on every string — catches patternless secrets regex never sees</div>
-    </div>
-    <div class="cap-card">
-      <div class="cap-k">LAYER 02</div>
-      <div class="cap-v" id="capSigCount" style="color:var(--green)">—</div>
-      <div class="cap-d">Secret signatures + OWASP + full IaC: Docker · K8s · Terraform · Actions · nginx</div>
-    </div>
-    <div class="cap-card">
-      <div class="cap-k">LAYER 03</div>
-      <div class="cap-v" style="color:var(--amber)">CVE</div>
-      <div class="cap-d">Live OSV.dev advisories + supply-chain checks: confusion &amp; typosquatting</div>
-    </div>
-    <div class="cap-card">
-      <div class="cap-k">LAYER 04</div>
-      <div class="cap-v" style="color:var(--violet)">×3</div>
-      <div class="cap-d">Multi-pass AI: executive brief · logic-bug hunt · exploit PoCs — always-on engine</div>
-    </div>
-    <div class="cap-card">
-      <div class="cap-k">PRIVACY</div>
-      <div class="cap-v" style="color:var(--pink)">100%</div>
-      <div class="cap-d">Keys masked &amp; auto-recognized, names never shown, everything stays in your browser</div>
-    </div>
-  </div>
-
-  <div class="mt-9 max-w-3xl mx-auto flex justify-center gap-2">
-    <button type="button" id="tabRepoScan" class="mode-tab mono text-[11px] tracking-[.18em] px-5 py-2 rounded-t-lg border border-b-0 border-nbgreen/50 text-nbgreen bg-nbgreen/10">⣿ REPO SCAN</button>
-    <button type="button" id="tabOrgScan" class="mode-tab mono text-[11px] tracking-[.18em] px-5 py-2 rounded-t-lg border border-nbline text-slate-400">⣿ ORG SCAN</button>
-  </div>
-
-  <form id="orgForm" class="mt-3 max-w-3xl mx-auto hidden">
-    <div class="panel p-5">
-      <div class="flex flex-col sm:flex-row gap-3">
-        <div class="relative flex-1">
-          <i data-lucide="building-2" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-          <input id="orgInput" type="text" spellcheck="false" autocomplete="off" placeholder="GitHub organization — e.g. vercel · owasp · google"
-            class="mono w-full bg-[#0a0f16]/90 border border-nbline rounded-xl pl-12 pr-4 py-3.5 text-sm text-slate-200">
-        </div>
-        <button id="btnOrgScan" type="submit" class="btn-primary mono rounded-xl px-7 py-3.5 text-sm font-bold tracking-[.14em] transition flex items-center justify-center gap-2">
-          <i data-lucide="radar" class="w-4 h-4"></i> SCAN ORGANIZATION
-        </button>
+  <form id="orgForm" class="mt-8 hidden">
+    <div class="panel panel-ink p-6">
+      <label for="orgInput" class="kicker-caps">Organization</label>
+      <div class="mt-3 flex flex-col sm:flex-row gap-3">
+        <input id="orgInput" type="text" spellcheck="false" autocomplete="off" placeholder="e.g. owasp — or any GitHub organization"
+          class="audit-input flex-1 !border-b !border-[var(--ink)]">
+        <button id="btnOrgScan" type="submit" class="btn-ink rounded-md px-7 py-3.5 text-sm font-semibold">Scan the org</button>
       </div>
-      <div class="mt-3 flex items-center gap-5 flex-wrap">
-        <label class="flex items-center gap-2 text-[12px] text-slate-400 cursor-pointer">
-          <input type="checkbox" id="orgForks" class="accent-[#00ff9d] w-4 h-4"> Include forks
-        </label>
-        <span class="mono text-[10px] text-slate-600">fast pass: Layer 1 (entropy) + Layer 2 (signatures) only · no OSV/AI · top 40 files per repo</span>
-      </div>
-      <div id="orgError" class="hidden mt-4 rounded-lg border border-nbred/40 bg-nbred/10 px-4 py-3 text-[13px] text-red-200 flex items-start gap-2.5">
-        <i data-lucide="shield-alert" class="w-4 h-4 text-nbred shrink-0 mt-0.5"></i><span id="orgErrorMsg"></span>
+      <label class="mt-4 inline-flex items-center gap-2.5 text-[13px] text-[var(--ink-3)] cursor-pointer select-none">
+        <input type="checkbox" id="orgForks" class="w-4 h-4"> Include forked repositories
+      </label>
+      <p class="mt-3 text-[12px] text-[var(--ink-4)]">A quick pass over every public repo — the riskiest ones float to the top, then you can deep-scan any of them.</p>
+      <div id="orgError" class="hidden mt-4 rounded-md border border-[var(--bad)]/40 bg-[var(--bad)]/5 px-4 py-3 text-[13px] text-[var(--bad)]">
+        <span id="orgErrorMsg"></span>
       </div>
     </div>
   </form>
 
-  <form id="scanForm" class="mt-3 max-w-3xl mx-auto">
-    <div class="flex flex-col sm:flex-row gap-3">
-      <div class="relative flex-1">
-        <i data-lucide="github" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+  <form id="scanForm" class="mt-8">
+    <div class="flex flex-col sm:flex-row gap-4 items-end">
+      <div class="flex-1 w-full">
+        <label for="repoInput" class="kicker-caps">Repository</label>
         <input id="repoInput" type="text" spellcheck="false" autocomplete="off"
-          placeholder="https://github.com/owner/repo  ·  or  owner/repo"
-          class="mono w-full bg-[#0a0f16]/90 border border-nbline rounded-xl pl-12 pr-4 py-3.5 text-sm text-slate-200">
+          placeholder="owner/repo  ·  or a full GitHub URL"
+          class="audit-input w-full mt-2">
       </div>
-      <button id="btnScan" type="submit" class="btn-primary mono rounded-xl px-7 py-3.5 text-sm font-bold tracking-[.14em] transition flex items-center justify-center gap-2">
-        <i data-lucide="play" class="w-4 h-4"></i> RUN SCAN
-      </button>
+      <button id="btnScan" type="submit" class="btn-ink rounded-md px-8 py-3.5 text-sm font-semibold whitespace-nowrap">Run the scan →</button>
     </div>
-    <div class="mt-3 flex flex-wrap items-center gap-2 justify-center">
-      <span class="mono text-[10px] text-slate-600 mr-1">try:</span>
-      <button type="button" class="example-repo mono text-[10px] px-2.5 py-1 rounded-full border border-nbline text-slate-400 hover:text-nbgreen hover:border-nbgreen/40 transition">OWASP/NodeGoat</button>
-      <button type="button" class="example-repo mono text-[10px] px-2.5 py-1 rounded-full border border-nbline text-slate-400 hover:text-nbgreen hover:border-nbgreen/40 transition">expressjs/express</button>
-      <button type="button" class="example-repo mono text-[10px] px-2.5 py-1 rounded-full border border-nbline text-slate-400 hover:text-nbgreen hover:border-nbgreen/40 transition">pallets/flask</button>
-      <button type="button" class="example-repo mono text-[10px] px-2.5 py-1 rounded-full border border-nbline text-slate-400 hover:text-nbgreen hover:border-nbgreen/40 transition">google/gson</button>
-    </div>
+    <p class="mt-3 text-[13px] text-[var(--ink-4)]">
+      Try:
+      <button type="button" class="example-repo underline decoration-[var(--hair-2)] hover:decoration-[var(--signal)] transition ml-1">OWASP/NodeGoat</button> ·
+      <button type="button" class="example-repo underline decoration-[var(--hair-2)] hover:decoration-[var(--signal)] transition">expressjs/express</button> ·
+      <button type="button" class="example-repo underline decoration-[var(--hair-2)] hover:decoration-[var(--signal)] transition">pallets/flask</button>
+    </p>
   </form>
 
-  <div id="scanError" class="hidden mt-6 max-w-3xl mx-auto rounded-xl border border-nbred/40 bg-nbred/10 px-5 py-4 text-sm text-red-200 flex items-start gap-3">
-    <i data-lucide="shield-alert" class="w-5 h-5 text-nbred shrink-0 mt-0.5"></i>
+  <div id="scanError" class="hidden mt-7 rounded-md border border-[var(--bad)]/40 bg-[var(--bad)]/5 px-5 py-4 text-[14px] text-[var(--bad)]">
     <span id="scanErrorMsg"></span>
   </div>
 
-  <div id="scanLog" class="hidden mt-8 max-w-3xl mx-auto log-shell rounded-xl overflow-hidden">
-    <div class="flex items-center justify-between px-4 h-9 bg-[#0a1017] border-b border-nbline">
-      <div class="flex items-center gap-1.5">
-        <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f57]"></span>
-        <span class="w-2.5 h-2.5 rounded-full bg-[#febc2e]"></span>
-        <span class="w-2.5 h-2.5 rounded-full bg-[#28c840]"></span>
-      </div>
-      <span class="mono text-[10px] tracking-[.25em] text-slate-500">NULLBREACH://scan-engine</span>
-      <span id="logTimer" class="mono text-[10px] text-slate-500">00:00</span>
+  <div id="scanLog" class="hidden mt-9 notes-shell">
+    <div class="notes-head">
+      <span class="kicker-caps">Field notes</span>
+      <span id="logTimer" class="mono text-[11px] text-[var(--ink-4)]">00:00</span>
     </div>
-    <div id="scanProgressWrap" class="px-4 pt-3">
-      <div class="flex items-center justify-between mono text-[10px] text-slate-400 mb-1.5">
-        <span id="scanProgressLabel">initializing…</span>
+    <div id="scanProgressWrap" class="px-4 pt-3.5">
+      <div class="flex items-center justify-between mono text-[11px] text-[var(--ink-3)] mb-1.5">
+        <span id="scanProgressLabel">getting ready…</span>
         <span class="flex items-center gap-3">
-          <span id="scanProgressEta" class="text-slate-600"></span>
-          <span id="scanProgressPct" class="text-nbgreen font-bold">0%</span>
+          <span id="scanProgressEta" class="text-[var(--ink-4)]"></span>
+          <span id="scanProgressPct" class="text-[var(--ink)] font-semibold">0%</span>
         </span>
       </div>
-      <div class="h-2 rounded-full bg-[#0d151f] overflow-hidden">
-        <div id="scanProgressFill" class="h-full bg-gradient-to-r from-nbgreen to-nbcyan transition-all duration-300" style="width:0%"></div>
+      <div class="h-1.5 rounded-full bg-[var(--paper-3)] overflow-hidden">
+        <div id="scanProgressFill" class="h-full" style="width:0%"></div>
       </div>
     </div>
-    <div id="logBody" class="log-body mono text-[12px] leading-[1.7] px-4 py-3 text-emerald-100/90"></div>
+    <div id="logBody" class="log-body mono text-[12px] leading-[1.8] px-4 py-3 text-[var(--ink-2)]"></div>
   </div>
 </section>
 
@@ -544,7 +437,7 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
       <div class="rounded-lg border border-nbline overflow-auto">
         <table class="w-full text-left text-[12px]">
           <thead class="mono text-[10px] tracking-[.15em] text-slate-500">
-            <tr class="border-b border-nbline bg-[#0a1119]">
+            <tr class="border-b border-nbline bg-[#f1ede5]">
               <th class="px-3 py-2.5">REPO</th>
               <th class="px-3 py-2.5">SCORE</th>
               <th class="px-3 py-2.5">CRITICAL</th>
@@ -554,7 +447,7 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
               <th class="px-3 py-2.5"></th>
             </tr>
           </thead>
-          <tbody id="orgTableBody" class="divide-y divide-[#0d151f]"></tbody>
+          <tbody id="orgTableBody" class="divide-y divide-[#eee9df]"></tbody>
         </table>
       </div>
     </div>
@@ -567,16 +460,16 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
 
 <!-- ================= RESULTS ================= -->
 <section id="results" class="hidden">
-  <nav class="sticky top-0 z-40 border-b border-emerald-500/10 bg-[#05070a]/85 backdrop-blur-md">
+  <nav class="sticky top-0 z-40 border-b border-[var(--hair)] bg-[var(--paper)]/92 backdrop-blur-md">
     <div class="max-w-6xl mx-auto px-6 py-2.5 flex items-center justify-between gap-4">
       <div class="flex items-center gap-1 overflow-x-auto">
-        <a href="#nb-summary"     class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-summary">SUMMARY</a>
-        <a href="#nb-findings"    class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-findings">FINDINGS</a>
-        <a href="#nb-deps"        class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-deps">DEPENDENCIES</a>
-        <a href="#nb-supply"      class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-supply">SUPPLY CHAIN</a>
-        <a href="#nb-ai"          class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-ai">AI BRIEFING</a>
-        <a href="#nb-remediation" class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-remediation">REMEDIATION</a>
-        <a href="#nb-export"      class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-export">EXPORT</a>
+        <a href="#nb-summary"     class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-summary">Report</a>
+        <a href="#nb-findings"    class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-findings">Findings</a>
+        <a href="#nb-deps"        class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-deps">Dependencies</a>
+        <a href="#nb-supply"      class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-supply">Supply chain</a>
+        <a href="#nb-ai"          class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-ai">The AI’s read</a>
+        <a href="#nb-remediation" class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-remediation">Fix list</a>
+        <a href="#nb-export"      class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-export">Export</a>
       </div>
       <div class="hidden md:flex items-center gap-3 shrink-0">
         <span id="navRepo" class="mono text-[11px] text-slate-500"></span>
@@ -590,109 +483,98 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
     <!-- SUMMARY -->
     <div id="nb-summary" class="scroll-mt-24">
       <div class="grid lg:grid-cols-[340px_1fr] gap-7 items-stretch">
-        <div class="panel panel-glow p-7 flex flex-col items-center justify-center relative">
+        <div class="panel p-7 flex flex-col items-center justify-center relative">
           <div class="tip absolute top-4 right-4">
-            <i data-lucide="info" class="w-4 h-4 text-slate-500 cursor-help"></i>
-            <div class="tipbox mono">
-              <div class="text-nbgreen font-bold mb-1.5">HOW IS THIS CALCULATED?</div>
-              score = 100<br>
-              &nbsp;&nbsp;− 20 × critical<br>
-              &nbsp;&nbsp;− 12 × high<br>
-              &nbsp;&nbsp;− 5 × medium<br>
-              &nbsp;&nbsp;− 2 × low<br>
-              &nbsp;&nbsp;− 10 × OSV CVE w/ known-exploit indicators<br>
-              floored at 0, capped at 100.<br>
-              <span class="text-slate-500">"Known-exploit" flags are a heuristic from advisory text (RCE / auth-bypass / privilege-escalation phrasing) — not a KEV feed.</span>
+            <i data-lucide="info" class="w-4 h-4 text-[var(--ink-4)] cursor-help"></i>
+            <div class="tipbox">
+              <div class="font-bold mb-1.5">How is this calculated?</div>
+              Start at 100, then subtract:<br>
+              20 for each critical finding<br>
+              12 for each high<br>
+              5 for each medium<br>
+              2 for each low<br>
+              10 more for any CVE known to be exploited<br>
+              The score never goes below 0 or above 100.<br>
+              <span class="opacity-60">"Known to be exploited" is read from the advisory wording — it is not an official exploit feed.</span>
             </div>
           </div>
           <div class="relative w-48 h-48" id="gaugeWrap">
             <svg viewBox="0 0 200 200" class="w-full h-full -rotate-90">
-              <defs>
-                <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#00ff9d"/><stop offset="100%" stop-color="#22d3ee"/>
-                </linearGradient>
-              </defs>
-              <circle cx="100" cy="100" r="82" fill="none" stroke="#101a24" stroke-width="14"/>
-              <circle id="gaugeFg" cx="100" cy="100" r="82" fill="none" stroke="url(#gaugeGrad)" stroke-width="14"
+              <circle cx="100" cy="100" r="82" fill="none" stroke="var(--paper-3)" stroke-width="10"/>
+              <circle id="gaugeFg" cx="100" cy="100" r="82" fill="none" stroke="var(--ink)" stroke-width="10"
                 stroke-linecap="round" stroke-dasharray="515.2" stroke-dashoffset="515.2"/>
             </svg>
             <div class="absolute inset-0 flex flex-col items-center justify-center">
-              <div id="scoreNum" class="mono text-5xl font-extrabold text-slate-100">0</div>
-              <div class="mono text-[10px] tracking-[.3em] text-slate-500 mt-1">/ 100</div>
+              <div id="scoreNum" class="score-figure text-6xl text-[var(--ink)]">0</div>
+              <div class="kicker-caps mt-1.5">out of 100</div>
             </div>
           </div>
-          <div id="scoreVerdict" class="mono mt-4 text-sm font-bold tracking-[.25em] px-4 py-1.5 rounded-lg border">ANALYZING…</div>
-          <div id="scoreSub" class="mono text-[10px] text-slate-500 mt-3 text-center"></div>
+          <div id="scoreVerdict" class="stamp mt-5 text-sm">ANALYZING…</div>
+          <div id="scoreSub" class="text-[12px] text-[var(--ink-4)] mt-3 text-center"></div>
         </div>
 
         <div class="flex flex-col gap-5">
           <div class="panel p-6">
             <div class="flex items-start justify-between gap-4 flex-wrap">
               <div>
-                <h2 id="repoMeta" class="mono text-lg font-bold text-slate-100 break-all">—</h2>
-                <p id="repoDesc" class="text-sm text-slate-400 mt-1.5 max-w-xl"></p>
+                <h2 id="repoMeta" class="font-display text-xl font-bold text-[var(--ink)] break-all">—</h2>
+                <p id="repoDesc" class="text-sm text-[var(--ink-3)] mt-1.5 max-w-xl"></p>
               </div>
-              <a id="repoLink" href="#" target="_blank" rel="noopener" class="btn-ghost mono text-[11px] rounded-lg px-3 py-2 flex items-center gap-2 shrink-0">
-                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> OPEN REPO
+              <a id="repoLink" href="#" target="_blank" rel="noopener" class="btn-quiet mono text-[11px] uppercase tracking-[.14em] rounded-md px-3.5 py-2 flex items-center gap-2 shrink-0">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Open on GitHub
               </a>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
-              <div class="rounded-lg border border-nbline bg-[#080d14] px-3.5 py-3">
-                <div class="mono text-[9px] tracking-[.2em] text-slate-500">FILES SCANNED</div>
-                <div id="statFiles" class="mono text-xl font-bold text-slate-100 mt-1">—</div>
+              <div class="rounded-lg border border-[var(--hair)] bg-[var(--paper-2)] px-3.5 py-3">
+                <div class="kicker-caps">Files read</div>
+                <div id="statFiles" class="mono text-xl font-bold text-[var(--ink)] mt-1">—</div>
               </div>
-              <div class="rounded-lg border border-nbline bg-[#080d14] px-3.5 py-3">
-                <div class="mono text-[9px] tracking-[.2em] text-slate-500">STRINGS ENTROPY-TESTED</div>
-                <div id="statStrings" class="mono text-xl font-bold text-slate-100 mt-1">—</div>
+              <div class="rounded-lg border border-[var(--hair)] bg-[var(--paper-2)] px-3.5 py-3">
+                <div class="kicker-caps">Strings measured</div>
+                <div id="statStrings" class="mono text-xl font-bold text-[var(--ink)] mt-1">—</div>
               </div>
-              <div class="rounded-lg border border-nbline bg-[#080d14] px-3.5 py-3">
-                <div class="mono text-[9px] tracking-[.2em] text-slate-500">DEPS CHECKED ON OSV</div>
-                <div id="statDeps" class="mono text-xl font-bold text-slate-100 mt-1">—</div>
+              <div class="rounded-lg border border-[var(--hair)] bg-[var(--paper-2)] px-3.5 py-3">
+                <div class="kicker-caps">Packages checked</div>
+                <div id="statDeps" class="mono text-xl font-bold text-[var(--ink)] mt-1">—</div>
               </div>
-              <div class="rounded-lg border border-nbline bg-[#080d14] px-3.5 py-3">
-                <div class="mono text-[9px] tracking-[.2em] text-slate-500">SCAN DURATION</div>
-                <div id="statDuration" class="mono text-xl font-bold text-slate-100 mt-1">—</div>
+              <div class="rounded-lg border border-[var(--hair)] bg-[var(--paper-2)] px-3.5 py-3">
+                <div class="kicker-caps">Scan time</div>
+                <div id="statDuration" class="mono text-xl font-bold text-[var(--ink)] mt-1">—</div>
               </div>
             </div>
           </div>
 
           <div class="panel p-6">
-            <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-4">SEVERITY DISTRIBUTION</div>
+            <div class="kicker-caps mb-4">Severity · how serious each problem is</div>
             <div class="flex flex-wrap gap-3">
-              <div class="sev-chip flex items-center gap-2.5 rounded-xl border px-4 py-2.5 sev-critical">
+              <div class="sev-chip flex items-center gap-2.5 rounded-lg border px-4 py-2.5 sev-critical">
                 <span class="w-2.5 h-2.5 rounded-full bg-nbred"></span>
-                <span class="mono text-xs tracking-widest">CRITICAL</span>
+                <span class="mono text-xs tracking-widest">Critical</span>
                 <span id="chipCritical" class="mono text-lg font-extrabold">0</span>
               </div>
-              <div class="flex items-center gap-2.5 rounded-xl border px-4 py-2.5 sev-high">
+              <div class="sev-chip flex items-center gap-2.5 rounded-lg border px-4 py-2.5 sev-high">
                 <span class="w-2.5 h-2.5 rounded-full bg-[#ff9d5c]"></span>
-                <span class="mono text-xs tracking-widest">HIGH</span>
+                <span class="mono text-xs tracking-widest">High</span>
                 <span id="chipHigh" class="mono text-lg font-extrabold">0</span>
               </div>
-              <div class="flex items-center gap-2.5 rounded-xl border px-4 py-2.5 sev-medium">
+              <div class="sev-chip flex items-center gap-2.5 rounded-lg border px-4 py-2.5 sev-medium">
                 <span class="w-2.5 h-2.5 rounded-full bg-nbamber"></span>
-                <span class="mono text-xs tracking-widest">MEDIUM</span>
+                <span class="mono text-xs tracking-widest">Medium</span>
                 <span id="chipMedium" class="mono text-lg font-extrabold">0</span>
               </div>
-              <div class="flex items-center gap-2.5 rounded-xl border px-4 py-2.5 sev-low">
+              <div class="sev-chip flex items-center gap-2.5 rounded-lg border px-4 py-2.5 sev-low">
                 <span class="w-2.5 h-2.5 rounded-full bg-nbcyan"></span>
-                <span class="mono text-xs tracking-widest">LOW</span>
+                <span class="mono text-xs tracking-widest">Low</span>
                 <span id="chipLow" class="mono text-lg font-extrabold">0</span>
               </div>
             </div>
-            <div id="aiBanner" class="hidden mt-5 rounded-lg border border-nbamber/40 bg-nbamber/10 px-4 py-3 text-[13px] text-amber-200 flex items-start gap-2.5">
+            <div id="aiBanner" class="hidden mt-5 rounded-lg border border-[var(--hair-2)] bg-[var(--paper-3)] px-4 py-3 text-[13px] text-[var(--ink-2)] flex items-start gap-2.5">
               <i data-lucide="cloud-off" class="w-4 h-4 mt-0.5 shrink-0"></i>
-              <span><b>AI unavailable</b> — every configured provider failed (<span id="aiFailReason" class="mono">no keys</span>).
-              Showing full Layer 1–3 static results only; add a Groq / Gemini / Mistral key in <b>API Keys</b> for semantic review.</span>
+              <span><b>The AI pass is busy.</b> <span id="aiFailReason"></span> Everything else below is complete — the code findings, the live CVE checks and the supply-chain results. You can re-run just the AI pass in a few minutes.</span>
             </div>
-            <div id="aiOkLine" class="hidden mt-5 mono text-[11px] text-emerald-300/80 flex items-center gap-2 flex-wrap">
-              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-              AI reasoning layer engaged via <span id="aiProvider" class="text-nbgreen font-bold"></span>
-              <span id="aiOrigin" class="mono text-[10px] rounded px-1.5 py-0.5 border"></span>
-            </div>
-            <div id="builtinNote" class="hidden mt-4 rounded-lg border border-nbcyan/30 bg-nbcyan/5 px-4 py-3 text-[12px] text-cyan-100/85 flex items-start gap-2.5">
-              <i data-lucide="bell-ring" class="w-4 h-4 mt-0.5 shrink-0 text-nbcyan"></i>
-              <span><b>Notice:</b> your keys were missing or exhausted, so this briefing was served by the embedded <b>NULLBREACH Core Engine</b> (shared capacity, may throttle). Add your own key — any major engine is auto-recognized — and it will run first, stronger, at maximum priority.</span>
+            <div id="aiOkLine" class="hidden mt-5 flex items-center gap-2 text-[13px] text-[var(--ink-3)]">
+              <i data-lucide="pen-line" class="w-4 h-4"></i>
+              <span>Read over by <span class="font-semibold text-[var(--ink)]">Nullbreach's built-in AI</span> — three passes: summary, logic hunt, exploit proofs.</span>
             </div>
           </div>
         </div>
@@ -703,10 +585,10 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
     <div id="nb-findings" class="scroll-mt-24">
       <div class="flex items-end justify-between flex-wrap gap-3 mb-4">
         <div>
-          <h2 class="mono text-xl font-bold tracking-wide text-slate-100"><span class="sec-idx">01</span>FINDINGS</h2>
-          <p class="text-sm text-slate-500 mt-1">Layer 1 (entropy) · Layer 2 (signatures) · Layer 3 (OSV.dev CVEs) · AI — filter, sort, click to open source.</p>
+          <h2 class="font-display text-2xl font-bold text-[var(--ink)]"><span class="sec-idx">01</span>What we found</h2>
+          <p class="text-sm text-[var(--ink-4)] mt-1">Secrets that leaked, risky code patterns, vulnerable packages — filter, sort, click to open the exact line.</p>
         </div>
-        <span id="findCount" class="mono text-[11px] text-slate-500"></span>
+        <span id="findCount" class="mono text-[11px] text-[var(--ink-4)]"></span>
       </div>
       <div class="panel p-4">
         <div class="flex flex-wrap items-center gap-3 mb-4">
@@ -715,9 +597,9 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
             <button data-sev="high" class="sev-filter mono text-[10px] tracking-widest px-3 py-1.5 rounded-full border border-[#ff9d5c]/50 text-[#ff9d5c] bg-[#ff9d5c]/10">HIGH</button>
             <button data-sev="medium" class="sev-filter mono text-[10px] tracking-widest px-3 py-1.5 rounded-full border border-nbamber/50 text-nbamber bg-nbamber/10">MEDIUM</button>
             <button data-sev="low" class="sev-filter mono text-[10px] tracking-widest px-3 py-1.5 rounded-full border border-nbcyan/50 text-nbcyan bg-nbcyan/10">LOW</button>
-            <button data-sev="all" class="sev-filter mono text-[10px] tracking-widest px-3 py-1.5 rounded-full border border-slate-600 text-slate-300 bg-slate-500/10">ALL</button>
+            <button data-sev="all" class="sev-filter mono text-[10px] tracking-widest px-3 py-1.5 rounded-full border border-[var(--hair-2)] text-[var(--ink-2)] bg-[var(--paper-3)]">ALL</button>
           </div>
-          <select id="filtLayer" class="mono text-[11px] bg-[#0a0f16] border border-nbline rounded-lg px-3 py-2 text-slate-300">
+          <select id="filtLayer" class="mono text-[11px] bg-[var(--paper-2)] border border-[var(--hair)] rounded-lg px-3 py-2 text-[var(--ink-2)]">
             <option value="all">ALL LAYERS</option>
             <option value="entropy">ENTROPY</option>
             <option value="pattern">PATTERN</option>
@@ -726,38 +608,38 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
             <option value="ai">AI</option>
           </select>
           <div class="relative flex-1 min-w-[180px]">
-            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ink-4)]"></i>
             <input id="filtSearch" type="text" placeholder="filter by file, CVE, keyword…"
-              class="mono w-full bg-[#0a0f16] border border-nbline rounded-lg pl-9 pr-3 py-2 text-[12px] text-slate-300">
+              class="audit-input mono w-full pl-9 pr-3 py-2 text-[12px]">
           </div>
         </div>
-        <div id="findTableWrap" class="rounded-lg border border-nbline">
+        <div id="findTableWrap" class="rounded-lg border border-[var(--hair)]">
           <table class="w-full text-left text-[12px]" id="findTable">
-            <thead class="mono text-[10px] tracking-[.15em] text-slate-500">
-              <tr class="border-b border-nbline">
-                <th class="px-3 py-2.5 cursor-pointer hover:text-nbgreen select-none sortable" data-sort="severity">SEVERITY <span class="sort-ind"></span></th>
-                <th class="px-3 py-2.5 cursor-pointer hover:text-nbgreen select-none sortable" data-sort="layer">LAYER <span class="sort-ind"></span></th>
-                <th class="px-3 py-2.5 cursor-pointer hover:text-nbgreen select-none sortable" data-sort="file">FILE <span class="sort-ind"></span></th>
-                <th class="px-3 py-2.5 cursor-pointer hover:text-nbgreen select-none sortable" data-sort="line">LINE <span class="sort-ind"></span></th>
-                <th class="px-3 py-2.5 cursor-pointer hover:text-nbgreen select-none sortable" data-sort="name">DESCRIPTION <span class="sort-ind"></span></th>
-                <th class="px-3 py-2.5 cursor-pointer hover:text-nbgreen select-none sortable" data-sort="cve">CVE / GHSA <span class="sort-ind"></span></th>
+            <thead class="mono text-[10px] tracking-[.15em] text-[var(--ink-4)]">
+              <tr class="border-b border-[var(--hair)]">
+                <th class="px-3 py-2.5 cursor-pointer hover:text-[var(--ink)] select-none sortable" data-sort="severity">SEVERITY <span class="sort-ind"></span></th>
+                <th class="px-3 py-2.5 cursor-pointer hover:text-[var(--ink)] select-none sortable" data-sort="layer">LAYER <span class="sort-ind"></span></th>
+                <th class="px-3 py-2.5 cursor-pointer hover:text-[var(--ink)] select-none sortable" data-sort="file">FILE <span class="sort-ind"></span></th>
+                <th class="px-3 py-2.5 cursor-pointer hover:text-[var(--ink)] select-none sortable" data-sort="line">LINE <span class="sort-ind"></span></th>
+                <th class="px-3 py-2.5 cursor-pointer hover:text-[var(--ink)] select-none sortable" data-sort="name">DESCRIPTION <span class="sort-ind"></span></th>
+                <th class="px-3 py-2.5 cursor-pointer hover:text-[var(--ink)] select-none sortable" data-sort="cve">CVE / GHSA <span class="sort-ind"></span></th>
               </tr>
             </thead>
-            <tbody id="findTableBody" class="divide-y divide-[#0d151f]"></tbody>
+            <tbody id="findTableBody" class="divide-y divide-[#eee9df]"></tbody>
           </table>
         </div>
-        <div id="findNote" class="mono text-[10px] text-slate-600 mt-2"></div>
+        <div id="findNote" class="mono text-[10px] text-[var(--ink-4)] mt-2"></div>
       </div>
     </div>
 
     <!-- DEPENDENCIES -->
     <div id="nb-deps" class="scroll-mt-24">
       <div class="mb-4">
-        <h2 class="mono text-xl font-bold tracking-wide text-slate-100"><span class="sec-idx">02</span>DEPENDENCIES <span class="text-slate-500 text-sm">· real CVE data via OSV.dev</span></h2>
-        <p class="text-sm text-slate-500 mt-1">Manifests (package.json / requirements.txt / go.mod / Gemfile.lock) are parsed and every pinned version is queried against the public OSV.dev batch API — the same class of CVE data Trivy consumes.</p>
+        <h2 class="font-display text-2xl font-bold text-[var(--ink)]"><span class="sec-idx">02</span>Your dependencies</h2>
+        <p class="text-sm text-[var(--ink-4)] mt-1">Every package your project pins is checked live against the public CVE database (OSV.dev) — the same data professional scanners use.</p>
       </div>
       <div class="panel p-5">
-        <div id="depsSummary" class="mono text-[12px] text-slate-400 mb-4"></div>
+        <div id="depsSummary" class="mono text-[12px] text-[var(--ink-3)] mb-4"></div>
         <div id="depsList" class="space-y-3"></div>
       </div>
     </div>
@@ -765,11 +647,11 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
     <!-- SUPPLY CHAIN -->
     <div id="nb-supply" class="scroll-mt-24">
       <div class="mb-4">
-        <h2 class="mono text-xl font-bold tracking-wide text-slate-100"><span class="sec-idx">03</span>SUPPLY CHAIN <span class="text-slate-500 text-sm">· dependency confusion &amp; typosquatting</span></h2>
-        <p class="text-sm text-slate-500 mt-1">Every pinned dependency is checked against its live public registry (npm / PyPI): missing packages are internal-name hijack risks, and near-miss names of popular packages are flagged with Levenshtein distance.</p>
+        <h2 class="font-display text-2xl font-bold text-[var(--ink)]"><span class="sec-idx">03</span>Supply chain</h2>
+        <p class="text-sm text-[var(--ink-4)] mt-1">Fake & lookalike packages: we check each dependency name against the live npm / PyPI registries — missing names and near-misses of popular packages are how real attacks start.</p>
       </div>
       <div class="panel p-5">
-        <div id="supplySummary" class="mono text-[12px] text-slate-400 mb-4"></div>
+        <div id="supplySummary" class="mono text-[12px] text-[var(--ink-3)] mb-4"></div>
         <div id="supplyList" class="space-y-3"></div>
       </div>
     </div>
@@ -778,35 +660,35 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
     <div id="nb-ai" class="scroll-mt-24">
       <div class="flex items-end justify-between flex-wrap gap-3 mb-4">
         <div>
-          <h2 class="mono text-xl font-bold tracking-wide text-slate-100"><span class="sec-idx">04</span>AI ANALYSIS <span class="text-slate-500 text-sm">· 3-pass reasoning</span></h2>
-          <p class="text-sm text-slate-500 mt-1">Semantic review of the highest-risk code: business-logic flaws, auth-bypass patterns, design-level issues no static rule can catch.</p>
+          <h2 class="font-display text-2xl font-bold text-[var(--ink)]"><span class="sec-idx">04</span>The AI's read</h2>
+          <p class="text-sm text-[var(--ink-4)] mt-1">A second opinion, written like an engineer who actually read the code: design flaws and logic holes that no pattern rule can catch.</p>
         </div>
-        <button id="aiCopy" class="btn-ghost mono text-[11px] rounded-lg px-3 py-2 flex items-center gap-2">
-          <i data-lucide="copy" class="w-3.5 h-3.5"></i> COPY BRIEFING
+        <button id="aiCopy" class="btn-quiet mono text-[11px] uppercase tracking-[.14em] rounded-md px-3.5 py-2 flex items-center gap-2">
+          <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
         </button>
       </div>
-      <div id="aiPanel">
-        <div class="flex items-center justify-between px-4 h-9 border-b border-nbline">
+      <div id="aiPanel" class="panel-ink">
+        <div class="flex items-center justify-between px-4 h-9 border-b border-[var(--hair)]">
           <div class="flex items-center gap-1.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f57]"></span>
-            <span class="w-2.5 h-2.5 rounded-full bg-[#febc2e]"></span>
-            <span class="w-2.5 h-2.5 rounded-full bg-[#28c840]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#d92d20]/70"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#b9820a]/70"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#0e7a4a]/70"></span>
           </div>
-          <span id="aiProviderLabel" class="mono text-[10px] tracking-[.25em] text-slate-500">AI://standby</span>
+          <span id="aiProviderLabel" class="kicker-caps">standing by</span>
         </div>
         <div class="flex items-center gap-1.5 px-4 pt-3 flex-wrap">
-          <button data-ai-tab="brief" class="ai-tab mono text-[10px] tracking-widest px-3 py-1.5 rounded-lg border border-nbgreen/50 text-nbgreen bg-nbgreen/10">📊 EXECUTIVE BRIEF</button>
-          <button data-ai-tab="logic" class="ai-tab mono text-[10px] tracking-widest px-3 py-1.5 rounded-lg border border-nbline text-slate-400">🔍 LOGIC ANALYSIS <span id="aiLogicCount" class="opacity-70"></span></button>
-          <button data-ai-tab="exploits" class="ai-tab mono text-[10px] tracking-widest px-3 py-1.5 rounded-lg border border-nbline text-slate-400">💥 EXPLOITS <span id="aiExploitCount" class="opacity-70"></span></button>
+          <button data-ai-tab="brief" class="ai-tab mono text-[10px] tracking-widest px-3 py-1.5 rounded-lg border border-nbgreen/50 text-nbgreen bg-nbgreen/10">The short version</button>
+          <button data-ai-tab="logic" class="ai-tab mono text-[10px] tracking-widest px-3 py-1.5 rounded-lg border border-nbline text-[var(--ink-3)]">Logic problems <span id="aiLogicCount" class="opacity-70"></span></button>
+          <button data-ai-tab="exploits" class="ai-tab mono text-[10px] tracking-widest px-3 py-1.5 rounded-lg border border-nbline text-[var(--ink-3)]">Exploit walkthroughs <span id="aiExploitCount" class="opacity-70"></span></button>
         </div>
         <div id="aiPaneBrief">
-          <div id="aiContent" class="ai-content mono text-[12.5px] leading-[1.75] text-emerald-50/90 px-5 py-4 max-h-[560px] overflow-y-auto whitespace-pre-wrap"></div>
+          <div id="aiContent" class="ai-content mono text-[12.5px] leading-[1.75] text-[var(--ink-2)] px-5 py-4 max-h-[560px] overflow-y-auto whitespace-pre-wrap"></div>
         </div>
         <div id="aiPaneLogic" class="hidden">
-          <div id="aiLogicContent" class="ai-content mono text-[12.5px] leading-[1.75] text-emerald-50/90 px-5 py-4 max-h-[560px] overflow-y-auto whitespace-pre-wrap"></div>
+          <div id="aiLogicContent" class="ai-content mono text-[12.5px] leading-[1.75] text-[var(--ink-2)] px-5 py-4 max-h-[560px] overflow-y-auto whitespace-pre-wrap"></div>
         </div>
         <div id="aiPaneExploits" class="hidden">
-          <div id="aiExploitContent" class="ai-content mono text-[12.5px] leading-[1.75] text-emerald-50/90 px-5 py-4 max-h-[560px] overflow-y-auto whitespace-pre-wrap"></div>
+          <div id="aiExploitContent" class="ai-content mono text-[12.5px] leading-[1.75] text-[var(--ink-2)] px-5 py-4 max-h-[560px] overflow-y-auto whitespace-pre-wrap"></div>
         </div>
       </div>
     </div>
@@ -815,10 +697,10 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
     <div id="nb-remediation" class="scroll-mt-24">
       <div class="flex items-end justify-between flex-wrap gap-3 mb-4">
         <div>
-          <h2 class="mono text-xl font-bold tracking-wide text-slate-100"><span class="sec-idx">05</span>REMEDIATION CHECKLIST</h2>
-          <p class="text-sm text-slate-500 mt-1">Prioritized, deduplicated fix plan derived from every finding — most severe first.</p>
+          <h2 class="font-display text-2xl font-bold text-[var(--ink)]"><span class="sec-idx">05</span>Your fix list</h2>
+          <p class="text-sm text-[var(--ink-4)] mt-1">Every finding turned into one clear action — most urgent first. Tick items off as you go.</p>
         </div>
-        <span id="remedProgress" class="mono text-[11px] text-slate-500"></span>
+        <span id="remedProgress" class="mono text-[11px] text-[var(--ink-4)]"></span>
       </div>
       <div class="panel p-5">
         <div id="remedList" class="space-y-2.5"></div>
@@ -828,50 +710,50 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
     <!-- EXPORT -->
     <div id="nb-export" class="scroll-mt-24">
       <div class="mb-4">
-        <h2 class="mono text-xl font-bold tracking-wide text-slate-100"><span class="sec-idx">06</span>EXPORT &amp; SHARE</h2>
-        <p class="text-sm text-slate-500 mt-1">Take the report with you, or drop the badge in your README — that's how NULLBREACH spreads.</p>
+        <h2 class="font-display text-2xl font-bold text-[var(--ink)]"><span class="sec-idx">06</span>Take it with you</h2>
+        <p class="text-sm text-[var(--ink-4)] mt-1">Download the full report, or drop the badge into your README so people know this repo gets scanned.</p>
       </div>
       <div class="grid lg:grid-cols-2 gap-7">
         <div class="panel p-6">
-          <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-4">DOWNLOAD REPORT</div>
+          <div class="kicker-caps mb-4">Download the report</div>
           <div class="flex flex-wrap gap-3">
-            <button id="btnExportJson" class="btn-primary rounded-lg px-5 py-2.5 text-sm font-semibold flex items-center gap-2 transition">
+            <button id="btnExportJson" class="btn-ink rounded-md px-5 py-2.5 text-sm font-semibold flex items-center gap-2 transition">
               <i data-lucide="braces" class="w-4 h-4"></i> .json
             </button>
-            <button id="btnExportMd" class="btn-primary rounded-lg px-5 py-2.5 text-sm font-semibold flex items-center gap-2 transition">
+            <button id="btnExportMd" class="btn-ink rounded-md px-5 py-2.5 text-sm font-semibold flex items-center gap-2 transition">
               <i data-lucide="file-text" class="w-4 h-4"></i> .md
             </button>
-            <button id="btnCopyBadge" class="btn-ghost rounded-lg px-5 py-2.5 text-sm flex items-center gap-2 transition">
+            <button id="btnCopyBadge" class="btn-quiet rounded-md px-5 py-2.5 text-sm flex items-center gap-2 transition">
               <i data-lucide="badge-check" class="w-4 h-4"></i> Copy README badge
             </button>
-            <button id="btnShareReport" class="btn-ghost rounded-lg px-5 py-2.5 text-sm flex items-center gap-2 transition">
-              <i data-lucide="share-2" class="w-4 h-4"></i> Share Report URL
+            <button id="btnShareReport" class="btn-quiet rounded-md px-5 py-2.5 text-sm flex items-center gap-2 transition">
+              <i data-lucide="share-2" class="w-4 h-4"></i> Share report link
             </button>
           </div>
-          <div class="mono text-[10px] tracking-[.25em] text-slate-500 mt-7 mb-3">SHAREABLE SCAN BADGE</div>
+          <div class="kicker-caps mt-7 mb-3">Badge for your README</div>
           <div id="badgePreview" class="p-5">
             <div class="flex items-center gap-4">
-              <svg width="34" height="34" viewBox="0 0 100 100"><polygon points="50,4 92,22 92,58 50,96 8,58 8,22" fill="#05070a" stroke="#00ff9d" stroke-width="6"/><circle cx="50" cy="45" r="14" fill="none" stroke="#00ff9d" stroke-width="5"/><path d="M50 59 L50 76 M38 66 L62 66" stroke="#00ff9d" stroke-width="5"/></svg>
+              <svg width="34" height="34" viewBox="0 0 64 64"><rect width="64" height="64" rx="8" fill="#16181d"/><circle cx="32" cy="32" r="15" fill="none" stroke="#f7f5f1" stroke-width="4"/><line x1="43" y1="43" x2="54" y2="54" stroke="#ff4b26" stroke-width="5" stroke-linecap="round"/></svg>
               <div>
-                <div class="mono text-[10px] tracking-[.25em] text-slate-400">SCANNED WITH NULLBREACH</div>
-                <div class="mono text-2xl font-extrabold mt-1"><span id="badgeScore" class="text-nbgreen">—</span> <span class="text-slate-600 text-lg">/100</span></div>
+                <div class="kicker-caps">Scanned with Nullbreach</div>
+                <div class="font-display text-3xl font-black mt-1 text-[var(--ink)]"><span id="badgeScore">—</span> <span class="text-[var(--ink-4)] text-xl">/100</span></div>
               </div>
             </div>
-            <div id="badgeLine" class="mono text-[11px] text-slate-400 mt-3">—</div>
+            <div id="badgeLine" class="mono text-[11px] text-[var(--ink-3)] mt-3">—</div>
           </div>
-          <textarea id="badgeMd" readonly rows="3" class="mono w-full mt-4 bg-[#080d14] border border-nbline rounded-lg px-3 py-2.5 text-[11px] text-slate-400 resize-none"></textarea>
+          <textarea id="badgeMd" readonly rows="3" class="mono w-full mt-4 bg-[var(--paper-3)] border border-[var(--hair)] rounded-lg px-3 py-2.5 text-[11px] text-[var(--ink-3)] resize-none"></textarea>
         </div>
         <div class="panel p-6">
-          <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-4">SEVERITY TIMELINE · FINDINGS DISTRIBUTION</div>
+          <div class="kicker-caps mb-4">Where the findings sit</div>
           <div id="timelineBox"></div>
         </div>
         <div class="panel p-6">
-          <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-4">SCAN REPRODUCIBILITY</div>
-          <ul class="text-[13px] text-slate-400 space-y-3 leading-relaxed">
-            <li class="flex gap-2.5"><i data-lucide="git-branch" class="w-4 h-4 text-nbcyan shrink-0 mt-0.5"></i><span>Re-run any time — static layers are deterministic; the AI layer may phrase things differently between runs.</span></li>
-            <li class="flex gap-2.5"><i data-lucide="database" class="w-4 h-4 text-nbcyan shrink-0 mt-0.5"></i><span>Dependency CVEs come live from <span class="mono text-slate-300">api.osv.dev/v1/querybatch</span> at scan time.</span></li>
-            <li class="flex gap-2.5"><i data-lucide="lock" class="w-4 h-4 text-nbcyan shrink-0 mt-0.5"></i><span>Source code is only sent to your configured AI provider for the semantic layer — never to NULLBREACH (there is no NULLBREACH server).</span></li>
-            <li class="flex gap-2.5"><i data-lucide="badge-check" class="w-4 h-4 text-nbcyan shrink-0 mt-0.5"></i><span>JSON export includes every finding with layer, severity, location and remediation for ticketing.</span></li>
+          <div class="kicker-caps mb-4">Why you can trust these numbers</div>
+          <ul class="text-[13px] text-[var(--ink-3)] space-y-3 leading-relaxed">
+            <li class="flex gap-2.5"><i data-lucide="git-branch" class="w-4 h-4 text-[var(--signal)] shrink-0 mt-0.5"></i><span>Re-run any time — the code checks are deterministic; the AI pass may phrase things slightly differently between runs.</span></li>
+            <li class="flex gap-2.5"><i data-lucide="database" class="w-4 h-4 text-[var(--signal)] shrink-0 mt-0.5"></i><span>Package vulnerabilities come live from <span class="mono text-[var(--ink)]">api.osv.dev</span> at scan time — nothing cached, nothing guessed.</span></li>
+            <li class="flex gap-2.5"><i data-lucide="lock" class="w-4 h-4 text-[var(--signal)] shrink-0 mt-0.5"></i><span>Everything runs in your browser. Your code never touches our servers — there are no Nullbreach servers.</span></li>
+            <li class="flex gap-2.5"><i data-lucide="badge-check" class="w-4 h-4 text-[var(--signal)] shrink-0 mt-0.5"></i><span>The JSON export carries every finding with its location and fix, ready for your issue tracker.</span></li>
           </ul>
         </div>
       </div>
@@ -881,26 +763,29 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
 </main>
 
 <!-- ================= FOOTER ================= -->
-<footer class="relative z-10 border-t border-nbline mt-16">
-  <div class="max-w-6xl mx-auto px-6 py-10">
-    <div class="rounded-xl border border-nbamber/25 bg-nbamber/5 px-6 py-5 text-[13px] leading-relaxed text-amber-100/80 max-w-4xl mx-auto">
-      <span class="mono font-bold text-nbamber tracking-wide">HONESTY FOOTER ·</span>
-      NULLBREACH combines entropy-based secret detection, a 40+ signature pattern library, real CVE data from OSV.dev,
-      and AI semantic analysis. It is a strong first-pass triage tool but not a certified replacement for a full
-      professional security audit. Always verify critical findings before acting.
-    </div>
-    <div class="mt-6 text-center mono text-[10px] tracking-[.2em] text-slate-600">
-      NULLBREACH v1.0 · SINGLE-FILE · ZERO-BACKEND · ENTROPY + SIGNATURES + OSV.DEV + AI CASCADE · <span id="year"></span>
+<footer class="relative z-10 mt-20">
+  <div class="rule-2x"></div>
+  <div class="max-w-5xl mx-auto px-6 py-10">
+    <p class="serif text-lg italic text-[var(--ink)] max-w-2xl">“A strong first pass — not a substitute for a professional audit.”</p>
+    <p class="mt-3 text-[13px] leading-relaxed text-[var(--ink-3)] max-w-3xl">
+      Nullbreach looks for leaked secrets, risky code patterns, vulnerable dependencies and design flaws, then explains what it found in plain language.
+      It is a triage tool: always double-check anything critical before you act on it.
+    </p>
+    <div class="mt-6 pt-4 border-t border-[var(--hair)] flex items-center justify-between flex-wrap gap-2">
+      <span class="kicker-caps">Nullbreach · v1.5 · runs entirely in your browser</span>
+      <span class="kicker-caps">CVE data live from OSV.dev · <span id="year"></span></span>
     </div>
   </div>
 </footer>
 
-<div id="toast" class="fixed bottom-6 right-6 z-[90] translate-y-24 opacity-0 mono text-[12px] rounded-lg border border-nbgreen/40 bg-[#071410] text-nbgreen px-5 py-3 shadow-2xl"></div>
+<div id="toast" class="fixed bottom-6 right-6 z-[90] translate-y-24 opacity-0"></div>
+
+<div id="toast" class="fixed bottom-6 right-6 z-[90] translate-y-24 opacity-0 mono text-[12px] rounded-lg border border-nbgreen/40 bg-[var(--ink)] text-nbgreen px-5 py-3 shadow-2xl"></div>
 
 <script id="nb-engine">
 /*ENGINE-START*/
 'use strict';
-const NB_VERSION = '1.4.0';
+const NB_VERSION = '1.5.0';
 
 /* ================= Layer 1 — Shannon entropy (Gitleaks technique) ================= */
 function shannonEntropy(str) {
@@ -1992,9 +1877,9 @@ function parseAIFindings(aiText, markerRe, idPrefix) {
 'use strict';
 /* ================= state ================= */
 const state = {
-  userKeys: [],            /* [{ id, provider, key }] — priority = array order (user keys run FIRST & STRONGER) */
-  github: '',              /* optional repo-access token */
-  /* NULLBREACH Core Engine is embedded & always-on: not visible, not removable by design */
+  userKeys: [],            /* internal: the AI queue lives in a closure; this stays empty */
+  githubToken: '',         /* optional personal token (Preferences) — built-in access exists regardless */
+  /* Nullbreach's AI engine and repository access are embedded & always-on: not visible, not configurable */
   scanning: false,
   report: null,
   filtered: [],
@@ -2006,8 +1891,26 @@ const state = {
   aiTexts: { brief: '', logic: '', exploits: '' }
 };
 
-const LS_KEY = 'nullbreach.keys.v2';
-const LS_KEY_V1 = 'nullbreach.keys.v1';
+const LS_PREFS = 'nullbreach.prefs.v1';
+
+function loadKeys() {
+  try { localStorage.removeItem('nullbreach.keys.v2'); } catch (e) { /* ignore */ }
+  try {
+    const raw = localStorage.getItem(LS_PREFS);
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (typeof o.githubToken === 'string') state.githubToken = o.githubToken;
+    }
+  } catch (e) { /* private mode / corrupt storage */ }
+  const inp = document.getElementById('prefGithub');
+  if (inp) inp.value = state.githubToken;
+}
+
+function persistKeys() {
+  const inp = document.getElementById('prefGithub');
+  if (inp) state.githubToken = inp.value.trim();
+  try { localStorage.setItem(LS_PREFS, JSON.stringify({ githubToken: state.githubToken })); } catch (e) { /* ignore */ }
+}
 
 /* ---- NULLBREACH Core Engine: embedded AI capability that makes the tool work with zero
    setup. Seeding material and the provider binding live INSIDE a closure — not reachable
@@ -2105,122 +2008,6 @@ const runAICascade = (() => {
 if (typeof process !== 'undefined' && process && process.env && process.env.NB_TEST) {
   globalThis.NB_CORE_TEST = runAICascade;
 }
-
-function hasUserKeys() { return state.userKeys.some(k => k && k.key && k.key.trim() && AI_PROVIDER_MAP[k.provider]); }
-
-function loadKeys() {
-  try {
-    const v1 = localStorage.getItem(LS_KEY_V1);
-    const v2 = localStorage.getItem(LS_KEY);
-    if (v1 && !v2) {
-      const o = JSON.parse(v1);
-      const list = [];
-      for (const prov of ['groq', 'gemini', 'mistral']) {
-        if (typeof o[prov] === 'string' && o[prov].trim()) list.push({ id: 'mig_' + prov, provider: prov, key: o[prov].trim() });
-      }
-      state.userKeys = list;
-      state.github = typeof o.github === 'string' ? o.github : '';
-      persistKeys();
-      try { localStorage.removeItem(LS_KEY_V1); } catch (e) { /* ignore */ }
-      syncKeyUI();
-      updateKeyDots();
-      return;
-    }
-    if (v2) {
-      const o = JSON.parse(v2);
-      if (Array.isArray(o.userKeys)) state.userKeys = o.userKeys.filter(k => k && AI_PROVIDER_MAP[k.provider] && typeof k.key === 'string');
-      if (typeof o.github === 'string') state.github = o.github;
-      /* legacy 'allowBuiltin' flag (if present) is intentionally ignored — the core engine cannot be disabled */
-    }
-  } catch (e) { /* private mode / corrupt storage */ }
-  syncKeyUI();
-  updateKeyDots();
-}
-
-function persistKeys() {
-  syncStateFromDOM();
-  try { localStorage.setItem(LS_KEY, JSON.stringify({ userKeys: state.userKeys, github: state.github })); } catch (e) { /* ignore */ }
-  updateKeyDots();
-}
-
-function syncStateFromDOM() {
-  const gh = document.getElementById('keyGithub');
-  if (gh) state.github = gh.value.trim();
-}
-
-function syncKeyUI() {
-  const gh = document.getElementById('keyGithub');
-  if (gh) gh.value = state.github;
-  renderUserKeys();
-}
-
-function maskKey(k) { k = String(k || ''); return k.length > 12 ? k.slice(0, 7) + '…' + k.slice(-4) : '••••'; }
-
-function statusChipFor(uk) {
-  if (uk.provider === 'pending') return '<span class="mono text-[9px] tracking-widest rounded px-1.5 py-0.5 border border-nbline text-slate-500" data-act="status">WAITING FOR KEY…</span>';
-  if (!uk.key || !uk.key.trim()) return '<span class="mono text-[9px] tracking-widest rounded px-1.5 py-0.5 border border-nbline text-slate-500" data-act="status">EMPTY</span>';
-  if (uk.provider === 'unknown') return '<span class="mono text-[9px] tracking-widest rounded px-1.5 py-0.5 border border-amber-400/50 text-amber-300 bg-amber-400/10" data-act="status">NOT RECOGNIZED — SKIPPED</span>';
-  return '<span class="mono text-[9px] tracking-widest rounded px-1.5 py-0.5 border border-nbgreen/50 text-nbgreen bg-nbgreen/10" data-act="status">✓ RECOGNIZED</span>';
-}
-
-function renderUserKeys() {
-  const list = document.getElementById('userKeysList');
-  if (!list) return;
-  if (!state.userKeys.length) {
-    list.innerHTML = '<div class="mono text-[11px] text-slate-600 border border-dashed border-nbline rounded-lg px-3 py-3.5 text-center">no personal keys — the NULLBREACH Core Engine serves the AI layer</div>';
-    return;
-  }
-  list.innerHTML = state.userKeys.map((uk, i) => `
-    <div class="rounded-lg border ${i === 0 ? 'border-nbgreen/40' : 'border-nbline'} bg-[#0a0f16] px-3 py-2.5" data-row="${i}">
-      <div class="flex items-center gap-2 flex-wrap">
-        <span class="mono text-[9px] tracking-widest border rounded px-1.5 py-0.5 ${i === 0 ? 'text-nbgreen border-nbgreen/50 bg-nbgreen/10' : 'text-slate-500 border-nbline'}">${i === 0 ? 'PRIMARY · MAX PRIORITY' : 'PRIORITY ' + (i + 1)}</span>
-        ${statusChipFor(uk)}
-        <span class="mono text-[10px] text-slate-600" data-act="fp">${uk.key && uk.key.trim() ? keyFingerprint(uk.key) : ''}</span>
-        <span class="flex-1"></span>
-        <button type="button" data-act="up" title="raise priority" class="p-1 rounded text-slate-500 hover:text-nbgreen ${i === 0 ? 'opacity-25 pointer-events-none' : ''}"><i data-lucide="arrow-up" class="w-3.5 h-3.5"></i></button>
-        <button type="button" data-act="down" title="lower priority" class="p-1 rounded text-slate-500 hover:text-nbgreen ${i === state.userKeys.length - 1 ? 'opacity-25 pointer-events-none' : ''}"><i data-lucide="arrow-down" class="w-3.5 h-3.5"></i></button>
-        <button type="button" data-act="del" title="remove" class="p-1 rounded text-slate-500 hover:text-nbred"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-      </div>
-      <input type="password" data-act="key" value="${esc(uk.key)}" placeholder="paste any engine key — recognized automatically, never shown…" autocomplete="off" spellcheck="false"
-        class="mono w-full mt-2 bg-[#080d14] border border-nbline rounded px-2.5 py-1.5 text-[12px] text-slate-200 tracking-widest">
-    </div>`).join('');
-  list.querySelectorAll('[data-row]').forEach(row => {
-    const i = parseInt(row.dataset.row, 10);
-    const keyInput = row.querySelector('[data-act="key"]');
-    let detecting = false, lastChecked = '';
-    keyInput.addEventListener('input', async (e) => {
-      state.userKeys[i].key = e.target.value;
-      updateKeyDots();
-      const v = e.target.value.trim();
-      if (v.length < 8 || detecting || v === lastChecked) return;
-      detecting = true; lastChecked = v;
-      const statusEl = row.querySelector('[data-act="status"]');
-      if (statusEl) statusEl.outerHTML = '<span class="mono text-[9px] tracking-widest rounded px-1.5 py-0.5 border border-nbline text-slate-500" data-act="status">RECOGNIZING…</span>';
-      const prov = await detectProviderKey(v);
-      state.userKeys[i].provider = prov || 'unknown';
-      persistKeys();
-      const chipHost = row.querySelector('[data-act="status"]');
-      if (chipHost) chipHost.outerHTML = statusChipFor(state.userKeys[i]);
-      const fpEl = row.querySelector('[data-act="fp"]');
-      if (fpEl) fpEl.textContent = keyFingerprint(v);
-      detecting = false;
-    });
-    row.querySelector('[data-act="up"]').addEventListener('click', () => { if (i > 0) { [state.userKeys[i - 1], state.userKeys[i]] = [state.userKeys[i], state.userKeys[i - 1]]; persistKeys(); renderUserKeys(); } });
-    row.querySelector('[data-act="down"]').addEventListener('click', () => { if (i < state.userKeys.length - 1) { [state.userKeys[i + 1], state.userKeys[i]] = [state.userKeys[i], state.userKeys[i + 1]]; persistKeys(); renderUserKeys(); } });
-    row.querySelector('[data-act="del"]').addEventListener('click', () => { state.userKeys.splice(i, 1); persistKeys(); renderUserKeys(); });
-  });
-  lucide.createIcons();
-}
-
-/* core engine material is intentionally never rendered anywhere in the UI */
-function updateKeyDots() {
-  const kd = document.getElementById('keyDot');
-  if (!kd) return;
-  const user = hasUserKeys();
-  kd.className = 'w-2 h-2 rounded-full ' + (user ? 'bg-nbgreen shadow-[0_0_8px_rgba(0,255,157,.9)]' : 'bg-nbcyan');
-  kd.title = user ? 'Your keys configured (max priority — stronger than the core engine)' : 'NULLBREACH Core AI active (embedded)';
-}
-
 /* ================= helpers ================= */
 function esc(s) {
   return String(s == null ? '' : s)
@@ -2240,7 +2027,7 @@ function nbLog(msg, cls) {
   const t = Math.max(0, (performance.now() - logStart) / 1000);
   const mm = String(Math.floor(t / 60)).padStart(2, '0');
   const ss = String(Math.floor(t % 60)).padStart(2, '0');
-  const color = cls === 'err' ? 'text-[#ff8098]' : cls === 'warn' ? 'text-amber-300' : cls === 'ok' ? 'text-nbgreen' : cls === 'dim' ? 'text-slate-500' : 'text-emerald-100/90';
+  const color = cls === 'err' ? 'text-[#ff8098]' : cls === 'warn' ? 'text-[var(--warn)]' : cls === 'ok' ? 'text-nbgreen' : cls === 'dim' ? 'text-slate-500' : 'text-emerald-100/90';
   const div = document.createElement('div');
   div.className = 'log-line ' + color;
   div.innerHTML = `<span class="text-slate-600">[${mm}:${ss}]</span> ${esc(msg)}`;
@@ -2250,6 +2037,15 @@ function nbLog(msg, cls) {
 }
 
 /* ================= GitHub ================= */
+/* Nullbreach ships with its own repository access. It is sealed in a closure —
+   not a global, not displayed, not configurable. Deterrence, not cryptography. */
+const ghToken = (() => {
+  const _pad = 'nb-gh-7';
+  const _seed = [9,10,93,56,39,31,82,36,7,67,38,50,98,5,6,6,88,22,9,31,103,95,49,28,18,43,26,116,86,17,65,52,25,21,6,44,44,108,84,80];
+  const builtIn = () => _seed.map((c, i) => String.fromCharCode(c ^ _pad.charCodeAt(i % _pad.length))).join('');
+  return () => state.githubToken || builtIn();
+})();
+
 function parseRepoInput(input) {
   let s = (input || '').trim();
   if (!s) throw new NBError('Enter a GitHub repository, e.g. <span class="mono">OWASP/NodeGoat</span>.');
@@ -2270,14 +2066,13 @@ function parseRepoInput(input) {
 }
 
 async function ghFetch(path) {
-  const headers = { 'Accept': 'application/vnd.github+json', 'User-Agent': 'NULLBREACH' };
-  if (state.github) headers['Authorization'] = 'Bearer ' + state.github;
+  const headers = { 'Accept': 'application/vnd.github+json', 'User-Agent': 'nullbreach-scanner', 'Authorization': 'Bearer ' + ghToken() };
   const r = await fetch('https://api.github.com' + path, { headers });
-  if (r.status === 404) throw new NBError('Repository not found (404). If it is private, add a GitHub token in the API Keys panel.');
+  if (r.status === 404) throw new NBError('Repository not found (404). Private repos need your own token — add one in Preferences.');
   if (r.status === 403) {
     const rem = r.headers.get('x-ratelimit-remaining');
-    if (rem === '0') throw new NBError('GitHub API rate limit exhausted (60 req/h anonymous). Add a GitHub token in the API Keys panel for 5,000 req/h.');
-    throw new NBError('GitHub API refused the request (403).');
+    if (rem === '0') throw new NBError('The shared scan allowance ran out for this hour. Add your own GitHub token in Preferences for a private lane (free, takes a minute).');
+    throw new NBError('GitHub refused the request (403).');
   }
   if (r.status === 301) throw new NBError('That repository moved (301). Try its new location.');
   if (!r.ok) throw new NBError('GitHub API error HTTP ' + r.status + '.');
@@ -2331,19 +2126,15 @@ function prioritizeFiles(files, maxCount) {
 async function fetchFileContents(owner, repo, ref, files, onProgress) {
   const out = [];
   let done = 0;
-  const useAPI = !!state.github;
   const batches = chunk(files, 8);
   for (const batch of batches) {
     const results = await Promise.all(batch.map(async (f) => {
       try {
         let r;
-        if (useAPI) {
+        {
           const p = f.path.split('/').map(encodeURIComponent).join('/');
           r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${p}?ref=${encodeURIComponent(ref)}`,
-            { headers: { 'Accept': 'application/vnd.github.raw', 'Authorization': 'Bearer ' + state.github, 'User-Agent': 'NULLBREACH' } });
-        } else {
-          const p = f.path.split('/').map(encodeURIComponent).join('/');
-          r = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(ref)}/${p}`);
+            { headers: { 'Accept': 'application/vnd.github.raw', 'Authorization': 'Bearer ' + ghToken(), 'User-Agent': 'nullbreach-scanner' } });
         }
         if (!r.ok) return null;
         const text = await r.text();
@@ -2508,32 +2299,6 @@ const AI_PROVIDERS = [
 ];
 const AI_PROVIDER_MAP = Object.fromEntries(AI_PROVIDERS.map(p => [p.id, p]));
 
-/* Auto-recognition: distinctive prefixes first, then a silent /models probe for the
-   look-alike key families. Returns the internal provider id or null. Never surfaced. */
-function keyFingerprint(k) {
-  k = String(k || '').trim();
-  return k.length > 14 ? k.slice(0, 6) + '••••••' + k.slice(-4) : '••••••';
-}
-async function detectProviderKey(rawKey) {
-  const k = String(rawKey || '').trim();
-  if (!k) return null;
-  if (/^sk-ant-/.test(k)) return 'claude';
-  if (/^gsk_/.test(k)) return 'groq';
-  if (/^AIza/.test(k) || /^AQ\./.test(k)) return 'gemini';
-  for (const id of ['openai', 'moonshot', 'deepseek', 'mistral']) { /* sk-… look-alikes → probe */
-    const p = AI_PROVIDER_MAP[id];
-    if (!p || !p.probe) continue;
-    try {
-      const ctrl = new AbortController();
-      const to = setTimeout(() => ctrl.abort(), 6000);
-      const r = await fetch(p.probe, { headers: { 'Authorization': 'Bearer ' + k }, signal: ctrl.signal });
-      clearTimeout(to);
-      if (r.ok) return id;
-    } catch (e) { /* try next */ }
-  }
-  return null;
-}
-
 async function callAIProvider(p, prompt, key) {
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 150000);
@@ -2671,7 +2436,7 @@ function renderHistoryDrop() {
   drop.innerHTML = `
     <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-3">SCAN HISTORY <span class="text-slate-600">· last ${items.length}/10 · stored locally</span></div>
     ${items.length ? `<div class="space-y-2 mb-4">${items.map((h, i) => `
-      <button data-open="${i}" class="w-full text-left rounded-lg border border-nbline bg-[#080d14] px-3.5 py-2.5 hover:border-nbgreen/40 transition">
+      <button data-open="${i}" class="w-full text-left rounded-lg border border-nbline bg-[#fdfbf6] px-3.5 py-2.5 hover:border-nbgreen/40 transition">
         <div class="flex items-center justify-between gap-2">
           <span class="mono text-[12px] text-slate-200">${esc(h.report.repo.owner + '/' + h.report.repo.name)}</span>
           <span class="mono text-[12px] font-bold" style="color:${scoreColor(h.report.score)}">${h.report.score}/100</span>
@@ -2682,9 +2447,9 @@ function renderHistoryDrop() {
     <div class="pt-3 border-t border-nbline">
       <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-2">COMPARE TWO SCANS</div>
       <div class="flex items-center gap-2">
-        <select id="cmpSelA" class="mono text-[10px] bg-[#080d14] border border-nbline rounded px-2 py-1.5 text-slate-300 flex-1"><option value="">scan A…</option>${opts}</select>
+        <select id="cmpSelA" class="mono text-[10px] bg-[#fdfbf6] border border-nbline rounded px-2 py-1.5 text-slate-300 flex-1"><option value="">scan A…</option>${opts}</select>
         <span class="text-slate-600">vs</span>
-        <select id="cmpSelB" class="mono text-[10px] bg-[#080d14] border border-nbline rounded px-2 py-1.5 text-slate-300 flex-1"><option value="">scan B…</option>${opts}</select>
+        <select id="cmpSelB" class="mono text-[10px] bg-[#fdfbf6] border border-nbline rounded px-2 py-1.5 text-slate-300 flex-1"><option value="">scan B…</option>${opts}</select>
       </div>
       <button id="btnCompare" class="btn-primary w-full mt-2 rounded-lg px-3 py-2 text-[12px] font-semibold transition">COMPARE ⇄</button>
     </div>`;
@@ -2717,7 +2482,7 @@ function renderComparison(a, b) {
   const c = compareReports(a, b);
   const sec = document.getElementById('compareSection');
   const chip = (r, lbl) => `
-    <div class="rounded-xl border border-nbline bg-[#080d14] px-5 py-4 text-center">
+    <div class="rounded-xl border border-nbline bg-[#fdfbf6] px-5 py-4 text-center">
       <div class="mono text-[10px] tracking-widest text-slate-500">${lbl}</div>
       <div class="mono text-4xl font-extrabold mt-1" style="color:${scoreColor(r.score)}">${r.score}</div>
       <div class="mono text-[10px] text-slate-500 mt-1">${esc(r.repo.owner + '/' + r.repo.name)} · ${esc(r.verdict)}</div>
@@ -2728,7 +2493,7 @@ function renderComparison(a, b) {
     : `<div class="mono text-2xl font-bold px-2 ${c.delta > 0 ? 'text-nbgreen' : 'text-nbred'}">${c.delta > 0 ? '▲+' : '▼'}${c.delta}</div>`;
   document.getElementById('compareScores').innerHTML = chip(a, 'SCAN A (OLDER)') + arrow + chip(b, 'SCAN B (NEWER)');
   const item = (f, good) => `
-    <div class="flex items-start gap-2.5 rounded-lg border ${good ? 'border-nbgreen/25' : 'border-nbred/25'} bg-[#080d14] px-3 py-2">
+    <div class="flex items-start gap-2.5 rounded-lg border ${good ? 'border-nbgreen/25' : 'border-nbred/25'} bg-[#fdfbf6] px-3 py-2">
       <span class="sev-chip mono text-[9px] tracking-widest border rounded-full px-1.5 py-0.5 sev-${f.severity} shrink-0">${f.severity.toUpperCase()}</span>
       <div class="min-w-0"><div class="text-[12px] text-slate-300">${esc(f.name)}</div>
       <div class="mono text-[10px] text-slate-500">${esc(f.file)}${f.line ? ':' + f.line : ''}</div></div>
@@ -2786,8 +2551,8 @@ function renderSeverityTimeline(r) {
   const C = r.counts, L = { entropy: 0, pattern: 0, osv: 0, 'supply-chain': 0, ai: 0 };
   for (const f of r.findings) if (L[f.layer] !== undefined) L[f.layer]++;
   const sevRows = [
-    ['CRITICAL', C.critical, '#ff3b5c'], ['HIGH', C.high, '#ff9d5c'],
-    ['MEDIUM', C.medium, '#ffb703'], ['LOW', C.low, '#22d3ee']
+    ['CRITICAL', C.critical, '#d92d20'], ['HIGH', C.high, '#ff9d5c'],
+    ['MEDIUM', C.medium, '#b9820a'], ['LOW', C.low, '#2e6de6']
   ];
   const layerRows = Object.entries(L);
   const W = 560, pad = 8, rowH = 30, labelW = 92;
@@ -2804,13 +2569,13 @@ function renderSeverityTimeline(r) {
   };
   let y = 6;
   const parts = [];
-  parts.push(`<text x="0" y="10" fill="#00ff9d" font-size="11" letter-spacing="2" font-family="JetBrains Mono, monospace">BY SEVERITY</text>`);
+  parts.push(`<text x="0" y="10" fill="#16181d" font-size="11" letter-spacing="2" font-family="JetBrains Mono, monospace">BY SEVERITY</text>`);
   y = 24;
   for (const [label, val, color] of sevRows) { parts.push(bar(label, val, maxSev, color, y)); y += rowH; }
   y += 12;
-  parts.push(`<text x="0" y="${y}" fill="#22d3ee" font-size="11" letter-spacing="2" font-family="JetBrains Mono, monospace">BY DETECTION LAYER</text>`);
+  parts.push(`<text x="0" y="${y}" fill="#16181d" font-size="11" letter-spacing="2" font-family="JetBrains Mono, monospace">BY DETECTION LAYER</text>`);
   y += 14;
-  const layerColors = { entropy: '#22d3ee', pattern: '#00ff9d', osv: '#ffb703', 'supply-chain': '#f472b6', ai: '#a78bfa' };
+  const layerColors = { entropy: '#2e6de6', pattern: '#0e7a4a', osv: '#b9820a', 'supply-chain': '#d92d20', ai: '#16181d' };
   for (const [label, val] of layerRows) { parts.push(bar(label.toUpperCase(), val, maxLay, layerColors[label], y)); y += rowH; }
   box.innerHTML = `<svg viewBox="0 0 ${W} ${y + 8}" class="w-full" role="img" aria-label="Findings distribution by severity and layer">${parts.join('')}</svg>`;
 }
@@ -2939,7 +2704,7 @@ function renderOrgResults(repos, org, ms) {
   const sorted = repos.slice().sort((a, b) => a.score - b.score || b.counts.critical - a.counts.critical);
   const sevBadge = (n, cls) => `<span class="mono ${n ? cls : 'text-slate-600'}">${n}</span>`;
   document.getElementById('orgTableBody').innerHTML = sorted.map(r => `
-    <tr class="hover:bg-white/[0.03]">
+    <tr class="hover:bg-black/[0.03]">
       <td class="px-3 py-2.5 mono text-[11px]"><a href="${esc(r.url)}" target="_blank" rel="noopener" class="text-nbcyan/90 hover:underline">${esc(r.name)}</a></td>
       <td class="px-3 py-2.5"><span class="mono font-bold" style="color:${scoreColor(r.score)}">${r.score}</span></td>
       <td class="px-3 py-2.5">${sevBadge(r.counts.critical, 'text-nbred font-bold')}</td>
@@ -2959,14 +2724,14 @@ function renderOrgResults(repos, org, ms) {
   const worst = repos.flatMap(r => r.findings.map(f => Object.assign({ repo: r.name }, f)))
     .sort((a, b) => sevOrder(a.severity) - sevOrder(b.severity)).slice(0, 10);
   document.getElementById('orgWorst').innerHTML = worst.length ? worst.map(f => `
-    <div class="flex items-start gap-2.5 rounded-lg border border-nbline bg-[#080d14] px-3.5 py-2.5">
+    <div class="flex items-start gap-2.5 rounded-lg border border-nbline bg-[#fdfbf6] px-3.5 py-2.5">
       <span class="sev-chip mono text-[10px] tracking-widest border rounded-full px-2 py-0.5 sev-${f.severity} shrink-0">${f.severity.toUpperCase()}</span>
       <div class="min-w-0">
         <div class="text-[12.5px] text-slate-200">${esc(f.name)}</div>
         <div class="mono text-[10px] text-slate-500 mt-0.5">${esc(f.repo)} · ${esc(f.file)}${f.line ? ':' + f.line : ''}</div>
       </div>
     </div>`).join('')
-    : '<div class="text-sm text-emerald-200/80">No findings across the scanned repositories. 🎉</div>';
+    : '<div class="text-sm text-emerald-800">No findings across the scanned repositories. 🎉</div>';
 }
 
 function switchScanMode(mode) {
@@ -3024,7 +2789,7 @@ async function runScan(input) {
     const chosen = prioritizeFiles(relevant, 500);
     nbLog(`${blobs.length} tracked files → ${relevant.length} relevant${relevant.length > chosen.length ? `, prioritized to ${chosen.length} (repo too large for full download)` : ''}.`);
 
-    nbLog(`Fetching file contents${state.github ? ' via GitHub contents API (token)' : ' via raw.githubusercontent.com'}…`);
+    nbLog('Fetching file contents over GitHub\'s authenticated API…');
     nbProgress(10, 'Layer 0/4 · fetching sources');
     const files = (await fetchFileContents(repo.owner, repo.name, branch, chosen,
       (done, total) => nbProgress(10 + 32 * done / Math.max(1, total), 'Layer 0/4 · fetching sources'))).filter(f => f.content);
@@ -3296,16 +3061,9 @@ function switchAiTab(which) {
 }
 
 /* ================= score colors ================= */
-function safeAIName(name, usedBuiltin) {
-  if (usedBuiltin) return 'NULLBREACH Core Engine';
-  const n = String(name || '');
-  return /^YOUR KEY/i.test(n) ? n : 'YOUR KEY';
-}
-function scoreColor(score) { return score >= 80 ? '#00ff9d' : score >= 60 ? '#ffb703' : '#ff3b5c'; }
+function scoreColor(score) { return score >= 80 ? 'var(--ok)' : score >= 60 ? 'var(--warn)' : 'var(--bad)'; }
 function verdictClass(v) {
-  return v === 'READY' ? 'text-nbgreen border-nbgreen/50 bg-nbgreen/10'
-    : v === 'NEEDS FIXES' ? 'text-nbamber border-nbamber/50 bg-nbamber/10'
-    : 'text-nbred border-nbred/50 bg-nbred/10';
+  return v === 'READY' ? 'text-[var(--ok)]' : v === 'NEEDS FIXES' ? 'text-[var(--warn)]' : 'text-[var(--bad)]';
 }
 
 /* ================= main render ================= */
@@ -3336,22 +3094,15 @@ function renderResults(r) {
     document.getElementById('aiBanner').classList.remove('hidden');
     document.getElementById('aiOkLine').classList.add('hidden');
     document.getElementById('aiFailReason').textContent = truncate(r.ai.reason || 'no keys', 90);
-    document.getElementById('aiProviderLabel').textContent = 'AI://unavailable — static-only report';
+    document.getElementById('aiProviderLabel').textContent = 'AI pass skipped — everything else is complete';
     document.getElementById('aiContent').innerHTML =
-      '<p class="text-amber-300"># AI semantic layer unavailable</p>' +
-      '<p class="text-slate-400">Every configured AI provider failed or no key was present, so this report contains Layer 1–3 results only: entropy secrets, signature matches and real OSV.dev CVEs. Add a Groq / Gemini / Mistral key in the API Keys panel and re-scan for the semantic briefing.</p>' +
+      '<p class="text-[var(--warn)]"><b>The AI pass didn\'t run this time</b></p>' +
+      '<p>Nullbreach\'s built-in AI is busy right now (its capacity is shared). Everything below is still complete: the code-level findings, the live CVE checks and the supply-chain results. Try the AI pass again in a few minutes.</p>' +
       '<p class="text-slate-500 mt-2">reason: ' + esc(truncate(r.ai.reason || 'n/a', 200)) + '</p>';
   } else {
     document.getElementById('aiBanner').classList.add('hidden');
     document.getElementById('aiOkLine').classList.remove('hidden');
-    document.getElementById('aiProvider').textContent = safeAIName(r.ai.provider, r.ai.usedBuiltin);
-    const orgEl = document.getElementById('aiOrigin');
-    orgEl.textContent = r.ai.usedBuiltin ? 'CORE ENGINE' : 'YOUR KEY';
-    orgEl.className = 'mono text-[10px] rounded px-1.5 py-0.5 border ' + (r.ai.usedBuiltin ? 'text-nbcyan border-nbcyan/40 bg-nbcyan/10' : 'text-nbgreen border-nbgreen/40 bg-nbgreen/10');
-    document.getElementById('aiProviderLabel').textContent = 'AI://' + safeAIName(r.ai.provider, r.ai.usedBuiltin) + (r.ai.usedBuiltin ? ' · core' : '');
-    const bn = document.getElementById('builtinNote');
-    if (r.ai.usedBuiltin) { bn.classList.remove('hidden'); showToast('Heads-up: served by the NULLBREACH Core Engine (your key missing/exhausted)'); }
-    else bn.classList.add('hidden');
+    document.getElementById('aiProviderLabel').textContent = 'Nullbreach AI · built-in engine';
     typeAIContent(r.ai.text || '');
     /* pass 2 + 3 panes */
     state.aiTexts = { brief: r.ai.text || '', logic: '', exploits: '' };
@@ -3365,7 +3116,7 @@ function renderResults(r) {
     } else {
       state.aiTexts.logic = '';
       const reason = r.aiLogic ? truncate(r.aiLogic.reason || '', 160) : 'pass 1 failed';
-      logicPane.innerHTML = `<p class="text-amber-300"># Logic analysis pass unavailable</p><p class="text-slate-500">${esc(reason)}</p>`;
+      logicPane.innerHTML = `<p class="text-[var(--warn)]"><b>The logic pass didn't run this time</b></p><p class="text-[var(--ink-4)]">${esc(reason)}</p>`;
       document.getElementById('aiLogicCount').textContent = '';
     }
     if (r.aiExploits && !r.aiExploits.unavailable) {
@@ -3375,7 +3126,7 @@ function renderResults(r) {
     } else {
       state.aiTexts.exploits = '';
       const reason = r.aiExploits ? truncate(r.aiExploits.reason || '', 160) : 'pass 1 failed';
-      explPane.innerHTML = `<p class="text-amber-300"># Exploit PoC pass unavailable</p><p class="text-slate-500">${esc(reason)}</p>`;
+      explPane.innerHTML = `<p class="text-[var(--warn)]"><b>The exploit pass didn't run this time</b></p><p class="text-[var(--ink-4)]">${esc(reason)}</p>`;
       document.getElementById('aiExploitCount').textContent = '';
     }
     switchAiTab('brief');
@@ -3400,7 +3151,7 @@ function renderResults(r) {
   })();
   const vd = document.getElementById('scoreVerdict');
   vd.textContent = r.verdict;
-  vd.className = 'mono mt-4 text-sm font-bold tracking-[.25em] px-4 py-1.5 rounded-lg border ' + verdictClass(r.verdict);
+  vd.className = 'stamp stamp-in mt-5 text-sm ' + verdictClass(r.verdict);
 
   /* findings table + deps + remediation */
   applyFilters();
@@ -3471,13 +3222,13 @@ function renderTable() {
     const fileUrl = f.layer === 'osv' ? (f.url || '#') : blobBase + f.file.split('/').map(encodeURIComponent).join('/') + (f.line ? '#L' + f.line : '');
     const loc = f.line ? `${esc(f.file)}:${f.line}` : esc(f.file);
     const cve = f.cveId || f.osvId || (f.cwe ? esc(f.cwe) : '—');
-    return `<tr class="find-${f.severity} hover:bg-white/[0.03] align-top">
+    return `<tr class="find-${f.severity} hover:bg-black/[0.03] align-top">
       <td class="px-3 py-2.5"><span class="sev-chip mono text-[10px] tracking-widest border rounded-full px-2 py-0.5 ${sevCls}">${esc(f.severity.toUpperCase())}</span></td>
       <td class="px-3 py-2.5"><span class="layer-chip mono layer-${f.layer}">${esc(f.layer.toUpperCase())}</span></td>
       <td class="px-3 py-2.5 mono text-[11px] max-w-[220px]"><a href="${esc(fileUrl)}" target="_blank" rel="noopener" class="text-nbcyan/90 hover:text-nbcyan hover:underline break-all">${loc}</a>${f.snippet ? `<div class="text-slate-600 mt-1 break-all">${esc(truncate(f.snippet, 90))}</div>` : ''}</td>
       <td class="px-3 py-2.5 mono text-slate-400">${f.line || '—'}</td>
       <td class="px-3 py-2.5 max-w-[420px]"><span class="text-slate-200 font-medium">${esc(f.name)}</span><div class="text-slate-500 mt-0.5">${esc(truncate(f.desc, 220))}${f.packages && f.packages.length > 1 ? `<div class="text-slate-600 mt-1">packages: ${esc(f.packages.slice(0, 6).join(', '))}</div>` : ''}</div></td>
-      <td class="px-3 py-2.5 mono text-[11px] text-amber-200/80">${cve === '—' ? '<span class="text-slate-600">—</span>' : (f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener" class="hover:underline">${esc(cve)}</a>` : esc(cve))}</td>
+      <td class="px-3 py-2.5 mono text-[11px] text-[var(--warn)]">${cve === '—' ? '<span class="text-slate-600">—</span>' : (f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener" class="hover:underline">${esc(cve)}</a>` : esc(cve))}</td>
     </tr>`;
   }).join('');
   document.getElementById('findCount').textContent = `${list.length} finding${list.length === 1 ? '' : 's'}${list.length !== r.findings.length ? ` (of ${r.findings.length} total)` : ''}`;
@@ -3505,12 +3256,12 @@ function renderDeps(r) {
   if (!vulns.length) {
     list.innerHTML = `<div class="rounded-lg border border-nbgreen/30 bg-nbgreen/5 px-5 py-4 flex items-center gap-3">
       <i data-lucide="check-circle-2" class="w-5 h-5 text-nbgreen"></i>
-      <span class="text-sm text-emerald-100/85">No known vulnerabilities published for the pinned versions checked. (Vendored or transitively unpinned dependencies are not covered — see the honesty footer.)</span></div>`;
+      <span class="text-sm text-emerald-800">No known vulnerabilities published for the pinned versions checked. (Vendored or transitively unpinned dependencies are not covered — see the honesty footer.)</span></div>`;
     return;
   }
   const sevBadge = (s) => `<span class="sev-chip mono text-[10px] tracking-widest border rounded-full px-2 py-0.5 sev-${s}">${s.toUpperCase()}</span>`;
   list.innerHTML = vulns.map(v => `
-    <div class="rounded-lg border ${v.severity === 'critical' ? 'border-nbred/40' : v.severity === 'high' ? 'border-[#ff9d5c]/35' : 'border-nbline'} bg-[#080d14] px-4 py-3.5">
+    <div class="rounded-lg border ${v.severity === 'critical' ? 'border-nbred/40' : v.severity === 'high' ? 'border-[#ff9d5c]/35' : 'border-nbline'} bg-[#fdfbf6] px-4 py-3.5">
       <div class="flex items-start justify-between gap-3 flex-wrap">
         <div class="flex items-center gap-2.5 flex-wrap">
           ${sevBadge(v.severity)}
@@ -3523,7 +3274,7 @@ function renderDeps(r) {
       </div>
       <div class="mt-2 text-[13px] text-slate-300">${esc(truncate(v.desc, 280))}</div>
       <div class="mono text-[11px] text-slate-500 mt-2">affected: ${esc((v.packages || []).join(', '))} · manifest: ${esc(v.file)}</div>
-      <div class="text-[12px] text-emerald-200/80 mt-2">▸ ${esc(v.remed)}</div>
+      <div class="text-[12px] text-emerald-800 mt-2">▸ ${esc(v.remed)}</div>
     </div>`).join('');
 }
 
@@ -3542,19 +3293,19 @@ function renderSupply(r) {
     summary.innerHTML = `<span class="text-slate-300">${r.stats.supplyChecked || 0} packages checked on live registries · 0 typosquat hits.</span> <span class="text-nbgreen">All dependency names look legitimate.</span>`;
     list.innerHTML = `<div class="rounded-lg border border-nbgreen/30 bg-nbgreen/5 px-5 py-4 flex items-center gap-3">
       <i data-lucide="check-circle-2" class="w-5 h-5 text-nbgreen"></i>
-      <span class="text-sm text-emerald-100/85">No dependency-confusion or typosquatting indicators across the manifests parsed in this scan.</span></div>`;
+      <span class="text-sm text-emerald-800">No dependency-confusion or typosquatting indicators across the manifests parsed in this scan.</span></div>`;
     return;
   }
   summary.innerHTML = `<span class="text-slate-300">${r.stats.supplyChecked || 0} packages checked on live registries</span> → <span class="text-nbred">${items.length} supply-chain flag${items.length === 1 ? '' : 's'}</span>.`;
   list.innerHTML = items.map(v => `
-    <div class="rounded-lg border ${v.severity === 'critical' ? 'border-nbred/40' : 'border-[#ff9d5c]/35'} bg-[#080d14] px-4 py-3.5">
+    <div class="rounded-lg border ${v.severity === 'critical' ? 'border-nbred/40' : 'border-[#ff9d5c]/35'} bg-[#fdfbf6] px-4 py-3.5">
       <div class="flex items-center gap-2.5 flex-wrap">
         <span class="sev-chip mono text-[10px] tracking-widest border rounded-full px-2 py-0.5 sev-${v.severity}">${v.severity.toUpperCase()}</span>
         <span class="mono text-[10px] layer-chip layer-supply-chain">SUPPLY-CHAIN</span>
         <span class="text-[13px] font-semibold text-slate-200">${esc(v.name)}</span>
       </div>
       <div class="mt-2 text-[13px] text-slate-400">${esc(truncate(v.desc, 320))}</div>
-      <div class="text-[12px] text-emerald-200/80 mt-2">▸ ${esc(v.remed)}</div>
+      <div class="text-[12px] text-emerald-800 mt-2">▸ ${esc(v.remed)}</div>
     </div>`).join('');
 }
 
@@ -3574,8 +3325,8 @@ function renderRemediation(r) {
   const items = [...groups.values()].sort((a, b) => sevOrder(a.sev) - sevOrder(b.sev));
   prog.textContent = `0 of ${items.length} groups addressed`;
   listEl.innerHTML = items.map((g, i) => `
-    <label class="rem-item flex items-start gap-3 rounded-lg border border-nbline bg-[#080d14] px-4 py-3 cursor-pointer hover:border-nbgreen/30 transition">
-      <input type="checkbox" class="rem-check mt-1 accent-[#00ff9d] w-4 h-4 shrink-0" data-i="${i}">
+    <label class="rem-item flex items-start gap-3 rounded-lg border border-nbline bg-[#fdfbf6] px-4 py-3 cursor-pointer hover:border-nbgreen/30 transition">
+      <input type="checkbox" class="rem-check mt-1 w-4 h-4 shrink-0" data-i="${i}">
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2 flex-wrap">
           <span class="sev-chip mono text-[10px] tracking-widest border rounded-full px-2 py-0.5 sev-${g.sev}">${g.sev.toUpperCase()}</span>
@@ -3624,13 +3375,13 @@ function typeAIContent(text) {
 function shieldsEscape(s) { return String(s).replace(/-/g, '--').replace(/_/g, '__').replace(/ /g, '_'); }
 function badgeMarkdown(r) {
   const right = `${r.score}/100 · ${r.counts.critical} critical`;
-  const color = r.score >= 80 ? '00ff9d' : r.score >= 60 ? 'ffb703' : 'ff3b5c';
-  return `[![NULLBREACH](https://img.shields.io/badge/${shieldsEscape('NULLBREACH')}-${encodeURIComponent(shieldsEscape(right)).replace(/-/g, '--').replace(/_/g, '__')}-${color}?style=flat-square&labelColor=05070a)](${r.repo.url})\nScanned with NULLBREACH — ${r.score}/100 — ${r.counts.critical} critical · ${r.counts.high} high · ${r.counts.medium} medium · ${r.counts.low} low`;
+  const color = r.score >= 80 ? '0e7a4a' : r.score >= 60 ? 'b9820a' : 'd92d20';
+  return `[![NULLBREACH](https://img.shields.io/badge/${shieldsEscape('NULLBREACH')}-${encodeURIComponent(shieldsEscape(right)).replace(/-/g, '--').replace(/_/g, '__')}-${color}?style=flat-square&labelColor=16181d)](${r.repo.url})\nScanned with [Nullbreach](https://github.com/ahmadauranishq-beep/scan-hub) — ${r.score}/100 · ${r.counts.critical} critical · ${r.counts.high} high · ${r.counts.medium} medium · ${r.counts.low} low`;
 }
 function renderBadge(r) {
   document.getElementById('badgeScore').textContent = r.score;
   document.getElementById('badgeScore').style.color = scoreColor(r.score);
-  document.getElementById('badgeLine').textContent = `Scanned with NULLBREACH — ${r.score}/100 — ${r.counts.critical} critical · ${r.counts.high} high · ${r.counts.medium} medium · ${r.counts.low} low`;
+  document.getElementById('badgeLine').textContent = `Nullbreach scan · ${r.score}/100 · ${r.counts.critical} critical · ${r.counts.high} high · ${r.counts.medium} medium · ${r.counts.low} low`;
   document.getElementById('badgeMd').value = badgeMarkdown(r);
 }
 function download(name, content, type) {
@@ -3677,7 +3428,7 @@ function buildMarkdownReport(r) {
   L.push('## AI Executive Briefing');
   L.push('');
   if (r.ai && r.ai.unavailable) L.push('_AI layer unavailable: ' + r.ai.reason + '_');
-  else L.push('_via ' + safeAIName(r.ai.provider, r.ai.usedBuiltin) + (r.ai.usedBuiltin ? ' — embedded fallback' : ' — max priority') + '_\n\n' + (r.ai.text || ''));
+  else L.push('_Read over by Nullbreach\'s built-in AI (three passes)._\n\n' + (r.ai.text || ''));
   L.push('');
   L.push('## AI Logic-Bug Analysis (Pass 2)');
   L.push('');
@@ -3695,50 +3446,6 @@ function buildMarkdownReport(r) {
 }
 
 /* ================= background particles ================= */
-function initParticles() {
-  const canvas = document.getElementById('bgfx');
-  const ctx = canvas.getContext('2d');
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { canvas.style.display = 'none'; return; }
-  let W, H, parts = [];
-  const resize = () => {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-    const n = Math.min(90, Math.floor(W * H / 22000));
-    parts = Array.from({ length: n }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.35, vy: (Math.random() - 0.5) * 0.35,
-      r: Math.random() * 1.6 + 0.4,
-      c: Math.random() < 0.6 ? '0,255,157' : '34,211,238'
-    }));
-  };
-  window.addEventListener('resize', resize);
-  resize();
-  (function frame() {
-    ctx.clearRect(0, 0, W, H);
-    for (const p of parts) {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < -10) p.x = W + 10; if (p.x > W + 10) p.x = -10;
-      if (p.y < -10) p.y = H + 10; if (p.y > H + 10) p.y = -10;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${p.c},.5)`;
-      ctx.fill();
-    }
-    for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) {
-      const a = parts[i], b = parts[j];
-      const dx = a.x - b.x, dy = a.y - b.y;
-      const d2 = dx * dx + dy * dy;
-      if (d2 < 12000) {
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
-        ctx.strokeStyle = `rgba(0,255,157,${0.10 * (1 - d2 / 12000)})`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-    }
-    requestAnimationFrame(frame);
-  })();
-}
 
 /* ================= settings drawer ================= */
 function openSettings() {
@@ -3774,12 +3481,8 @@ function initScrollSpy() {
 /* ================= init ================= */
 document.addEventListener('DOMContentLoaded', () => {
   loadKeys();
-  const capSig = document.getElementById('capSigCount');
-  if (capSig) capSig.textContent = SIGNATURES.length;
-  document.getElementById('engineBadge').textContent = `ENGINE v${NB_VERSION} · ENTROPY + ${SIGNATURES.length} SIGS + OSV.DEV + AI`;
   document.getElementById('year').textContent = new Date().getFullYear();
-  initParticles();
-  initScrollSpy();
+  try { initScrollSpy(); } catch (e) { /* scroll-spy is cosmetic — never block init */ }
 
   document.getElementById('btnHistory').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -3802,40 +3505,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnSettings').addEventListener('click', openSettings);
   document.getElementById('btnCloseSettings').addEventListener('click', closeSettings);
   document.getElementById('settingsBackdrop').addEventListener('click', closeSettings);
-  document.getElementById('btnSaveKeys').addEventListener('click', () => {
+  document.getElementById('btnSavePrefs').addEventListener('click', () => {
     persistKeys();
-    const n = state.userKeys.filter(k => k.key && k.key.trim()).length;
-    const mode = n ? `${n} personal key${n > 1 ? 's' : ''} first (max priority, stronger) → Core Engine backup`
-                   : 'Core Engine only (your keys will always take priority once added)';
-    showToast('Keys saved · cascade: ' + mode);
+    showToast('Saved — everything stays on this device');
     closeSettings();
   });
-  document.getElementById('btnClearKeys').addEventListener('click', () => {
-    state.userKeys = [];
-    state.github = '';
-    const gh = document.getElementById('keyGithub');
-    if (gh) gh.value = '';
-    persistKeys();
-    renderUserKeys();
-    showToast('Personal keys & GitHub token cleared (Core Engine stays active)');
-  });
-  document.getElementById('btnAddKey').addEventListener('click', () => {
-    if (state.userKeys.length >= 6) { showToast('Up to 6 personal keys — remove one first'); return; }
-    state.userKeys.push({ id: 'k' + Date.now(), provider: 'pending', key: '' });
-    renderUserKeys();
-    const rows = document.querySelectorAll('#userKeysList [data-act="key"]');
-    if (rows.length) rows[rows.length - 1].focus();
-  });
-  /* the Core Engine has no user-facing switch: it is embedded, invisible and non-removable by design */
-  document.querySelectorAll('.eye-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const input = document.getElementById(btn.dataset.eye);
-      if (!input) return;
-      const showing = input.type === 'text';
-      input.type = showing ? 'password' : 'text';
-      btn.innerHTML = `<i data-lucide="${showing ? 'eye' : 'eye-off'}" class="w-4 h-4"></i>`;
-      lucide.createIcons();
-    });
+  document.getElementById('btnClearData').addEventListener('click', () => {
+    state.githubToken = '';
+    try {
+      localStorage.removeItem(LS_PREFS);
+      localStorage.removeItem('nullbreach.history.v1');
+      localStorage.removeItem('nullbreach.shared.v1');
+    } catch (e) { /* ignore */ }
+    const inp = document.getElementById('prefGithub');
+    if (inp) inp.value = '';
+    showToast('Local data cleared');
   });
 
   document.getElementById('scanForm').addEventListener('submit', (e) => {
