@@ -1,0 +1,66 @@
+name: NULLBREACH Security Scan
+
+# Runs the exact engine that powers nullbreach.html against every push and PR.
+# - Layer 1: Shannon-entropy secret detection
+# - Layer 2: 65-signature secret/OWASP library
+# - Layer 3: live OSV.dev CVE lookups (npm / PyPI / Go / RubyGems)
+# - AI layer: optional — provide repository secrets GROQ_API_KEY / GEMINI_API_KEY /
+#   MISTRAL_API_KEY / ANTHROPIC_API_KEY / OPENAI_API_KEY (your keys = stronger review)
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      fail_on_critical:
+        description: "Fail the job if CRITICAL findings exist"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  nullbreach:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run NULLBREACH
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Set NULLBREACH_ALLOW_CORE to "1" as a repo secret to also use the
+          # embedded Core Engine in CI (it is OFF here by default to protect
+          # the shared quota — add your own secrets for a stronger review).
+          NULLBREACH_ALLOW_CORE: ${{ secrets.NULLBREACH_ALLOW_CORE }}
+          NULLBREACH_FAIL_ON_CRITICAL: ${{ github.event_name == 'workflow_dispatch' && inputs.fail_on_critical && '1' || '0' }}
+          NULLBREACH_MAX_FILES: "800"
+        run: node scripts/nullbreach-ci.mjs . --out nullbreach-output
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nullbreach-report
+          path: |
+            nullbreach-output/nullbreach-report.json
+            nullbreach-output/nullbreach-report.md
+          if-no-files-found: ignore
+
+      - name: Comment summary on PR
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -f nullbreach-output/nullbreach-report.md ]; then
+            head -n 20 nullbreach-output/nullbreach-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi

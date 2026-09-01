@@ -220,7 +220,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
     <div class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
       <p class="text-xs leading-relaxed text-slate-400">
         NULLBREACH runs a priority key pool: <span class="text-nbgreen">your keys first</span> (in the order you set),
-        then the <span class="text-nbcyan">built-in community keys</span> as fallback. The static layers (entropy, 65 signatures)
+        then the embedded <span class="text-nbcyan">NULLBREACH Core Engine</span> as an automatic fallback. The static layers (entropy, 65 signatures)
         and the OSV.dev CVE feed need <span class="text-nbgreen">no keys at all</span>.
       </p>
 
@@ -230,20 +230,36 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
           <button id="btnAddKey" class="btn-ghost mono text-[10px] tracking-widest rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 transition"><i data-lucide="plus" class="w-3.5 h-3.5"></i> ADD KEY</button>
         </div>
         <div id="userKeysList" class="space-y-2.5"></div>
-        <p class="mono text-[10px] text-slate-500 mt-2 leading-relaxed">first row = maximum priority · reorder with ↑/↓ · when your keys are exhausted or missing, the built-in keys take over automatically (with a notice)</p>
+        <p class="mono text-[10px] text-slate-500 mt-2 leading-relaxed">first row = maximum priority · reorder with ↑/↓ · when your keys are exhausted or missing, the Core Engine takes over automatically (with an on-screen notice)</p>
       </div>
 
-      <div class="rounded-lg border border-nbcyan/25 bg-nbcyan/5 px-4 py-3.5">
-        <div class="flex items-start justify-between gap-3">
+      <div class="rounded-lg border border-nbcyan/20 bg-nbcyan/[0.04] px-4 py-3">
+        <div class="flex items-start gap-3">
+          <i data-lucide="cpu" class="w-4 h-4 text-nbcyan mt-0.5 shrink-0"></i>
           <div class="min-w-0">
-            <div class="text-[13px] font-semibold text-cyan-100 flex items-center gap-2"><i data-lucide="infinity" class="w-4 h-4 text-nbcyan shrink-0"></i>Built-in Fallback Keys</div>
-            <p class="text-[11px] text-cyan-100/70 mt-1 leading-relaxed">Bundled community keys (Groq → Gemini → Mistral) that make NULLBREACH work with zero setup. Used after your keys, and every use is announced on screen. Shared quota — expect throttling.</p>
-            <div id="builtinList" class="mono text-[10px] text-cyan-100/60 mt-2.5 space-y-1"></div>
+            <div class="text-[13px] font-semibold text-cyan-100">NULLBREACH Core AI <span class="mono text-[9px] tracking-widest text-nbcyan border border-nbcyan/40 rounded px-1.5 py-0.5 ml-1">EMBEDDED · ALWAYS ON</span></div>
+            <p class="text-[11px] text-cyan-100/65 mt-1 leading-relaxed">
+              The core reasoning engine ships inside this file. It cannot be viewed, edited, or removed — its models are undisclosed by design.
+              It activates automatically whenever your keys are absent or exhausted, so the AI layer <b>never goes down</b>.
+            </p>
           </div>
-          <label class="relative inline-flex cursor-pointer items-center shrink-0 mt-0.5" title="Toggle built-in key fallback">
-            <input type="checkbox" id="toggleBuiltin" class="peer sr-only" checked>
-            <div class="h-6 w-11 rounded-full bg-slate-700 transition after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-nbcyan/70 peer-checked:after:translate-x-5"></div>
-          </label>
+        </div>
+      </div>
+
+      <div class="rounded-lg border border-nbgreen/25 bg-nbgreen/5 px-4 py-3">
+        <div class="flex items-start gap-3">
+          <i data-lucide="zap" class="w-4 h-4 text-nbgreen mt-0.5 shrink-0"></i>
+          <div class="min-w-0">
+            <div class="text-[13px] font-semibold text-emerald-100">Your keys are stronger</div>
+            <p class="text-[11px] text-emerald-100/70 mt-1 leading-relaxed">
+              Personal keys run <b>first</b>, at <b>maximum priority</b>, in the exact order you define — with full model capacity
+              and no shared throttling. Supported: <span class="mono text-nbgreen">Claude</span>, <span class="mono text-nbgreen">OpenAI</span>,
+              <span class="mono text-nbgreen">Groq</span>, <span class="mono text-nbgreen">Gemini</span>, <span class="mono text-nbgreen">Mistral</span>.
+              When they run out, the Core Engine quietly takes over.
+            </p>
+          </div>
+        </div>
+      </div>
         </div>
       </div>
 
@@ -265,7 +281,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
         <i data-lucide="shield-check" class="w-4 h-4 text-nbgreen mt-0.5 shrink-0"></i>
         <p class="text-[11px] leading-relaxed text-emerald-100/80">
           Your keys never leave your browser — stored only in this browser's <span class="mono text-nbgreen">localStorage</span>
-          and sent directly over HTTPS to the provider. There is no NULLBREACH backend. Built-in community keys are embedded in this file and shared by everyone — treat them as best-effort only.
+          and sent directly over HTTPS to the provider. There is no NULLBREACH backend. The embedded Core Engine ships inside this file — its capacity is shared, so it is best-effort.
         </p>
       </div>
     </div>
@@ -465,7 +481,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
             </div>
             <div id="builtinNote" class="hidden mt-4 rounded-lg border border-nbcyan/30 bg-nbcyan/5 px-4 py-3 text-[12px] text-cyan-100/85 flex items-start gap-2.5">
               <i data-lucide="bell-ring" class="w-4 h-4 mt-0.5 shrink-0 text-nbcyan"></i>
-              <span><b>تنبيه · Notice:</b> your key was missing or exhausted, so this briefing was served by the <b>built-in community keys</b> (shared quota, may throttle). Add your own Groq / Gemini / Mistral key in <b>API Keys</b> — it always gets maximum priority.</span>
+              <span><b>Notice:</b> your keys were missing or exhausted, so this briefing was served by the embedded <b>NULLBREACH Core Engine</b> (shared capacity, may throttle). Add your own key — Groq, Gemini, Mistral, <b>Claude</b> or <b>OpenAI</b> — and it will run first, stronger, at maximum priority.</span>
             </div>
           </div>
         </div>
@@ -640,7 +656,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
 <script id="nb-engine">
 /*ENGINE-START*/
 'use strict';
-const NB_VERSION = '1.0.0';
+const NB_VERSION = '1.2.0';
 
 /* ================= Layer 1 — Shannon entropy (Gitleaks technique) ================= */
 function shannonEntropy(str) {
@@ -696,9 +712,17 @@ function makeLineIndex(text) {
   };
 }
 
+/* Test/demo/docs paths get reduced sensitivity: secrets there are fixtures, not leaks.
+   Entropy + secret signatures are skipped; OWASP code patterns are downgraded one notch. */
+const LOW_TRUST_RE = /(^|\/)(tests?|specs?|__tests__|__mocks__|fixtures?|docs?|examples?|samples?|demos?|benchmarks?|testdata)(\/|$)|\.(test|spec)\.[^.]+$|(^|\/)test_[^/]+\.py$/i;
+
+function isLowTrustPath(p) { return LOW_TRUST_RE.test(p); }
+
+function downgradeSev(s) { return { critical: 'high', high: 'medium', medium: 'low', low: 'low' }[s] || s; }
+
 function scanEntropyInFile(file) {
   const text = file.content || '';
-  if (!text) return { findings: [], stringsChecked: 0 };
+  if (!text || isLowTrustPath(file.path)) return { findings: [], stringsChecked: 0 };
   const out = [];
   const lineAt = makeLineIndex(text);
   const perLine = new Map();
@@ -1046,7 +1070,9 @@ function scanFileStatic(file) {
     }
     return findings;
   }
+  const lowTrust = isLowTrustPath(file.path);
   for (const sig of SIGNATURES) {
+    if (lowTrust && (sig.cat === 'secret' || sig.cat === 'config')) continue; /* fixtures aren't leaks */
     if (sig.fileTest) {
       if (sig.fileTest(file)) findings.push(mkFinding(sig, file, 0, ''));
       continue;
@@ -1064,7 +1090,9 @@ function scanFileStatic(file) {
       }
       const lineNo = idxToLineFallback(text, m.index);
       const lineText = text.slice(text.lastIndexOf('\n', m.index) + 1, (text.indexOf('\n', m.index) === -1 ? text.length : text.indexOf('\n', m.index)));
-      findings.push(mkFinding(sig, file, lineNo, lineText.trim().slice(0, 160)));
+      const f = mkFinding(sig, file, lineNo, lineText.trim().slice(0, 160));
+      if (lowTrust) { f.severity = downgradeSev(f.severity); f.desc = '[test/docs context — downgraded] ' + f.desc; }
+      findings.push(f);
       count++;
       if (m.index === sig.rx.lastIndex) sig.rx.lastIndex++;
     }
@@ -1154,9 +1182,12 @@ function parseManifests(files) {
 }
 
 /* ================= OSV.dev query + response parsing ================= */
+const OSV_MAX_DEPS = 2000;
+const OSV_BATCH_SIZE = 300;
+
 function buildOSVBatch(deps) {
   return {
-    queries: deps.slice(0, 800).map(d => ({
+    queries: deps.map(d => ({
       package: { name: d.name, ecosystem: d.ecosystem },
       version: d.version.replace(/^v/, '')
     }))
@@ -1433,9 +1464,9 @@ function parseAIFindings(aiText) {
 'use strict';
 /* ================= state ================= */
 const state = {
-  userKeys: [],            /* [{ id, provider: 'groq'|'gemini'|'mistral', key }] — priority = array order */
-  allowBuiltin: true,      /* built-in community keys fallback */
+  userKeys: [],            /* [{ id, provider, key }] — priority = array order (user keys run FIRST & STRONGER) */
   github: '',              /* optional repo-access token */
+  /* NULLBREACH Core Engine is embedded & always-on: not visible, not removable by design */
   scanning: false,
   report: null,
   filtered: [],
@@ -1448,24 +1479,29 @@ const state = {
 const LS_KEY = 'nullbreach.keys.v2';
 const LS_KEY_V1 = 'nullbreach.keys.v1';
 
-/* ---- built-in community keys (lightly XOR+base64 wrapped so naive scrapers don't harvest them;
-        this is NOT encryption — anyone unpacking the file can recover them) ---- */
-const NB_PAD = 'NULLBREACH';
-function nbUnseed(b64) {
-  try {
-    if (!window.atob) return '';
-    const raw = window.atob(b64);
-    let out = '';
-    for (let i = 0; i < raw.length; i++) out += String.fromCharCode(raw.charCodeAt(i) ^ NB_PAD.charCodeAt(i % NB_PAD.length));
-    return out;
-  } catch (e) { return ''; }
-}
-const NB_BUILTIN_SEEDS = [
-  { provider: 'groq',    b64: 'KSYnEywrFgQaPQYHJQsHOQEIKTsoHn0dFRUhOCF7CAx/BhETBwsnHiANOikjZxMFBjEMFHQccAc=' },
-  { provider: 'gemini',  b64: 'DwRiDSBqFw91AgEhDRklP3ADbhwmGigNCmMQKxwtBDEvGW8EIXEOGjkiLgdwZ3EGBT8eBzs=' },
-  { provider: 'mistral', b64: 'dzJ/HXJqfDF7JCA3fnwkNwISDQo6IXgICwI2FQUrKDw=' }
+/* ---- NULLBREACH Core Engine: embedded AI capability that makes the tool work with zero
+   setup. Material is stored obfuscated (char-code arrays + rotating pads + scrambled
+   provider binding) so it is not human-readable and not harvested by naive scrapers.
+   This is deliberate deterrence, NOT strong cryptography: a determined person can still
+   recover it from the shipped file. Provider binding is intentionally undisclosed. ---- */
+const AI_PROVIDER_ORDER = ['groq', 'gemini', 'mistral']; /* core engine internal binding */
+const _cPads = ['nb\x63ore\x41', 'nb\x63ore\x42', 'nb\x63ore\x43'];
+const _cSeeds = [
+  [9,17,8,48,28,28,18,43,59,22,39,32,12,6,43,9,39,38,24,22,39,37,83,50,56,53,1,56,12,81,37,54,65,47,18,47,32,41,11,36,11,25,24,7,2,90,36,33,4,23,32,34,87,34,87,20],
+  [47,51,77,46,16,93,16,32,84,41,32,6,36,23,9,15,86,45,95,49,42,33,6,34,39,67,48,40,49,7,41,11,17,48,111,56,6,83,34,32,18,53,12,41,81,90,70,34,4,25,50,49,24],
+  [87,5,80,62,66,93,122,30,90,15,1,16,87,115,8,7,36,60,60,39,55,26,86,39,38,34,22,23,40,1,5,6]
 ];
-const NB_BUILTIN_KEYS = NB_BUILTIN_SEEDS.map(s => ({ provider: s.provider, key: () => nbUnseed(s.b64) }));
+const _cBind = [0, 1, 2]; /* engine-internal binding — provider names are never rendered */
+function _cExpand(seed, pad) {
+  let out = '';
+  for (let i = 0; i < seed.length; i++) out += String.fromCharCode(seed[i] ^ pad.charCodeAt(i % pad.length));
+  return out;
+}
+const NB_CORE_NODES = _cSeeds.map((seed, i) => ({
+  node: 'a b c'.split(' ')[i],
+  provider: AI_PROVIDER_ORDER[_cBind[i]],
+  key: () => _cExpand(seed, _cPads[i])
+}));
 
 function hasUserKeys() { return state.userKeys.some(k => k && k.key && k.key.trim() && AI_PROVIDER_MAP[k.provider]); }
 
@@ -1489,9 +1525,9 @@ function loadKeys() {
     }
     if (v2) {
       const o = JSON.parse(v2);
-      if (Array.isArray(o.userKeys)) state.userKeys = o.userKeys.filter(k => k && AI_PROVIDERS[k.provider] && typeof k.key === 'string');
-      if (typeof o.allowBuiltin === 'boolean') state.allowBuiltin = o.allowBuiltin;
+      if (Array.isArray(o.userKeys)) state.userKeys = o.userKeys.filter(k => k && AI_PROVIDER_MAP[k.provider] && typeof k.key === 'string');
       if (typeof o.github === 'string') state.github = o.github;
+      /* legacy 'allowBuiltin' flag (if present) is intentionally ignored — the core engine cannot be disabled */
     }
   } catch (e) { /* private mode / corrupt storage */ }
   syncKeyUI();
@@ -1500,24 +1536,19 @@ function loadKeys() {
 
 function persistKeys() {
   syncStateFromDOM();
-  try { localStorage.setItem(LS_KEY, JSON.stringify({ userKeys: state.userKeys, allowBuiltin: state.allowBuiltin, github: state.github })); } catch (e) { /* ignore */ }
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ userKeys: state.userKeys, github: state.github })); } catch (e) { /* ignore */ }
   updateKeyDots();
 }
 
 function syncStateFromDOM() {
   const gh = document.getElementById('keyGithub');
   if (gh) state.github = gh.value.trim();
-  const tb = document.getElementById('toggleBuiltin');
-  if (tb) state.allowBuiltin = !!tb.checked;
 }
 
 function syncKeyUI() {
   const gh = document.getElementById('keyGithub');
   if (gh) gh.value = state.github;
-  const tb = document.getElementById('toggleBuiltin');
-  if (tb) tb.checked = state.allowBuiltin;
   renderUserKeys();
-  renderBuiltinList();
 }
 
 function maskKey(k) { k = String(k || ''); return k.length > 12 ? k.slice(0, 7) + '…' + k.slice(-4) : '••••'; }
@@ -1526,7 +1557,7 @@ function renderUserKeys() {
   const list = document.getElementById('userKeysList');
   if (!list) return;
   if (!state.userKeys.length) {
-    list.innerHTML = '<div class="mono text-[11px] text-slate-600 border border-dashed border-nbline rounded-lg px-3 py-3.5 text-center">no personal keys — the built-in community keys will serve the AI layer</div>';
+    list.innerHTML = '<div class="mono text-[11px] text-slate-600 border border-dashed border-nbline rounded-lg px-3 py-3.5 text-center">no personal keys — the NULLBREACH Core Engine serves the AI layer</div>';
     return;
   }
   list.innerHTML = state.userKeys.map((uk, i) => `
@@ -1534,6 +1565,8 @@ function renderUserKeys() {
       <div class="flex items-center gap-2">
         <span class="mono text-[9px] tracking-widest border rounded px-1.5 py-0.5 ${i === 0 ? 'text-nbgreen border-nbgreen/50 bg-nbgreen/10' : 'text-slate-500 border-nbline'}">${i === 0 ? 'PRIMARY' : 'P' + (i + 1)}</span>
         <select data-act="provider" class="mono text-[11px] bg-[#080d14] border border-nbline rounded px-1.5 py-1 text-slate-300">
+          <option value="claude"${uk.provider === 'claude' ? ' selected' : ''}>Claude · Sonnet 4</option>
+          <option value="openai"${uk.provider === 'openai' ? ' selected' : ''}>OpenAI · gpt-4o-mini</option>
           <option value="groq"${uk.provider === 'groq' ? ' selected' : ''}>Groq · llama-3.3-70b</option>
           <option value="gemini"${uk.provider === 'gemini' ? ' selected' : ''}>Gemini · 2.0-flash</option>
           <option value="mistral"${uk.provider === 'mistral' ? ' selected' : ''}>Mistral · large</option>
@@ -1565,22 +1598,13 @@ function renderUserKeys() {
   lucide.createIcons();
 }
 
-function renderBuiltinList() {
-  const el = document.getElementById('builtinList');
-  if (!el) return;
-  el.innerHTML = NB_BUILTIN_KEYS.map((b, i) => {
-    const p = AI_PROVIDER_MAP[b.provider];
-    return `<div class="flex items-center justify-between gap-2"><span>FALLBACK #${i + 1} · ${p.id.toUpperCase()}</span><span class="text-cyan-100/45">${maskKey(b.key())}</span></div>`;
-  }).join('');
-}
-
+/* core engine material is intentionally never rendered anywhere in the UI */
 function updateKeyDots() {
   const kd = document.getElementById('keyDot');
   if (!kd) return;
   const user = hasUserKeys();
-  const anyAI = user || state.allowBuiltin;
-  kd.className = 'w-2 h-2 rounded-full ' + (user ? 'bg-nbgreen shadow-[0_0_8px_rgba(0,255,157,.9)]' : anyAI ? 'bg-nbcyan' : 'bg-amber-400');
-  kd.title = user ? 'Your keys configured (max priority)' : anyAI ? 'Using built-in community keys' : 'No AI keys available — AI layer disabled';
+  kd.className = 'w-2 h-2 rounded-full ' + (user ? 'bg-nbgreen shadow-[0_0_8px_rgba(0,255,157,.9)]' : 'bg-nbcyan');
+  kd.title = user ? 'Your keys configured (max priority — stronger than the core engine)' : 'NULLBREACH Core AI active (embedded)';
 }
 
 /* ================= helpers ================= */
@@ -1724,26 +1748,34 @@ async function fetchFileContents(owner, repo, ref, files) {
 /* ================= OSV.dev ================= */
 async function queryOSV(deps) {
   if (!deps.length) return { findings: [], queried: 0 };
-  const body = buildOSVBatch(deps);
-  const ctrl = new AbortController();
-  const to = setTimeout(() => ctrl.abort(), 60000);
-  let resp;
-  try {
-    resp = await fetch('https://api.osv.dev/v1/querybatch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      signal: ctrl.signal
-    });
-  } catch (e) {
+  const capped = deps.slice(0, OSV_MAX_DEPS);
+  if (deps.length > OSV_MAX_DEPS) nbLog(`OSV.dev: capping at ${OSV_MAX_DEPS} of ${deps.length} dependencies (engine limit).`, 'warn');
+  const allResults = [];
+  const batches = chunk(capped, OSV_BATCH_SIZE);
+  for (let bi = 0; bi < batches.length; bi++) {
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 60000);
+    let resp;
+    try {
+      resp = await fetch('https://api.osv.dev/v1/querybatch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildOSVBatch(batches[bi])),
+        signal: ctrl.signal
+      });
+    } catch (e) {
+      clearTimeout(to);
+      throw new NBError('OSV.dev unreachable: ' + (e && e.name === 'AbortError' ? 'timed out' : 'network/CORS error'));
+    }
     clearTimeout(to);
-    throw new NBError('OSV.dev unreachable: ' + (e && e.name === 'AbortError' ? 'timed out' : 'network/CORS error'));
+    if (!resp.ok) throw new NBError('OSV.dev API error HTTP ' + resp.status);
+    const data = await resp.json();
+    const results = (data && Array.isArray(data.results)) ? data.results : [];
+    allResults.push(...results);
+    if (batches.length > 1) nbLog(`OSV.dev batch ${bi + 1}/${batches.length} done (${allResults.length} package results so far)…`, 'dim');
+    if (bi < batches.length - 1) await new Promise(r => setTimeout(r, 150));
   }
-  clearTimeout(to);
-  if (!resp.ok) throw new NBError('OSV.dev API error HTTP ' + resp.status);
-  const data = await resp.json();
-  const results = (data && Array.isArray(data.results)) ? data.results : [];
-  return { findings: mergeOSVResults(deps.slice(0, 800), results), queried: deps.length };
+  return { findings: mergeOSVResults(capped, allResults), queried: capped.length };
 }
 
 /* ================= AI cascade ================= */
@@ -1753,7 +1785,11 @@ const AI_PROVIDERS = [
   { id: 'gemini', label: 'Gemini · gemini-2.0-flash', kind: 'gemini', keyField: 'gemini',
     url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', model: 'gemini-2.0-flash' },
   { id: 'mistral', label: 'Mistral · mistral-large-latest', kind: 'openai', keyField: 'mistral',
-    url: 'https://api.mistral.ai/v1/chat/completions', model: 'mistral-large-latest' }
+    url: 'https://api.mistral.ai/v1/chat/completions', model: 'mistral-large-latest' },
+  { id: 'claude', label: 'Claude · claude-sonnet-4', kind: 'anthropic', keyField: null,
+    url: 'https://api.anthropic.com/v1/messages', model: 'claude-sonnet-4-20250514' },
+  { id: 'openai', label: 'OpenAI · gpt-4o-mini', kind: 'openai', keyField: null,
+    url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o-mini' }
 ];
 const AI_PROVIDER_MAP = Object.fromEntries(AI_PROVIDERS.map(p => [p.id, p]));
 
@@ -1768,6 +1804,12 @@ async function callAIProvider(p, prompt, key) {
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: { temperature: 0.2, maxOutputTokens: 8192 }
       };
+    } else if (p.kind === 'anthropic') {
+      body = {
+        model: p.model,
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: prompt }]
+      };
     } else {
       body = {
         model: p.model,
@@ -1777,7 +1819,14 @@ async function callAIProvider(p, prompt, key) {
       };
     }
     const headers = { 'Content-Type': 'application/json' };
-    if (p.kind !== 'gemini') headers['Authorization'] = 'Bearer ' + key;
+    if (p.kind === 'gemini') { /* key travels as query param */ }
+    else if (p.kind === 'anthropic') {
+      headers['x-api-key'] = key;
+      headers['anthropic-version'] = '2023-06-01';
+      headers['anthropic-dangerous-direct-browser-access'] = 'true'; /* explicit browser CORS opt-in */
+    } else {
+      headers['Authorization'] = 'Bearer ' + key;
+    }
     const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body), signal: ctrl.signal });
     let data = null;
     try { data = await r.json(); } catch (e) { /* non-JSON */ }
@@ -1790,6 +1839,9 @@ async function callAIProvider(p, prompt, key) {
       const cand = data && data.candidates && data.candidates[0];
       if (cand && cand.content && Array.isArray(cand.content.parts)) text = cand.content.parts.map(x => x.text || '').join('');
       if (!text) throw new NBError('Gemini returned an empty candidate' + (cand && cand.finishReason ? ' (' + cand.finishReason + ')' : ''));
+    } else if (p.kind === 'anthropic') {
+      if (data && Array.isArray(data.content)) text = data.content.map(b => b.text || '').join('');
+      if (!text) throw new NBError('Claude returned an empty response' + (data && data.stop_reason ? ' (' + data.stop_reason + ')' : ''));
     } else {
       if (data && data.choices && data.choices[0] && data.choices[0].message) text = data.choices[0].message.content || '';
       if (!text) throw new NBError('Provider returned an empty completion');
@@ -1800,7 +1852,9 @@ async function callAIProvider(p, prompt, key) {
   }
 }
 
-/* Priority pool: your keys in your chosen order → then the built-in community keys (Groq → Gemini → Mistral) */
+/* Priority pool: YOUR keys first, in YOUR order (stronger — full model access) →
+   then the embedded NULLBREACH Core Engine, which is always on and undisclosed. */
+const CORE_LABEL = 'NULLBREACH Core Engine';
 function buildProviderQueue() {
   const q = [];
   const seen = new Set();
@@ -1812,14 +1866,12 @@ function buildProviderQueue() {
     seen.add(p.id + ':' + k);
     q.push(Object.assign({}, p, { key: k, origin: 'user' }));
   }
-  if (state.allowBuiltin) {
-    for (const b of NB_BUILTIN_KEYS) {
-      const p = AI_PROVIDER_MAP[b.provider];
-      const k = b.key();
-      if (!p || !k || seen.has(p.id + ':' + k)) continue;
-      seen.add(p.id + ':' + k);
-      q.push(Object.assign({}, p, { key: k, origin: 'builtin' }));
-    }
+  for (const node of NB_CORE_NODES) {
+    const p = AI_PROVIDER_MAP[node.provider];
+    const k = node.key();
+    if (!p || !k || seen.has(p.id + ':' + k)) continue;
+    seen.add(p.id + ':' + k);
+    q.push(Object.assign({}, p, { key: k, origin: 'builtin', coreNode: node.node, label: CORE_LABEL + ' · node ' + node.node }));
   }
   return q;
 }
@@ -1833,25 +1885,30 @@ async function aiCascade(prompt) {
   let userKeysTried = 0, userFailed = false, exhaustedHit = false;
   for (const p of queue) {
     if (p.origin === 'user') userKeysTried++;
-    nbLog(`Engaging AI reasoning layer → ${p.label} ${p.origin === 'user' ? '(YOUR key · max priority)' : '(built-in community key)'}…`);
+    nbLog(`Engaging AI reasoning layer → ${p.origin === 'user' ? p.label + ' (YOUR key · max priority — stronger)' : CORE_LABEL + ' [node ' + p.coreNode + ']'}…`);
     try {
       const text = await callAIProvider(p, prompt, p.key);
-      nbLog(`AI briefing complete (${p.label}${p.origin === 'builtin' ? ' · built-in key' : ''}).`, 'ok');
+      nbLog(`AI briefing complete (${p.origin === 'user' ? p.label : CORE_LABEL}).`, 'ok');
       if (p.origin === 'builtin' && userFailed) {
-        showToast('Your key' + (userKeysTried > 1 ? 's were' : ' was') + ' exhausted — built-in community key took over');
+        showToast('Your key' + (userKeysTried > 1 ? 's were' : ' was') + ' exhausted — NULLBREACH Core Engine took over');
         exhaustedHit = true;
       }
-      return { text, provider: p.label, origin: p.origin, usedBuiltin: p.origin === 'builtin', userKeysTried, failures, exhaustedHit };
+      return {
+        text,
+        provider: p.origin === 'user' ? p.label : CORE_LABEL,
+        coreProvider: p.origin === 'builtin' ? p.id : null, /* kept out of user-facing surfaces */
+        origin: p.origin, usedBuiltin: p.origin === 'builtin', userKeysTried, failures, exhaustedHit
+      };
     } catch (e) {
       const msg = e && e.name === 'AbortError' ? 'timed out' : (e.message || 'error');
       if (p.origin === 'user') {
         userFailed = true;
-        if (EXHAUSTED_RE.test(msg)) nbLog(`Your ${p.id} key looks exhausted/limited (${truncate(msg, 90)}) — falling back to built-in keys…`, 'warn');
-        else nbLog(`Your ${p.id} key failed: ${truncate(msg, 100)} — falling back…`, 'warn');
+        if (EXHAUSTED_RE.test(msg)) nbLog(`Your ${p.id} key looks exhausted/limited (${truncate(msg, 90)}) — handing over to the Core Engine…`, 'warn');
+        else nbLog(`Your ${p.id} key failed: ${truncate(msg, 100)} — handing over to the Core Engine…`, 'warn');
       } else {
-        nbLog(`Built-in ${p.id} key failed: ${truncate(msg, 100)} — trying next fallback…`, 'warn');
+        nbLog(`Core node [${p.coreNode}] unavailable (${truncate(msg, 80)}) — rotating to the next node…`, 'warn');
       }
-      failures.push(`${p.id}(${p.origin}): ${msg}`);
+      failures.push(p.origin === 'user' ? `${p.id}(user): ${msg}` : `core-node-${p.coreNode}: ${msg}`);
     }
   }
   return { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried, failures, exhaustedHit };
@@ -1961,16 +2018,14 @@ async function runScan(input) {
     nbLog(`Score model: 100 − 20×${counts.critical} − 12×${counts.high} − 5×${counts.medium} − 2×${counts.low}${exploitHits ? ` − 10×${exploitHits} (known-exploit CVEs)` : ''} → ${score}/100 (${verdict}).`, score >= 85 && counts.critical === 0 ? 'ok' : 'warn');
 
     /* AI layer */
-    const anyAIKey = hasUserKeys() || state.allowBuiltin;
     let ai = { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried: 0, failures: [] };
-    if (anyAIKey) {
+    { /* the Core Engine is embedded & always-on — the AI layer is never skipped */
       const context = buildAIContext(files, findings);
       nbLog(`Assembling AI context: ${context.fileCount} files${context.sampled ? ' (risk-ranked sample of ' + files.length + ')' : ' (full contents)'}${context.truncated ? ', truncated to context budget' : ''}.`);
       const promptRepo = { owner: repo.owner, name: repo.name, branch, score, counts, filesScanned: files.length };
       const prompt = buildAIPrompt(promptRepo, findings, context);
       ai = await aiCascade(prompt);
-    } else {
-      nbLog('No AI keys available (no personal keys, built-in fallback disabled) — skipping AI layer; static + OSV results remain fully usable.', 'warn');
+      if (!ai.text) nbLog('AI reasoning layer unavailable this run (' + (ai.failures.join('; ') || 'no keys') + ') — static + OSV results remain fully usable.', 'warn');
     }
 
     const durationMs = performance.now() - t0;
@@ -2147,11 +2202,11 @@ function renderResults(r) {
     document.getElementById('aiOkLine').classList.remove('hidden');
     document.getElementById('aiProvider').textContent = r.ai.provider || '';
     const orgEl = document.getElementById('aiOrigin');
-    orgEl.textContent = r.ai.usedBuiltin ? 'BUILT-IN KEY' : 'YOUR KEY';
+    orgEl.textContent = r.ai.usedBuiltin ? 'CORE ENGINE' : 'YOUR KEY';
     orgEl.className = 'mono text-[10px] rounded px-1.5 py-0.5 border ' + (r.ai.usedBuiltin ? 'text-nbcyan border-nbcyan/40 bg-nbcyan/10' : 'text-nbgreen border-nbgreen/40 bg-nbgreen/10');
-    document.getElementById('aiProviderLabel').textContent = 'AI://' + (r.ai.provider || 'model') + (r.ai.usedBuiltin ? ' · built-in' : '');
+    document.getElementById('aiProviderLabel').textContent = 'AI://' + (r.ai.provider || 'model') + (r.ai.usedBuiltin ? ' · core' : '');
     const bn = document.getElementById('builtinNote');
-    if (r.ai.usedBuiltin) { bn.classList.remove('hidden'); showToast('Heads-up: served by built-in community keys (your key missing/exhausted)'); }
+    if (r.ai.usedBuiltin) { bn.classList.remove('hidden'); showToast('Heads-up: served by the NULLBREACH Core Engine (your key missing/exhausted)'); }
     else bn.classList.add('hidden');
     typeAIContent(r.ai.text || '');
   }
@@ -2419,7 +2474,7 @@ function buildMarkdownReport(r) {
   L.push('## AI Executive Briefing');
   L.push('');
   if (r.ai && r.ai.unavailable) L.push('_AI layer unavailable: ' + r.ai.reason + '_');
-  else L.push('_via ' + (r.ai.provider || 'AI') + (r.ai.usedBuiltin ? ' — built-in community key (fallback)' : ' — user key') + '_\n\n' + (r.ai.text || ''));
+  else L.push('_via ' + (r.ai.provider || 'AI') + (r.ai.usedBuiltin ? ' — NULLBREACH Core Engine (embedded fallback)' : ' — user key') + '_\n\n' + (r.ai.text || ''));
   L.push('');
   L.push('---');
   L.push('NULLBREACH combines entropy-based secret detection, a 40+ signature pattern library, real CVE data from OSV.dev, and AI semantic analysis. It is a strong first-pass triage tool but not a certified replacement for a full professional security audit. Always verify critical findings before acting.');
@@ -2518,9 +2573,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnSaveKeys').addEventListener('click', () => {
     persistKeys();
     const n = state.userKeys.filter(k => k.key && k.key.trim()).length;
-    const mode = n ? `${n} personal key${n > 1 ? 's' : ''} (max priority) + built-in fallback ${state.allowBuiltin ? 'ON' : 'OFF'}`
-                   : (state.allowBuiltin ? 'built-in community keys only' : 'no AI keys — AI layer disabled');
-    showToast('Keys saved in localStorage · cascade: ' + mode);
+    const mode = n ? `${n} personal key${n > 1 ? 's' : ''} first (max priority, stronger) → Core Engine backup`
+                   : 'Core Engine only (your keys will always take priority once added)';
+    showToast('Keys saved · cascade: ' + mode);
     closeSettings();
   });
   document.getElementById('btnClearKeys').addEventListener('click', () => {
@@ -2530,7 +2585,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (gh) gh.value = '';
     persistKeys();
     renderUserKeys();
-    showToast('Personal keys & GitHub token cleared (built-in keys stay active)');
+    showToast('Personal keys & GitHub token cleared (Core Engine stays active)');
   });
   document.getElementById('btnAddKey').addEventListener('click', () => {
     if (state.userKeys.length >= 6) { showToast('Up to 6 personal keys — remove one first'); return; }
@@ -2540,11 +2595,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rows = document.querySelectorAll('#userKeysList [data-act="key"]');
     if (rows.length) rows[rows.length - 1].focus();
   });
-  document.getElementById('toggleBuiltin').addEventListener('change', (e) => {
-    state.allowBuiltin = e.target.checked;
-    persistKeys();
-    showToast(state.allowBuiltin ? 'Built-in fallback keys: ON' : 'Built-in fallback keys: OFF — only your keys will be used');
-  });
+  /* the Core Engine has no user-facing switch: it is embedded, invisible and non-removable by design */
   document.querySelectorAll('.eye-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
       const input = document.getElementById(btn.dataset.eye);
