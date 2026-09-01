@@ -127,6 +127,7 @@ body { background:#05070a; color:#dbe4ee; font-family:'Space Grotesk',Inter,sans
 .layer-pattern{ color:#00ff9d; border-color:rgba(0,255,157,.45); background:rgba(0,255,157,.06); }
 .layer-osv{ color:#ffb703; border-color:rgba(255,183,3,.5); background:rgba(255,183,3,.06); }
 .layer-ai{ color:#a78bfa; border-color:rgba(167,139,250,.5); background:rgba(167,139,250,.07); }
+.layer-supply-chain{ color:#f472b6; border-color:rgba(244,114,182,.5); background:rgba(244,114,182,.07); }
 
 tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
 @keyframes critrow { 0% { background:rgba(255,59,92,.28);} 100% { background:transparent; } }
@@ -137,16 +138,16 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
 /* ---------- AI terminal ---------- */
 #aiPanel{ background:#04070b; border:1px solid rgba(0,255,157,.22); border-radius:12px;
   box-shadow:inset 0 0 80px rgba(0,255,157,.04), 0 20px 60px -30px rgba(0,255,157,.2); }
-#aiContent h3{ color:#00ff9d; font-weight:700; margin:18px 0 8px; font-size:15px; letter-spacing:.02em; }
-#aiContent h4{ color:#22d3ee; font-weight:600; margin:14px 0 6px; font-size:14px; }
-#aiContent p{ margin:6px 0; }
-#aiContent ul,#aiContent ol{ margin:8px 0 8px 20px; list-style:disc; }
-#aiContent ol{ list-style:decimal; }
-#aiContent li{ margin:4px 0; }
-#aiContent code{ background:rgba(0,255,157,.08); border:1px solid rgba(0,255,157,.2); padding:1px 5px; border-radius:4px; font-size:12px; }
-#aiContent pre{ background:#060a10; border:1px solid #142030; border-radius:8px; padding:12px; overflow-x:auto; margin:10px 0; }
-#aiContent pre code{ background:none; border:none; padding:0; }
-#aiContent strong{ color:#e8f2ee; }
+.ai-content h3{ color:#00ff9d; font-weight:700; margin:18px 0 8px; font-size:15px; letter-spacing:.02em; }
+.ai-content h4{ color:#22d3ee; font-weight:600; margin:14px 0 6px; font-size:14px; }
+.ai-content p{ margin:6px 0; }
+.ai-content ul,.ai-content ol{ margin:8px 0 8px 20px; list-style:disc; }
+.ai-content ol{ list-style:decimal; }
+.ai-content li{ margin:4px 0; }
+.ai-content code{ background:rgba(0,255,157,.08); border:1px solid rgba(0,255,157,.2); padding:1px 5px; border-radius:4px; font-size:12px; }
+.ai-content pre{ background:#060a10; border:1px solid #142030; border-radius:8px; padding:12px; overflow-x:auto; margin:10px 0; }
+.ai-content pre code{ background:none; border:none; padding:0; }
+.ai-content strong{ color:#e8f2ee; }
 
 /* ---------- shareable badge ---------- */
 #badgePreview{ background:linear-gradient(135deg,#070c12 0%, #0b1420 60%, #081018 100%);
@@ -196,6 +197,12 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
     </a>
     <div class="flex items-center gap-3">
       <span class="hidden md:flex mono text-[10px] tracking-widest text-slate-500 border border-nbline rounded-full px-3 py-1.5" id="engineBadge">ENGINE v1.0 · ENTROPY + SIGS + OSV.DEV + AI</span>
+      <div class="relative">
+        <button id="btnHistory" class="btn-ghost flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm transition" title="Scan history & comparison">
+          <i data-lucide="history" class="w-4 h-4"></i><span class="hidden sm:inline">History</span>
+        </button>
+        <div id="historyDrop" class="hidden absolute right-0 top-12 w-[430px] max-h-[500px] overflow-y-auto panel p-4 z-50 shadow-2xl"></div>
+      </div>
       <button id="btnSettings" class="btn-ghost flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm transition" title="API keys & settings">
         <i data-lucide="settings-2" class="w-4 h-4"></i>
         <span class="hidden sm:inline">API Keys</span>
@@ -315,7 +322,36 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
     </p>
   </div>
 
-  <form id="scanForm" class="mt-9 max-w-3xl mx-auto">
+  <div class="mt-9 max-w-3xl mx-auto flex justify-center gap-2">
+    <button type="button" id="tabRepoScan" class="mode-tab mono text-[11px] tracking-[.18em] px-5 py-2 rounded-t-lg border border-b-0 border-nbgreen/50 text-nbgreen bg-nbgreen/10">⣿ REPO SCAN</button>
+    <button type="button" id="tabOrgScan" class="mode-tab mono text-[11px] tracking-[.18em] px-5 py-2 rounded-t-lg border border-nbline text-slate-400">⣿ ORG SCAN</button>
+  </div>
+
+  <form id="orgForm" class="mt-3 max-w-3xl mx-auto hidden">
+    <div class="panel p-5">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+          <i data-lucide="building-2" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+          <input id="orgInput" type="text" spellcheck="false" autocomplete="off" placeholder="GitHub organization — e.g. vercel · owasp · google"
+            class="mono w-full bg-[#0a0f16]/90 border border-nbline rounded-xl pl-12 pr-4 py-3.5 text-sm text-slate-200">
+        </div>
+        <button id="btnOrgScan" type="submit" class="btn-primary mono rounded-xl px-7 py-3.5 text-sm font-bold tracking-[.14em] transition flex items-center justify-center gap-2">
+          <i data-lucide="radar" class="w-4 h-4"></i> SCAN ORGANIZATION
+        </button>
+      </div>
+      <div class="mt-3 flex items-center gap-5 flex-wrap">
+        <label class="flex items-center gap-2 text-[12px] text-slate-400 cursor-pointer">
+          <input type="checkbox" id="orgForks" class="accent-[#00ff9d] w-4 h-4"> Include forks
+        </label>
+        <span class="mono text-[10px] text-slate-600">fast pass: Layer 1 (entropy) + Layer 2 (signatures) only · no OSV/AI · top 40 files per repo</span>
+      </div>
+      <div id="orgError" class="hidden mt-4 rounded-lg border border-nbred/40 bg-nbred/10 px-4 py-3 text-[13px] text-red-200 flex items-start gap-2.5">
+        <i data-lucide="shield-alert" class="w-4 h-4 text-nbred shrink-0 mt-0.5"></i><span id="orgErrorMsg"></span>
+      </div>
+    </div>
+  </form>
+
+  <form id="scanForm" class="mt-3 max-w-3xl mx-auto">
     <div class="flex flex-col sm:flex-row gap-3">
       <div class="relative flex-1">
         <i data-lucide="github" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
@@ -351,7 +387,77 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
       <span class="mono text-[10px] tracking-[.25em] text-slate-500">NULLBREACH://scan-engine</span>
       <span id="logTimer" class="mono text-[10px] text-slate-500">00:00</span>
     </div>
+    <div id="scanProgressWrap" class="px-4 pt-3">
+      <div class="flex items-center justify-between mono text-[10px] text-slate-400 mb-1.5">
+        <span id="scanProgressLabel">initializing…</span>
+        <span class="flex items-center gap-3">
+          <span id="scanProgressEta" class="text-slate-600"></span>
+          <span id="scanProgressPct" class="text-nbgreen font-bold">0%</span>
+        </span>
+      </div>
+      <div class="h-2 rounded-full bg-[#0d151f] overflow-hidden">
+        <div id="scanProgressFill" class="h-full bg-gradient-to-r from-nbgreen to-nbcyan transition-all duration-300" style="width:0%"></div>
+      </div>
+    </div>
     <div id="logBody" class="log-body mono text-[12px] leading-[1.7] px-4 py-3 text-emerald-100/90"></div>
+  </div>
+</section>
+
+<!-- ================= COMPARE ================= -->
+<section id="compareSection" class="hidden relative z-10">
+  <div class="max-w-6xl mx-auto px-6 pt-9">
+    <div class="panel p-6">
+      <div class="flex items-center justify-between flex-wrap gap-3 mb-5">
+        <h2 class="mono text-lg font-bold tracking-wide text-slate-100">// SCAN COMPARISON</h2>
+        <button id="btnCloseCompare" class="btn-ghost mono text-[10px] rounded-lg px-3 py-2">CLOSE ✕</button>
+      </div>
+      <div id="compareScores" class="grid sm:grid-cols-[1fr_auto_1fr] gap-4 items-center mb-6"></div>
+      <div class="grid lg:grid-cols-2 gap-6">
+        <div>
+          <div class="mono text-[10px] tracking-[.25em] text-nbred mb-3">NEW FINDINGS <span id="cmpNewCount"></span></div>
+          <div id="cmpNewList" class="space-y-2 max-h-[320px] overflow-y-auto"></div>
+        </div>
+        <div>
+          <div class="mono text-[10px] tracking-[.25em] text-nbgreen mb-3">RESOLVED FINDINGS <span id="cmpResCount"></span></div>
+          <div id="cmpResList" class="space-y-2 max-h-[320px] overflow-y-auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ORG RESULTS ================= -->
+<section id="orgResults" class="hidden relative z-10">
+  <div class="max-w-6xl mx-auto px-6 py-9">
+    <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
+      <div>
+        <h2 class="mono text-xl font-bold tracking-wide text-slate-100">// ORGANIZATION REPORT <span id="orgNameLabel" class="text-nbcyan"></span></h2>
+        <p class="text-sm text-slate-500 mt-1">Fast triage across the org's public repositories — entropy + signatures, worst repos first. Run a Deep Scan on anything suspicious.</p>
+      </div>
+      <span id="orgTotals" class="mono text-[12px] text-slate-400"></span>
+    </div>
+    <div class="panel p-5 mb-6">
+      <div class="rounded-lg border border-nbline overflow-auto">
+        <table class="w-full text-left text-[12px]">
+          <thead class="mono text-[10px] tracking-[.15em] text-slate-500">
+            <tr class="border-b border-nbline bg-[#0a1119]">
+              <th class="px-3 py-2.5">REPO</th>
+              <th class="px-3 py-2.5">SCORE</th>
+              <th class="px-3 py-2.5">CRITICAL</th>
+              <th class="px-3 py-2.5">HIGH</th>
+              <th class="px-3 py-2.5">MEDIUM</th>
+              <th class="px-3 py-2.5">STATUS</th>
+              <th class="px-3 py-2.5"></th>
+            </tr>
+          </thead>
+          <tbody id="orgTableBody" class="divide-y divide-[#0d151f]"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel p-5">
+      <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-3">WORST 10 FINDINGS ACROSS ALL REPOS</div>
+      <div id="orgWorst" class="space-y-2"></div>
+    </div>
   </div>
 </section>
 
@@ -363,6 +469,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
         <a href="#nb-summary"     class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-summary">SUMMARY</a>
         <a href="#nb-findings"    class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-findings">FINDINGS</a>
         <a href="#nb-deps"        class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-deps">DEPENDENCIES</a>
+        <a href="#nb-supply"      class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-supply">SUPPLY CHAIN</a>
         <a href="#nb-ai"          class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-ai">AI BRIEFING</a>
         <a href="#nb-remediation" class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-remediation">REMEDIATION</a>
         <a href="#nb-export"      class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-export">EXPORT</a>
@@ -511,6 +618,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
             <option value="entropy">ENTROPY</option>
             <option value="pattern">PATTERN</option>
             <option value="osv">OSV.DEV</option>
+            <option value="supply-chain">SUPPLY CHAIN</option>
             <option value="ai">AI</option>
           </select>
           <div class="relative flex-1 min-w-[180px]">
@@ -550,6 +658,18 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
       </div>
     </div>
 
+    <!-- SUPPLY CHAIN -->
+    <div id="nb-supply" class="scroll-mt-24">
+      <div class="mb-4">
+        <h2 class="mono text-xl font-bold tracking-wide text-slate-100">// SUPPLY CHAIN <span class="text-slate-500 text-sm">· dependency confusion &amp; typosquatting</span></h2>
+        <p class="text-sm text-slate-500 mt-1">Every pinned dependency is checked against its live public registry (npm / PyPI): missing packages are internal-name hijack risks, and near-miss names of popular packages are flagged with Levenshtein distance.</p>
+      </div>
+      <div class="panel p-5">
+        <div id="supplySummary" class="mono text-[12px] text-slate-400 mb-4"></div>
+        <div id="supplyList" class="space-y-3"></div>
+      </div>
+    </div>
+
     <!-- AI BRIEFING -->
     <div id="nb-ai" class="scroll-mt-24">
       <div class="flex items-end justify-between flex-wrap gap-3 mb-4">
@@ -570,7 +690,20 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
           </div>
           <span id="aiProviderLabel" class="mono text-[10px] tracking-[.25em] text-slate-500">AI://standby</span>
         </div>
-        <div id="aiContent" class="mono text-[12.5px] leading-[1.75] text-emerald-50/90 px-5 py-4 max-h-[560px] overflow-y-auto whitespace-pre-wrap"></div>
+        <div class="flex items-center gap-1.5 px-4 pt-3 flex-wrap">
+          <button data-ai-tab="brief" class="ai-tab mono text-[10px] tracking-widest px-3 py-1.5 rounded-lg border border-nbgreen/50 text-nbgreen bg-nbgreen/10">📊 EXECUTIVE BRIEF</button>
+          <button data-ai-tab="logic" class="ai-tab mono text-[10px] tracking-widest px-3 py-1.5 rounded-lg border border-nbline text-slate-400">🔍 LOGIC ANALYSIS <span id="aiLogicCount" class="opacity-70"></span></button>
+          <button data-ai-tab="exploits" class="ai-tab mono text-[10px] tracking-widest px-3 py-1.5 rounded-lg border border-nbline text-slate-400">💥 EXPLOITS <span id="aiExploitCount" class="opacity-70"></span></button>
+        </div>
+        <div id="aiPaneBrief">
+          <div id="aiContent" class="ai-content mono text-[12.5px] leading-[1.75] text-emerald-50/90 px-5 py-4 max-h-[560px] overflow-y-auto whitespace-pre-wrap"></div>
+        </div>
+        <div id="aiPaneLogic" class="hidden">
+          <div id="aiLogicContent" class="ai-content mono text-[12.5px] leading-[1.75] text-emerald-50/90 px-5 py-4 max-h-[560px] overflow-y-auto whitespace-pre-wrap"></div>
+        </div>
+        <div id="aiPaneExploits" class="hidden">
+          <div id="aiExploitContent" class="ai-content mono text-[12.5px] leading-[1.75] text-emerald-50/90 px-5 py-4 max-h-[560px] overflow-y-auto whitespace-pre-wrap"></div>
+        </div>
       </div>
     </div>
 
@@ -607,6 +740,9 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
             <button id="btnCopyBadge" class="btn-ghost rounded-lg px-5 py-2.5 text-sm flex items-center gap-2 transition">
               <i data-lucide="badge-check" class="w-4 h-4"></i> Copy README badge
             </button>
+            <button id="btnShareReport" class="btn-ghost rounded-lg px-5 py-2.5 text-sm flex items-center gap-2 transition">
+              <i data-lucide="share-2" class="w-4 h-4"></i> Share Report URL
+            </button>
           </div>
           <div class="mono text-[10px] tracking-[.25em] text-slate-500 mt-7 mb-3">SHAREABLE SCAN BADGE</div>
           <div id="badgePreview" class="p-5">
@@ -620,6 +756,10 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
             <div id="badgeLine" class="mono text-[11px] text-slate-400 mt-3">—</div>
           </div>
           <textarea id="badgeMd" readonly rows="3" class="mono w-full mt-4 bg-[#080d14] border border-nbline rounded-lg px-3 py-2.5 text-[11px] text-slate-400 resize-none"></textarea>
+        </div>
+        <div class="panel p-6">
+          <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-4">SEVERITY TIMELINE · FINDINGS DISTRIBUTION</div>
+          <div id="timelineBox"></div>
         </div>
         <div class="panel p-6">
           <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-4">SCAN REPRODUCIBILITY</div>
@@ -656,7 +796,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
 <script id="nb-engine">
 /*ENGINE-START*/
 'use strict';
-const NB_VERSION = '1.2.0';
+const NB_VERSION = '1.3.0';
 
 /* ================= Layer 1 — Shannon entropy (Gitleaks technique) ================= */
 function shannonEntropy(str) {
@@ -783,6 +923,14 @@ function rejectVersionIP(m, line) {
   return false;
 }
 
+const DOCKERFILE_RE = /(^|\/)Dockerfile(\.[^/]*)?$/i;
+const COMPOSE_RE = /(^|\/)(docker-)?compose\.ya?ml$/i;
+function isK8sManifest(f) {
+  const c = f.content || '';
+  return /\.ya?ml$/i.test(f.path) && /^\s*apiVersion\s*:/m.test(c) && /^\s*kind\s*:/m.test(c);
+}
+function k8sHasContainers(f) { return isK8sManifest(f) && /^\s*(?:init)?[Cc]ontainers\s*:/m.test(f.content || ''); }
+function contentLacks(f, re) { return !re.test(f.content || ''); }
 const SIGNATURES = [
   /* ---- hardcoded secrets ---- */
   { id:'sec.aws.access',  name:'AWS Access Key ID', cat:'secret', sev:'critical', cwe:'CWE-798',
@@ -1050,8 +1198,158 @@ const SIGNATURES = [
   { id:'code.graphql.introspection', name:'GraphQL Introspection Enabled', cat:'owasp', sev:'low', cwe:'CWE-200',
     rx:/introspection\s*:\s*true/gi,
     desc:'GraphQL introspection left on — eases attacker schema mapping in production.',
-    remed:'Disable introspection (and validation depth limits) for public deployments.' }
+    remed:'Disable introspection (and validation depth limits) for public deployments.' },
+
+  /* ---- IaC signatures: Dockerfile / docker-compose / Kubernetes / Terraform / GitHub Actions / nginx ---- */
 ];
+SIGNATURES.push(
+  /* Dockerfile */
+  { id:'iac.docker.root', name:'Docker Container Runs as root', cat:'iac', sev:'high', cwe:'CWE-250',
+    fileRe:DOCKERFILE_RE, rx:/^\s*USER\s+root\s*$/mi,
+    desc:'Container explicitly switches to or runs as root — container escape gives the attacker root on the host.',
+    remed:'Create an unprivileged USER in the Dockerfile and drop Linux capabilities (CAP_DROP ALL) at runtime.' },
+  { id:'iac.docker.latest', name:'Docker Base Image Pinned to :latest', cat:'iac', sev:'medium', cwe:'CWE-1357',
+    fileRe:DOCKERFILE_RE, rx:/^\s*FROM\s+[\w./\-]+:latest\s*(?:AS\s+\w+)?$/mi,
+    desc:'Base image tagged :latest — builds are non-reproducible and silently pull new (possibly compromised) layers.',
+    remed:'Pin base images to an immutable digest (image@sha256:…) or at least a specific version tag.' },
+  { id:'iac.docker.env.secret', name:'Secret Baked into Dockerfile ENV', cat:'secret', sev:'critical', cwe:'CWE-798',
+    fileRe:DOCKERFILE_RE, rx:/^\s*ENV\s+(?:[A-Za-z0-9_]*)(?:PASSWORD|PASSWD|SECRET|TOKEN|API_?KEY|ACCESS_?KEY|PRIVATE_?KEY)(?:[A-Za-z0-9_]*)\s*[ =]\s*(?!\$\{?\w+\}?)([^\s#]{4,})/mi,
+    reject:rejectEnvAssignment,
+    desc:'Dockerfile ENV carries a literal credential — anyone who can pull the image can extract it layer by layer.',
+    remed:'Inject secrets at runtime (orchestrator secrets / buildkit --secret), never in image layers; rotate the exposed value.' },
+  { id:'iac.docker.add', name:'Dockerfile ADD instead of COPY', cat:'iac', sev:'low', cwe:'CWE-250',
+    fileRe:DOCKERFILE_RE, rx:/^\s*ADD\s+\S+/mi,
+    desc:'ADD can extract remote archives and tar bombs silently; COPY is the predictable, safer instruction.',
+    remed:'Replace ADD with COPY unless remote-URL/tar auto-extraction is explicitly required.' },
+  { id:'iac.docker.nohealthcheck', name:'No HEALTHCHECK Defined', cat:'iac', sev:'low', cwe:'CWE-1188',
+    fileTest:(f) => DOCKERFILE_RE.test(f.path) && /^\s*FROM\b/m.test(f.content || '') && contentLacks(f, /^\s*HEALTHCHECK\b/mi),
+    rx:/(?!)/g,
+    desc:'Image declares no HEALTHCHECK — orchestrators cannot detect hung or dead containers.',
+    remed:'Add a HEALTHCHECK (or rely on orchestrator probes: k8s liveness/readiness) covering the real app port.' },
+
+  /* docker-compose */
+  { id:'iac.compose.privileged', name:'Privileged Container (compose)', cat:'iac', sev:'critical', cwe:'CWE-250',
+    fileRe:COMPOSE_RE, rx:/^\s*privileged\s*:\s*true\b/mi,
+    desc:'privileged: true gives the container nearly unlimited host device access — the classic docker-escape precondition.',
+    remed:'Remove privileged mode; grant only specific capabilities (cap_add) that the service truly needs.' },
+  { id:'iac.compose.hostnet', name:'Host Network Mode (compose)', cat:'iac', sev:'high', cwe:'CWE-284',
+    fileRe:COMPOSE_RE, rx:/^\s*network_mode\s*:\s*["']?host["']?\s*$/mi,
+    desc:'network_mode: host removes container/network isolation — the service shares the host stack and can sniff/bind any interface.',
+    remed:'Use a bridge/overlay network and publish only the required ports.' },
+  { id:'iac.compose.rootvol', name:'Host Root Mounted into Container (compose)', cat:'iac', sev:'critical', cwe:'CWE-250',
+    fileRe:COMPOSE_RE, rx:/^\s*-\s*["']?\/\s*:/m,
+    desc:'A volume maps the host root ( / ) into the container — combined with any container flaw this is instant host takeover.',
+    remed:'Mount only the specific data directories the service needs, read-only where possible.' },
+  { id:'iac.compose.env.secret', name:'Hardcoded Secret in compose environment', cat:'secret', sev:'critical', cwe:'CWE-798',
+    fileRe:COMPOSE_RE, rx:/^\s*(?:-\s+|)([A-Za-z0-9_]*(?:PASSWORD|PASSWD|SECRET|TOKEN|API_?KEY|ACCESS_?KEY)[A-Za-z0-9_]*)\s*[=:]\s*(?!\$\{)[\"'`]?([^\s"'`{]{4,})/mi,
+    reject:rejectEnvAssignment,
+    desc:'compose file sets a credential-looking variable to a literal value — committed secrets for every repo reader.',
+    remed:'Use env_file with a git-ignored file, or compose secrets, or ${VAR} interpolation from the host environment.' },
+  { id:'iac.compose.portbinding', name:'Service Bound to 0.0.0.0 (compose)', cat:'iac', sev:'medium', cwe:'CWE-668',
+    fileRe:COMPOSE_RE, rx:/-\s*["']?0\.0\.0\.0:\d+(?::\d+)?["']?/m,
+    desc:'Port explicitly published on 0.0.0.0 — exposed on every host interface (and often straight to the internet).',
+    remed:'Bind to 127.0.0.1 for local-only services, or front with a reverse proxy and firewall rules.' },
+
+  /* Kubernetes */
+  { id:'iac.k8s.privileged', name:'Privileged Container (Kubernetes)', cat:'iac', sev:'critical', cwe:'CWE-250',
+    guard:isK8sManifest, rx:/^\s*privileged\s*:\s*true\b/mi,
+    desc:'Kubernetes pod runs privileged — effectively root on the node behind any single escape.',
+    remed:'Set privileged: false and add a restricted securityContext; use specific capabilities if needed.' },
+  { id:'iac.k8s.hostnetwork', name:'hostNetwork Enabled (Kubernetes)', cat:'iac', sev:'high', cwe:'CWE-284',
+    guard:isK8sManifest, rx:/^\s*hostNetwork\s*:\s*true\b/mi,
+    desc:'Pod shares the node network namespace — can intercept node traffic and binds clash with host ports.',
+    remed:'Disable hostNetwork unless the workload is a node agent; use a Service with explicit ports.' },
+  { id:'iac.k8s.runasroot', name:'Pod Allowed to Run as root (Kubernetes)', cat:'iac', sev:'high', cwe:'CWE-250',
+    guard:isK8sManifest, rx:/^\s*(?:runAsNonRoot\s*:\s*false\b|runAsUser\s*:\s*0\b)/mi,
+    desc:'Pod securityContext explicitly permits root (runAsNonRoot: false or runAsUser: 0).',
+    remed:'Set runAsNonRoot: true with a numeric runAsUser; enforce via Pod Security Admission "restricted".' },
+  { id:'iac.k8s.noresourcelimits', name:'No Resource Limits (Kubernetes)', cat:'iac', sev:'medium', cwe:'CWE-770',
+    guard:k8sHasContainers, fileTest:(f) => contentLacks(f, /^\s*limits\s*:/m),
+    rx:/(?!)/g,
+    desc:'Containers declare no resource limits — one noisy/compromised pod can starve the whole node (DoS).',
+    remed:'Set requests+limits for cpu/memory on every container; consider a LimitRange default.' },
+  { id:'iac.k8s.noreadonlyfs', name:'readOnlyRootFilesystem Not Enforced (Kubernetes)', cat:'iac', sev:'low', cwe:'CWE-1188',
+    guard:k8sHasContainers, fileTest:(f) => contentLacks(f, /readOnlyRootFilesystem\s*:\s*true/i),
+    rx:/(?!)/g,
+    desc:'Container root filesystem stays writable — attackers can drop binaries and persist in-container.',
+    remed:'Set readOnlyRootFilesystem: true and mount emptyDir volumes for the few writable paths.' },
+  { id:'iac.k8s.pullnever', name:'imagePullPolicy: Never (Kubernetes)', cat:'iac', sev:'medium', cwe:'CWE-1357',
+    guard:isK8sManifest, rx:/^\s*imagePullPolicy\s*:\s*Never\b/mi,
+    desc:'imagePullPolicy: Never runs whatever local image matches the tag — nodes can be poisoned with a same-tag image.',
+    remed:'Prefer Always with digest-pinned images; if Never is required, lock node image loading tightly.' },
+  { id:'iac.k8s.nosecuritycontext', name:'No securityContext (Kubernetes)', cat:'iac', sev:'medium', cwe:'CWE-1188',
+    guard:k8sHasContainers, fileTest:(f) => contentLacks(f, /^\s*securityContext\s*:/m),
+    rx:/(?!)/g,
+    desc:'No securityContext at pod/container level — defaults apply (possible root, full capabilities).',
+    remed:'Add a hardened securityContext: runAsNonRoot, seccompProfile RuntimeDefault, drop ALL capabilities.' },
+
+  /* Terraform */
+  { id:'iac.tf.s3public', name:'S3 Bucket Publicly Readable/Writable', cat:'iac', sev:'critical', cwe:'CWE-732',
+    fileRe:/\.(tf|hcl)$/i, rx:/acl\s*=\s*["']public-read(?:-write)?["']/i,
+    desc:'Terraform sets an S3 bucket ACL to public-read(-write) — direct data exposure or hostile data injection.',
+    remed:'Remove the public ACL; serve via CloudFront/OAC with an origin access identity if public delivery is needed.' },
+  { id:'iac.tf.sg.open', name:'Security Group Open to 0.0.0.0/0 on 22/3389', cat:'iac', sev:'critical', cwe:'CWE-284',
+    fileRe:/\.tf$/i, rx:/from_port\s*=\s*(?:22|3389)\b[\s\S]{0,240}?cidr_blocks?\s*=\s*\[[^\]]*["']0\.0\.0\.0\/0["']/i,
+    desc:'SSH/RDP ingress is open to the entire internet — constant credential-stuffing and key pressure.',
+    remed:'Restrict management ports to VPN/bastion CIDRs; use SSM Session Manager instead of open SSH.' },
+  { id:'iac.tf.rdspublic', name:'RDS Publicly Accessible', cat:'iac', sev:'high', cwe:'CWE-668',
+    fileRe:/\.tf$/i, rx:/publicly_accessible\s*=\s*true\b/i,
+    desc:'Database instance flagged publicly_accessible — the data tier is exposed beyond the VPC.',
+    remed:'Set publicly_accessible = false and reach the DB through VPC peering/private subnets only.' },
+  { id:'iac.tf.encdisabled', name:'Storage Encryption Disabled', cat:'iac', sev:'high', cwe:'CWE-311',
+    fileRe:/\.tf$/i, rx:/\bencrypted\s*=\s*false\b/i,
+    desc:'Managed storage created with encryption disabled — snapshots and disks are readable at the provider level.',
+    remed:'Enable at-rest encryption with a customer-managed KMS key and rotate grants.' },
+  { id:'iac.tf.loggingoff', name:'Logging Disabled (Terraform resource)', cat:'iac', sev:'medium', cwe:'CWE-778',
+    fileRe:/\.tf$/i, rx:/\b(?:logging|access_logging|enable_logging|logging_enabled)\s*=\s*false\b/i,
+    desc:'Service-level logging explicitly turned off — incidents become uninvestigable.',
+    remed:'Enable access/server logs and ship them to immutable storage with retention.' },
+
+  /* GitHub Actions */
+  { id:'iac.gha.prt.checkout', name:'pull_request_target Checks Out PR Head', cat:'iac', sev:'critical', cwe:'CWE-829',
+    fileRe:/(^|\/)\.github\/workflows\/[\w.-]+\.ya?ml$/i,
+    rx:/pull_request_target[\s\S]{0,500}?actions\/checkout[\s\S]{0,300}?ref\s*:\s*\$\{\{\s*github\.event\.pull_request\.head\.(?:ref|sha)/i,
+    desc:'Workflow runs with a repo token but checks out attacker-controlled PR head code — remote code execution in CI.',
+    remed:'Never checkout PR head in pull_request_target; run untrusted code in a separate label-gated workflow with no secrets.' },
+  { id:'iac.gha.scriptinject', name:'Untrusted Event Data in run: block', cat:'iac', sev:'critical', cwe:'CWE-78',
+    fileRe:/(^|\/)\.github\/workflows\/[\w.-]+\.ya?ml$/i,
+    rx:/run\s*:[\s\S]{0,300}?\$\{\{\s*github\.event\.(?:issue\.body|comment\.body|discussion\.body|head_commit\.message|commits\[\d+\]\.message)/i,
+    desc:'Issue/comment text is interpolated into a shell script — anyone who can open an issue owns your CI runner.',
+    remed:'Pass event data through an intermediate file/env with an intermediate step, never template it into run:.' },
+  { id:'iac.gha.secretenv', name:'Hardcoded Secret in Workflow env', cat:'secret', sev:'critical', cwe:'CWE-798',
+    fileRe:/(^|\/)\.github\/workflows\/[\w.-]+\.ya?ml$/i,
+    rx:/^\s*(?:[A-Z0-9_]*(?:PASSWORD|PASSWD|SECRET|TOKEN|API_?KEY|ACCESS_?KEY)[A-Z0-9_]*)\s*:\s*(?![\"']?\$\{\{\s*(?:secrets|vars)\.)(?:["\']?)([A-Za-z0-9+/_\-=:]{8,})/mi,
+    desc:'Workflow env pins a literal credential instead of referencing ${{ secrets.* }} — leaked to every fork reader.',
+    remed:'Move values into repository/project secrets and reference them; rotate anything already committed.' },
+  { id:'iac.gha.unpinned', name:'Action Not Pinned to SHA', cat:'iac', sev:'medium', cwe:'CWE-829',
+    fileRe:/(^|\/)\.github\/workflows\/[\w.-]+\.ya?ml$/i,
+    rx:/uses\s*:\s*[\w.-]+\/[\w.-]+@(?!\s*$)(?!.*[0-9a-f]{40})(?:v?\d[\w.]*)/g,
+    desc:'Third-party action referenced by mutable tag — a hijacked upstream repo flows straight into your CI.',
+    remed:'Pin actions to a full commit SHA (and review updates); use Dependabot to manage the bumps.' },
+  { id:'iac.gha.selfhosted', name:'Self-Hosted Runner for Untrusted Code', cat:'iac', sev:'medium', cwe:'CWE-250',
+    fileRe:/(^|\/)\.github\/workflows\/[\w.-]+\.ya?ml$/i,
+    rx:/runs-on\s*:\s*(?:\[?\s*)?["']?self-hosted["']?/i,
+    desc:'Workflow targets a self-hosted runner — persistent, environment-rich targets if any workflow accepts PRs.',
+    remed:'Run untrusted builds on ephemeral GitHub-hosted runners; isolate and harden self-hosted pools (one-use VMs).' },
+
+  /* nginx */
+  { id:'iac.nginx.autoindex', name:'nginx Directory Listing Enabled', cat:'iac', sev:'medium', cwe:'CWE-548',
+    fileRe:/(^|\/)nginx\.conf$|(^|\/)nginx\//i, rx:/autoindex\s+on\s*;/i,
+    desc:'autoindex on exposes full directory listings — leaks hidden files, backups and internal structure.',
+    remed:'Turn autoindex off and serve an explicit index; deny access to dotfiles.' },
+  { id:'iac.nginx.servertokens', name:'nginx server_tokens Exposed', cat:'iac', sev:'low', cwe:'CWE-200',
+    fileRe:/(^|\/)nginx\.conf$|(^|\/)nginx\//i, rx:/server_tokens\s+on\s*;/i,
+    desc:'Version disclosure in Server headers and error pages — free recon for attackers.',
+    remed:'Set server_tokens off (and consider ServerTokens/More headers hardening).' },
+  { id:'iac.nginx.oldtls', name:'Legacy TLS Protocols Enabled (nginx)', cat:'iac', sev:'high', cwe:'CWE-327',
+    fileRe:/(^|\/)nginx\.conf$|(^|\/)nginx\//i, rx:/ssl_protocols\s+[^;]*\bTLSv1(?:\.1)?\s*;/i,
+    desc:'TLSv1/1.1 accepted — downgrade and POODLE-class attacks against legacy clients.',
+    remed:'ssl_protocols TLSv1.2 TLSv1.3; and modernize cipher suites.' },
+  { id:'iac.nginx.allowall', name:'Unrestricted allow all on Root Location', cat:'iac', sev:'medium', cwe:'CWE-284',
+    fileRe:/(^|\/)nginx\.conf$|(^|\/)nginx\//i, rx:/location\s+\/\s*\{[\s\S]{0,160}?allow\s+all\s*;/i,
+    desc:'Root location grants access to every source without restriction where the config appears to intend control.',
+    remed:'Scope allow/deny lists precisely; add auth_basic or rate limiting for sensitive paths.' }
+);
 /*ENGINE-END*/
 </script>
 
@@ -1073,6 +1371,8 @@ function scanFileStatic(file) {
   const lowTrust = isLowTrustPath(file.path);
   for (const sig of SIGNATURES) {
     if (lowTrust && (sig.cat === 'secret' || sig.cat === 'config')) continue; /* fixtures aren't leaks */
+    if (sig.fileRe && !sig.fileRe.test(file.path)) continue;
+    if (sig.guard && !sig.guard(file)) continue;
     if (sig.fileTest) {
       if (sig.fileTest(file)) findings.push(mkFinding(sig, file, 0, ''));
       continue;
@@ -1323,6 +1623,73 @@ function mergeOSVResults(deps, results) {
 
 function sevOrder(s) { return { critical: 0, high: 1, medium: 2, low: 3 }[s] ?? 4; }
 
+/* ================= Supply chain — typosquatting (pure) ================= */
+function levenshtein(a, b) {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  let prev = new Array(b.length + 1);
+  for (let j = 0; j <= b.length; j++) prev[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+const NPM_TOP_PACKAGES = ["lodash","express","react","axios","moment","webpack","babel","jest","typescript","eslint","prettier","chalk","commander","dotenv","uuid","async","request","underscore","jquery","mongoose","sequelize","passport","bcrypt","jsonwebtoken","socket.io","multer","cors","helmet","morgan","nodemailer","puppeteer","cheerio","redis","pg","mysql","sqlite3","mongodb","firebase","aws-sdk","stripe","twilio","sendgrid","mailgun","cloudinary","sharp","jimp","pdfkit","xlsx","csv-parser","readline","fs-extra","glob","rimraf","mkdirp","ncp","archiver","unzipper","tar","node-fetch","got","superagent","needle","form-data","querystring","crypto-js","forge","ssh2","ftp","semver","yargs","minimist","nconf","config","convict","joi","yup","ajv","validator","sanitize-html","dompurify","marked","highlight.js","prismjs","katex","chart.js","d3","three","gsap","anime","velocity-animate"];
+const PYPI_TOP_PACKAGES = ["requests","numpy","pandas","flask","django","fastapi","sqlalchemy","pydantic","celery","redis","boto3","pytest","click","pillow","scipy","matplotlib","seaborn","tensorflow","torch","sklearn","transformers","openai","langchain","cryptography","paramiko","fabric","ansible","docker","kubernetes","stripe","twilio","sendgrid","mailchimp","jwt","bcrypt","passlib","itsdangerous","werkzeug","jinja2","aiohttp","httpx","beautifulsoup4","scrapy","selenium","playwright","pymongo","elasticsearch","cassandra","kafka"];
+
+function typosquatBestMatch(name, list) {
+  let best = null;
+  for (const popular of list) {
+    if (Math.abs(popular.length - name.length) > 2) continue;
+    const dist = levenshtein(name, popular);
+    if (dist > 0 && dist <= 2 && (!best || dist < best.dist)) {
+      best = { popular, dist };
+      if (best.dist === 1) break;
+    }
+  }
+  return best;
+}
+
+function typosquatFindingsForDeps(deps) {
+  const findings = [];
+  let count = 0;
+  const CAP = 25;
+  for (const d of deps) {
+    if (count >= CAP) break;
+    const list = d.ecosystem === 'npm' ? NPM_TOP_PACKAGES : d.ecosystem === 'PyPI' ? PYPI_TOP_PACKAGES : null;
+    if (!list) continue;
+    const nm = String(d.name).toLowerCase();
+    if (list.includes(nm)) continue;
+    const best = typosquatBestMatch(nm, list);
+    if (!best) continue;
+    count++;
+    findings.push({
+      id: 'supply:typo:' + d.ecosystem + ':' + d.name + '@' + d.manifest,
+      severity: best.dist === 1 ? 'critical' : 'high',
+      layer: 'supply-chain',
+      file: d.manifest,
+      line: 0,
+      name: best.dist === 1
+        ? `Typosquatting: '${d.name}' is 1 character away from '${best.popular}'`
+        : `Possible typosquatting: '${d.name}' is 2 characters away from '${best.popular}'`,
+      desc: best.dist === 1
+        ? `The dependency '${d.name}' in ${d.manifest} is nearly identical to the hugely popular package '${best.popular}' (${d.ecosystem}). A single-character lookalike is the classic typosquat — an attacker publishes the similar name and waits for a typo in an install script or a lockfile drift.`
+        : `The dependency '${d.name}' in ${d.manifest} is 2 edits away from '${best.popular}' (${d.ecosystem}) — worth verifying it is the package you intended.`,
+      snippet: '',
+      remed: `Verify the exact spelling and publisher of '${d.name}' on the ${d.ecosystem} registry. If '${best.popular}' was intended, fix the manifest, regenerate the lockfile, and pin the version. Audit install scripts (preinstall/postinstall) of the suspicious package.`,
+      cwe: 'CWE-1357',
+      sig: 'supply.typo'
+    });
+  }
+  return { findings, count };
+}
+
 /* ================= Scoring model ================= */
 function computeScore(findings) {
   const counts = { critical: 0, high: 0, medium: 0, low: 0 };
@@ -1427,8 +1794,65 @@ If you identify ADDITIONAL code-level findings from reading the code, append the
 (Use this format only for issues the static layers above did not already report.)`;
 }
 
-function parseAIFindings(aiText) {
-  const marker = /^#{1,4}\s*ADDITIONAL FINDINGS.*$/im;
+function buildLogicPrompt(repo, findings, context) {
+  const names = findings.slice(0, 120).map(f => `- ${f.name} (${f.file}${f.line ? ':' + f.line : ''})`).join('\n');
+  return `You are a senior application security engineer performing a SECOND-PASS logic-bug hunt.
+Based on the same code context below, search ONLY for these issue types that were NOT already reported:
+1. IDOR (Insecure Direct Object References): user accessing other users' data by changing IDs
+2. Missing authorization checks on sensitive endpoints
+3. Race conditions in financial or state-changing operations
+4. Mass assignment vulnerabilities
+5. Missing rate limiting on: login, password reset, OTP
+6. Insecure session management
+7. Business logic bypasses (negative prices, quantity=-1, etc.)
+8. JWT algorithm confusion (alg:none, RS256→HS256)
+9. XXE in XML parsers
+10. SSRF in URL fetching functions
+
+REPOSITORY: ${repo.owner}/${repo.name} (branch: ${repo.branch})
+FILES ANALYZED STATICALLY: ${repo.filesScanned}
+
+ALREADY REPORTED (do NOT repeat these):
+${names || '- none'}
+
+CODE CONTEXT:
+${context.text}
+
+Respond in Markdown with reasoning per issue you find. End with a heading exactly "## LOGIC FINDINGS" and one finding per line in this exact format:
+- SEVERITY | path/file.ext:LINE | description of the logic flaw and its impact
+If nothing new is found, output the "## LOGIC FINDINGS" heading with no entries.`;
+}
+
+function buildExploitPrompt(repo, topFindings) {
+  const list = topFindings.map((f, i) => {
+    const loc = f.line ? `${f.file}:${f.line}` : f.file;
+    return `${i + 1}. [${String(f.severity).toUpperCase()}] ${f.name} — ${loc}
+   Detail: ${f.desc}
+${f.snippet ? '   Code: ' + f.snippet : ''}`;
+  }).join('\n');
+  return `You are a red-team lead writing proof-of-concept exploits for an internal remediation team (authorized security assessment).
+For the 3 most critical findings below, write a practical exploit write-up:
+1. Step-by-step attack scenario
+2. curl command or Python PoC code
+3. Real business impact (data stolen, money lost, etc.)
+4. Exact code fix with before/after comparison
+
+REPOSITORY: ${repo.owner}/${repo.name} (branch: ${repo.branch})
+
+FINDINGS:
+${list || '- none'}
+
+Format each as: ## EXPLOIT: [Finding Name]
+Be technical, specific, and end every write-up with the corrected before/after code.`;
+}
+
+function pickTopFindings(findings, n) {
+  return findings.slice().sort((a, b) => sevOrder(a.severity) - sevOrder(b.severity) || (b.line || 0) - (a.line || 0)).slice(0, n || 3);
+}
+
+function parseAIFindings(aiText, markerRe, idPrefix) {
+  const prefix = idPrefix || 'ai';
+  const marker = markerRe || /^#{1,4}\s*ADDITIONAL FINDINGS.*$/im;
   const m = aiText.match(marker);
   if (!m || m.index === undefined) return [];
   const section = aiText.slice(m.index + m[0].length);
@@ -1441,7 +1865,7 @@ function parseAIFindings(aiText) {
     const desc = mm[3].trim();
     const lm = loc.match(/([\w.\-/\\]+\.[A-Za-z0-9]{1,8})(?::(\d+))?/);
     out.push({
-      id: 'ai:' + out.length,
+      id: prefix + ':' + out.length,
       severity: sev,
       layer: 'ai',
       file: lm ? lm[1] : (loc && loc !== '—' && loc !== '-' ? loc : 'repository-wide'),
@@ -1451,7 +1875,7 @@ function parseAIFindings(aiText) {
       snippet: '',
       remed: 'Validate against the AI briefing section and apply the prioritized remediation steps.',
       cwe: null,
-      sig: 'ai.' + out.length
+      sig: prefix + '.' + out.length
     });
     if (out.length >= 25) break;
   }
@@ -1672,7 +2096,7 @@ async function ghFetch(path) {
 
 const SCAN_SKIP_DIR_RE = /(^|\/)(node_modules|\.git|vendor|dist|build|out|\.next|\.nuxt|\.output|coverage|__pycache__|\.venv|venv|env|target|\.idea|\.vscode|bower_components|site-packages|\.tox|\.mypy_cache|\.pytest_cache|\.svn|bin\/obj|gradle|\.gradle|\.terraform|\.serverless|\.cache)(\/|$)/i;
 const SCAN_BINARY_EXT = new Set(['png','jpg','jpeg','gif','ico','icns','svg','webp','bmp','tiff','woff','woff2','ttf','otf','eot','mp3','mp4','mov','avi','mkv','wav','flac','zip','gz','tar','bz2','7z','rar','jar','class','so','dylib','dll','exe','bin','dat','pdf','doc','docx','xls','xlsx','ppt','pptx','db','sqlite','pyc','pyo','o','a','lib','wasm','map','lock','sum','gem','pack','idx']);
-const SCAN_TEXT_EXT = new Set(['js','jsx','ts','tsx','mjs','cjs','py','pyw','rb','go','php','java','kt','kts','swift','cs','c','cc','cpp','h','hpp','hh','rs','sh','bash','zsh','fish','ps1','bat','cmd','sql','html','htm','vue','svelte','astro','yml','yaml','toml','ini','cfg','conf','properties','gradle','tf','hcl','env','txt','json','xml','plist','groovy','dockerfile','gemfile','rake','erb','hbs','ejs','pug','twig','liquid','jinja','jinja2','j2','proto','graphql','gql','sol','lua','pl','pm','scala','clj','ex','exs','dart','m','mm','ino','vhdl','verilog','md','rst','csv','gitignore','editorconfig','npmrc','babelrc','eslintrc','prettierrc']);
+const SCAN_TEXT_EXT = new Set(['js','jsx','ts','tsx','mjs','cjs','py','pyw','rb','go','php','java','kt','kts','swift','cs','c','cc','cpp','h','hpp','hh','rs','sh','bash','zsh','fish','ps1','bat','cmd','sql','html','htm','vue','svelte','astro','yml','yaml','toml','ini','cfg','conf','properties','gradle','tf','hcl','env','txt','json','xml','plist','groovy','dockerfile','gemfile','rake','erb','hbs','ejs','pug','twig','liquid','jinja','jinja2','j2','proto','graphql','gql','sol','lua','pl','pm','scala','clj','ex','exs','dart','m','mm','ino','vhdl','verilog','md','rst','csv','gitignore','editorconfig','npmrc','babelrc','eslintrc','prettierrc','tf','hcl','tfvars','nginx']);
 
 function extOf(path) {
   const base = path.split('/').pop() || '';
@@ -1714,7 +2138,7 @@ function prioritizeFiles(files, maxCount) {
   return files.map(f => ({ f, s: score(f) })).sort((a, b) => b.s - a.s).slice(0, maxCount).map(x => x.f);
 }
 
-async function fetchFileContents(owner, repo, ref, files) {
+async function fetchFileContents(owner, repo, ref, files, onProgress) {
   const out = [];
   let done = 0;
   const useAPI = !!state.github;
@@ -1740,13 +2164,14 @@ async function fetchFileContents(owner, repo, ref, files) {
     for (const r of results) if (r) { out.push(r); done++; }
     done = out.length;
     nbLog(`Downloading sources… ${done}/${files.length} files`, 'dim');
+    if (onProgress) onProgress(done, files.length);
     await new Promise(res => setTimeout(res, 30));
   }
   return out;
 }
 
 /* ================= OSV.dev ================= */
-async function queryOSV(deps) {
+async function queryOSV(deps, onProgress) {
   if (!deps.length) return { findings: [], queried: 0 };
   const capped = deps.slice(0, OSV_MAX_DEPS);
   if (deps.length > OSV_MAX_DEPS) nbLog(`OSV.dev: capping at ${OSV_MAX_DEPS} of ${deps.length} dependencies (engine limit).`, 'warn');
@@ -1773,9 +2198,103 @@ async function queryOSV(deps) {
     const results = (data && Array.isArray(data.results)) ? data.results : [];
     allResults.push(...results);
     if (batches.length > 1) nbLog(`OSV.dev batch ${bi + 1}/${batches.length} done (${allResults.length} package results so far)…`, 'dim');
+    if (onProgress) onProgress(bi + 1, batches.length);
     if (bi < batches.length - 1) await new Promise(r => setTimeout(r, 150));
   }
   return { findings: mergeOSVResults(capped, allResults), queried: capped.length };
+}
+
+/* ================= Supply chain — dependency confusion (live registry checks) ================= */
+const SUPPLY_REGISTRY_CAP = 200;
+const SUPPLY_RECENT_DAYS = 90;
+
+async function checkPackageRegistry(dep) {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    let url, parse;
+    if (dep.ecosystem === 'npm') {
+      url = 'https://registry.npmjs.org/' + String(dep.name).split('/').map(encodeURIComponent).join('/');
+      parse = (j) => ({ created: j && j.time && j.time.created ? Date.parse(j.time.created) : null });
+    } else if (dep.ecosystem === 'PyPI') {
+      url = 'https://pypi.org/pypi/' + encodeURIComponent(dep.name) + '/json';
+      parse = (j) => {
+        let earliest = null;
+        try {
+          for (const files of Object.values((j || {}).releases || {})) {
+            for (const f of files || []) {
+              if (f && f.upload_time) {
+                const t = Date.parse(f.upload_time);
+                if (t && (earliest === null || t < earliest)) earliest = t;
+              }
+            }
+          }
+        } catch (e) { /* ignore */ }
+        return { created: earliest };
+      };
+    } else return { status: 'unknown' };
+    const r = await fetch(url, { signal: ctrl.signal, headers: { 'Accept': 'application/json' } });
+    if (r.status === 404) return { status: 'missing' };
+    if (!r.ok) return { status: 'unknown' };
+    const j = await r.json();
+    const { created } = parse(j);
+    if (created && (Date.now() - created) < SUPPLY_RECENT_DAYS * 24 * 3600 * 1000) return { status: 'recent', created };
+    return { status: 'ok' };
+  } catch (e) {
+    return { status: 'unknown' };
+  } finally {
+    clearTimeout(to);
+  }
+}
+
+function supplyFindingBase(dep) {
+  return { layer: 'supply-chain', file: dep.manifest, line: 0, snippet: '', sig: 'supply.registry', cwe: 'CWE-1357' };
+}
+
+async function supplyChainScan(deps) {
+  const findings = [];
+  const typos = typosquatFindingsForDeps(deps);
+  findings.push(...typos.findings);
+  const uniq = [];
+  const seen = new Set();
+  for (const d of deps) {
+    if (d.ecosystem !== 'npm' && d.ecosystem !== 'PyPI') continue;
+    const k = d.ecosystem + ':' + String(d.name).toLowerCase();
+    if (!seen.has(k)) { seen.add(k); uniq.push(d); }
+  }
+  const targets = uniq.slice(0, SUPPLY_REGISTRY_CAP);
+  if (uniq.length > SUPPLY_REGISTRY_CAP) nbLog(`Supply chain: capping live registry lookups at ${SUPPLY_REGISTRY_CAP} of ${uniq.length} unique packages.`, 'dim');
+  let errors = 0, confusion = 0, recent = 0;
+  const results = await Promise.all(targets.map(async (d) => {
+    try { return { dep: d, res: await checkPackageRegistry(d) }; }
+    catch (e) { errors++; return null; }
+  }));
+  for (const r of results) {
+    if (!r || !r.res) continue;
+    const base = supplyFindingBase(r.dep);
+    if (r.res.status === 'missing') {
+      confusion++;
+      const scoped = String(r.dep.name).startsWith('@');
+      findings.push(Object.assign(base, {
+        id: 'supply:confusion:' + r.dep.ecosystem + ':' + r.dep.name + '@' + r.dep.manifest,
+        severity: 'critical',
+        name: `Dependency Confusion Risk: '${r.dep.name}' not found on the ${r.dep.ecosystem} registry`,
+        desc: `Package '${r.dep.name}' (${r.dep.ecosystem}) is required by ${r.dep.manifest} but does not exist on the official public registry. If this is an internal package, any attacker can register the name publicly and ship malicious code into your builds (dependency confusion). ${scoped ? 'Note: this is a scoped name — make sure your internal registry/scope config (.npmrc /-artifactory) is enforced in CI.' : ''}`,
+        remed: `Register/reserve '${r.dep.name}' on the public registry, or enforce scope-internal resolution (@scope → private registry) in .npmrc / pip config for every CI and dev environment. Verify which package your lockfile actually resolves to.`
+      }));
+    } else if (r.res.status === 'recent') {
+      recent++;
+      findings.push(Object.assign(base, {
+        id: 'supply:recent:' + r.dep.ecosystem + ':' + r.dep.name + '@' + r.dep.manifest,
+        severity: 'high',
+        name: `Recently published package: '${r.dep.name}'`,
+        desc: `'${r.dep.name}' (${r.dep.ecosystem}) was first published on the public registry within the last ${SUPPLY_RECENT_DAYS} days (${new Date(r.res.created).toISOString().slice(0, 10)}). Very fresh packages with established-sounding names are a common supply-chain pattern — verify authenticity.`,
+        remed: `Confirm the publisher, repository and maintainers of '${r.dep.name}'. Prefer an older, widely-adopted release or pin to a reviewed commit/version.`
+      }));
+    }
+  }
+  if (errors) nbLog(`Supply chain: ${errors} registry lookups failed (network) — treated as unknown, not flagged.`, 'warn');
+  return { findings, checked: targets.length, confusion, recent, typos: typos.count };
 }
 
 /* ================= AI cascade ================= */
@@ -1914,6 +2433,366 @@ async function aiCascade(prompt) {
   return { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried, failures, exhaustedHit };
 }
 
+/* ================= smart progress ================= */
+let progressStart = 0;
+function nbProgress(pct, label) {
+  pct = Math.max(0, Math.min(100, Math.round(pct)));
+  const fill = document.getElementById('scanProgressFill');
+  const pctEl = document.getElementById('scanProgressPct');
+  const lbl = document.getElementById('scanProgressLabel');
+  const eta = document.getElementById('scanProgressEta');
+  if (fill) fill.style.width = pct + '%';
+  if (pctEl) pctEl.textContent = pct + '%';
+  if (lbl && label) lbl.textContent = label;
+  if (eta) {
+    if (pct > 2 && pct < 100 && progressStart) {
+      const elapsed = (performance.now() - progressStart) / 1000;
+      const remaining = Math.max(0, Math.round(elapsed / pct * (100 - pct)));
+      eta.textContent = '~' + remaining + 's remaining';
+    } else eta.textContent = pct >= 100 ? 'done' : '';
+  }
+}
+
+/* ================= scan history / compare / share ================= */
+const LS_HISTORY = 'nullbreach.history.v1';
+
+function compactReport(r) {
+  const trim = (s, n) => String(s || '').slice(0, n);
+  return {
+    v: r.version || NB_VERSION,
+    generatedAt: r.generatedAt,
+    repo: r.repo,
+    score: r.score, verdict: r.verdict, counts: r.counts, exploitHits: r.exploitHits, formula: r.formula,
+    stats: r.stats,
+    dependencies: { parsed: (r.dependencies && r.dependencies.parsed ? r.dependencies.parsed : []).slice(0, 300) },
+    findings: (r.findings || []).slice(0, 400).map(f => ({
+      id: f.id, severity: f.severity, layer: f.layer, file: f.file, line: f.line || 0,
+      name: f.name, desc: trim(f.desc, 240), snippet: trim(f.snippet, 120), remed: trim(f.remed, 200),
+      cwe: f.cwe || null, cveId: f.cveId || null, osvId: f.osvId || null, url: f.url || null,
+      packages: f.packages || [], sig: f.sig || null
+    })),
+    ai: r.ai ? (r.ai.unavailable ? { unavailable: true, reason: trim(r.ai.reason, 200) } : { provider: r.ai.provider, usedBuiltin: !!r.ai.usedBuiltin, text: trim(r.ai.text, 40000) }) : null,
+    aiLogic: r.aiLogic ? (r.aiLogic.unavailable ? { unavailable: true, reason: trim(r.aiLogic.reason, 150) } : { text: trim(r.aiLogic.text, 20000) }) : null,
+    aiExploits: r.aiExploits ? (r.aiExploits.unavailable ? { unavailable: true, reason: trim(r.aiExploits.reason, 150) } : { text: trim(r.aiExploits.text, 20000) }) : null
+  };
+}
+
+function loadHistory() {
+  try {
+    const h = JSON.parse(localStorage.getItem(LS_HISTORY) || '[]');
+    return Array.isArray(h) ? h : [];
+  } catch (e) { return []; }
+}
+
+function saveScanHistory(report) {
+  try {
+    const h = loadHistory();
+    h.unshift({ savedAt: new Date().toISOString(), report: compactReport(report) });
+    localStorage.setItem(LS_HISTORY, JSON.stringify(h.slice(0, 10)));
+  } catch (e) { /* quota — drop silently */ }
+}
+
+function findingKey(f) { return (f.sig || f.id || '') + '|' + f.layer + '|' + f.file + '|' + (f.line || 0) + '|' + f.name; }
+
+function compareReports(a, b) {
+  const ka = new Set((a.findings || []).map(findingKey));
+  const kb = new Set((b.findings || []).map(findingKey));
+  const isNew = (b.findings || []).filter(f => !ka.has(findingKey(f)));
+  const resolved = (a.findings || []).filter(f => !kb.has(findingKey(f)));
+  return { newF: isNew, resolved, delta: b.score - a.score, from: a, to: b };
+}
+
+function renderHistoryDrop() {
+  const drop = document.getElementById('historyDrop');
+  const items = loadHistory();
+  const opts = items.map((h, i) => `<option value="${i}">#${i + 1} ${esc(h.report.repo.owner + '/' + h.report.repo.name)} · ${h.report.score}/100 · ${new Date(h.savedAt).toLocaleString()}</option>`).join('');
+  drop.innerHTML = `
+    <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-3">SCAN HISTORY <span class="text-slate-600">· last ${items.length}/10 · stored locally</span></div>
+    ${items.length ? `<div class="space-y-2 mb-4">${items.map((h, i) => `
+      <button data-open="${i}" class="w-full text-left rounded-lg border border-nbline bg-[#080d14] px-3.5 py-2.5 hover:border-nbgreen/40 transition">
+        <div class="flex items-center justify-between gap-2">
+          <span class="mono text-[12px] text-slate-200">${esc(h.report.repo.owner + '/' + h.report.repo.name)}</span>
+          <span class="mono text-[12px] font-bold" style="color:${scoreColor(h.report.score)}">${h.report.score}/100</span>
+        </div>
+        <div class="mono text-[10px] text-slate-500 mt-0.5">${h.report.verdict} · ${h.report.counts.critical}C/${h.report.counts.high}H/${h.report.counts.medium}M/${h.report.counts.low}L · ${new Date(h.savedAt).toLocaleString()}</div>
+      </button>`).join('')}</div>`
+    : '<div class="mono text-[11px] text-slate-600 mb-4">no scans saved yet — history fills up as you scan</div>'}
+    <div class="pt-3 border-t border-nbline">
+      <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-2">COMPARE TWO SCANS</div>
+      <div class="flex items-center gap-2">
+        <select id="cmpSelA" class="mono text-[10px] bg-[#080d14] border border-nbline rounded px-2 py-1.5 text-slate-300 flex-1"><option value="">scan A…</option>${opts}</select>
+        <span class="text-slate-600">vs</span>
+        <select id="cmpSelB" class="mono text-[10px] bg-[#080d14] border border-nbline rounded px-2 py-1.5 text-slate-300 flex-1"><option value="">scan B…</option>${opts}</select>
+      </div>
+      <button id="btnCompare" class="btn-primary w-full mt-2 rounded-lg px-3 py-2 text-[12px] font-semibold transition">COMPARE ⇄</button>
+    </div>`;
+  drop.querySelectorAll('[data-open]').forEach(b => {
+    b.addEventListener('click', () => openHistoryReport(parseInt(b.dataset.open, 10)));
+  });
+  const btn = document.getElementById('btnCompare');
+  if (btn) btn.addEventListener('click', () => {
+    const a = parseInt(document.getElementById('cmpSelA').value, 10);
+    const b = parseInt(document.getElementById('cmpSelB').value, 10);
+    if (isNaN(a) || isNaN(b)) { showToast('Pick two scans to compare'); return; }
+    const h = loadHistory();
+    renderComparison(h[a].report, h[b].report);
+    drop.classList.add('hidden');
+  });
+}
+
+function openHistoryReport(i) {
+  const h = loadHistory()[i];
+  if (!h) return;
+  state.report = h.report;
+  document.getElementById('results').classList.remove('hidden');
+  renderResults(h.report);
+  document.getElementById('historyDrop').classList.add('hidden');
+  showToast('Loaded scan #' + (i + 1) + ' from history');
+  setTimeout(() => document.getElementById('results').scrollIntoView({ behavior: 'smooth' }), 200);
+}
+
+function renderComparison(a, b) {
+  const c = compareReports(a, b);
+  const sec = document.getElementById('compareSection');
+  const chip = (r, lbl) => `
+    <div class="rounded-xl border border-nbline bg-[#080d14] px-5 py-4 text-center">
+      <div class="mono text-[10px] tracking-widest text-slate-500">${lbl}</div>
+      <div class="mono text-4xl font-extrabold mt-1" style="color:${scoreColor(r.score)}">${r.score}</div>
+      <div class="mono text-[10px] text-slate-500 mt-1">${esc(r.repo.owner + '/' + r.repo.name)} · ${esc(r.verdict)}</div>
+      <div class="mono text-[10px] text-slate-600 mt-0.5">${new Date(r.generatedAt).toLocaleString()}</div>
+    </div>`;
+  const arrow = c.delta === 0
+    ? '<div class="mono text-2xl text-slate-500 px-2">=</div>'
+    : `<div class="mono text-2xl font-bold px-2 ${c.delta > 0 ? 'text-nbgreen' : 'text-nbred'}">${c.delta > 0 ? '▲+' : '▼'}${c.delta}</div>`;
+  document.getElementById('compareScores').innerHTML = chip(a, 'SCAN A (OLDER)') + arrow + chip(b, 'SCAN B (NEWER)');
+  const item = (f, good) => `
+    <div class="flex items-start gap-2.5 rounded-lg border ${good ? 'border-nbgreen/25' : 'border-nbred/25'} bg-[#080d14] px-3 py-2">
+      <span class="sev-chip mono text-[9px] tracking-widest border rounded-full px-1.5 py-0.5 sev-${f.severity} shrink-0">${f.severity.toUpperCase()}</span>
+      <div class="min-w-0"><div class="text-[12px] text-slate-300">${esc(f.name)}</div>
+      <div class="mono text-[10px] text-slate-500">${esc(f.file)}${f.line ? ':' + f.line : ''}</div></div>
+    </div>`;
+  document.getElementById('cmpNewCount').textContent = `· ${c.newF.length}`;
+  document.getElementById('cmpResCount').textContent = `· ${c.resolved.length}`;
+  document.getElementById('cmpNewList').innerHTML = c.newF.length ? c.newF.map(f => item(f, false)).join('') : '<div class="mono text-[11px] text-slate-600">nothing new — great</div>';
+  document.getElementById('cmpResList').innerHTML = c.resolved.length ? c.resolved.map(f => item(f, true)).join('') : '<div class="mono text-[11px] text-slate-600">nothing resolved yet</div>';
+  sec.classList.remove('hidden');
+  setTimeout(() => sec.scrollIntoView({ behavior: 'smooth' }), 200);
+}
+
+/* ---- shareable report URL ---- */
+function buildShareHash(r) {
+  const json = JSON.stringify(compactReport(r));
+  const b64 = btoa(unescape(encodeURIComponent(json)));
+  return '#report=' + encodeURIComponent(b64);
+}
+function parseShareHash() {
+  if (!location.hash || !location.hash.startsWith('#report=')) return null;
+  try {
+    const b64 = decodeURIComponent(location.hash.slice(8));
+    const json = decodeURIComponent(escape(atob(b64)));
+    return JSON.parse(json);
+  } catch (e) { return null; }
+}
+
+/* ---- severity timeline (SVG) ---- */
+function renderSeverityTimeline(r) {
+  const box = document.getElementById('timelineBox');
+  if (!box) return;
+  const C = r.counts, L = { entropy: 0, pattern: 0, osv: 0, 'supply-chain': 0, ai: 0 };
+  for (const f of r.findings) if (L[f.layer] !== undefined) L[f.layer]++;
+  const sevRows = [
+    ['CRITICAL', C.critical, '#ff3b5c'], ['HIGH', C.high, '#ff9d5c'],
+    ['MEDIUM', C.medium, '#ffb703'], ['LOW', C.low, '#22d3ee']
+  ];
+  const layerRows = Object.entries(L);
+  const W = 560, pad = 8, rowH = 30, labelW = 92;
+  const maxSev = Math.max(1, ...sevRows.map(x => x[1]));
+  const maxLay = Math.max(1, ...layerRows.map(x => x[1]));
+  const bar = (label, val, max, color, y) => {
+    const w = Math.round((W - labelW - 60 - pad) * (val / max));
+    return `<g transform="translate(0,${y})">
+      <text x="0" y="13" fill="#8aa0b4" font-size="11" font-family="JetBrains Mono, monospace">${label}</text>
+      <rect x="${labelW}" y="2" width="${W - labelW - 60 - pad}" height="16" rx="8" fill="#0d151f"/>
+      <rect x="${labelW}" y="2" width="${Math.max(val ? 4 : 0, w)}" height="16" rx="8" fill="${color}" opacity="0.85"/>
+      <text x="${labelW + Math.max(val ? 4 : 0, w) + 8}" y="14" fill="${val ? color : '#4a5a68'}" font-size="12" font-weight="bold" font-family="JetBrains Mono, monospace">${val}</text>
+    </g>`;
+  };
+  let y = 6;
+  const parts = [];
+  parts.push(`<text x="0" y="10" fill="#00ff9d" font-size="11" letter-spacing="2" font-family="JetBrains Mono, monospace">BY SEVERITY</text>`);
+  y = 24;
+  for (const [label, val, color] of sevRows) { parts.push(bar(label, val, maxSev, color, y)); y += rowH; }
+  y += 12;
+  parts.push(`<text x="0" y="${y}" fill="#22d3ee" font-size="11" letter-spacing="2" font-family="JetBrains Mono, monospace">BY DETECTION LAYER</text>`);
+  y += 14;
+  const layerColors = { entropy: '#22d3ee', pattern: '#00ff9d', osv: '#ffb703', 'supply-chain': '#f472b6', ai: '#a78bfa' };
+  for (const [label, val] of layerRows) { parts.push(bar(label.toUpperCase(), val, maxLay, layerColors[label], y)); y += rowH; }
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${y + 8}" class="w-full" role="img" aria-label="Findings distribution by severity and layer">${parts.join('')}</svg>`;
+}
+
+/* ================= Organization scanner ================= */
+const ORG_MAX_REPOS = 50;
+const ORG_FILES_PER_REPO = 40;
+let orgState = { repos: [], org: '' };
+
+async function ghListAll(path, maxPages) {
+  const out = [];
+  for (let page = 1; page <= (maxPages || 10); page++) {
+    const sep = path.includes('?') ? '&' : '?';
+    const batch = await ghFetch(path + sep + 'per_page=100&page=' + page);
+    if (!Array.isArray(batch)) break;
+    out.push(...batch);
+    if (batch.length < 100) break;
+  }
+  return out;
+}
+
+async function scanRepoLite(repoFull) {
+  const meta = await ghFetch(`/repos/${repoFull}`);
+  const branch = meta.default_branch || 'main';
+  const treeData = await ghFetch(`/repos/${repoFull}/git/trees/${encodeURIComponent(branch)}?recursive=1`);
+  const blobs = (treeData.tree || []).filter(e => e.type === 'blob');
+  const relevant = blobs.filter(b => isRelevantFile(b.path, b.size));
+  const chosen = prioritizeFiles(relevant, ORG_FILES_PER_REPO);
+  let files = [];
+  if (chosen.length) {
+    const batches = chunk(chosen, 8);
+    for (const batch of batches) {
+      const results = await Promise.all(batch.map(async (f) => {
+        try {
+          const p = f.path.split('/').map(encodeURIComponent).join('/');
+          const r = await fetch(`https://raw.githubusercontent.com/${repoFull}/${encodeURIComponent(branch)}/${p}`);
+          if (!r.ok) return null;
+          const text = await r.text();
+          return text.length > 500000 ? null : { path: f.path, content: text };
+        } catch (e) { return null; }
+      }));
+      for (const x of results) if (x) files.push(x);
+    }
+  }
+  let findings = [];
+  for (const f of files) findings.push(...scanEntropyInFile(f).findings);
+  for (const f of files) findings.push(...scanFileStatic(f));
+  const seen = new Set();
+  findings = findings.filter(f => { const k = f.sig + '|' + f.file + '|' + f.line + '|' + f.name; if (seen.has(k)) return false; seen.add(k); return true; });
+  findings.sort((a, b) => sevOrder(a.severity) - sevOrder(b.severity));
+  const { score, counts } = computeScore(findings);
+  return { name: repoFull, url: `https://github.com/${repoFull}`, branch, score, counts, findings, verdict: verdictFor(score, counts), filesScanned: files.length };
+}
+
+async function runOrgScan(org, includeForks) {
+  if (state.scanning) return;
+  state.scanning = true;
+  const btn = document.getElementById('btnOrgScan');
+  btn.disabled = true;
+  document.getElementById('orgError').classList.add('hidden');
+  document.getElementById('orgResults').classList.add('hidden');
+  const t0 = performance.now();
+  try {
+    persistKeys();
+    if (!/^[\w.-]+$/.test(org)) throw new NBError('Enter a valid organization name (letters, digits, dashes).');
+    nbLog(`Organization scan → ${org} (forks ${includeForks ? 'included' : 'excluded'})…`);
+    let repos;
+    try {
+      repos = await ghListAll(`/orgs/${org}/repos?type=public`);
+    } catch (e) {
+      if (String(e.message).includes('404')) {
+        nbLog(`No org named "${org}" — trying user account…`, 'dim');
+        repos = await ghListAll(`/users/${org}/repos?type=owner`);
+      } else throw e;
+    }
+    if (!repos.length) throw new NBError(`No public repositories found for "${org}".`);
+    if (!includeForks) repos = repos.filter(r => !r.fork);
+    if (!repos.length) throw new NBError(`All repositories of "${org}" are forks — enable "Include forks" to scan them anyway.`);
+    repos.sort((a, b) => (b.stargazers_count || 0) - (a.stargazers_count || 0));
+    const capped = repos.slice(0, ORG_MAX_REPOS);
+    nbLog(`${repos.length} public repos found${repos.length > ORG_MAX_REPOS ? ` → scanning the ${ORG_MAX_REPOS} most-starred` : ''}.`);
+    orgState = { repos: [], org };
+    let done = 0;
+    const queue = capped.map(r => r.full_name);
+    const results = [];
+    const worker = async () => {
+      while (queue.length) {
+        const full = queue.shift();
+        try {
+          const res = await scanRepoLite(full);
+          results.push(res);
+        } catch (e) {
+          if (e instanceof NBError && /403|rate limit/i.test(e.message)) throw e;
+          nbLog(`skip ${full}: ${String(e.message).slice(0, 80)}`, 'warn');
+        }
+        done++;
+        nbLog(`[${done}/${capped.length}] ${full} scanned.`, 'dim');
+      }
+    };
+    const runners = [worker(), worker(), worker()];
+    await Promise.all(runners.map(p => p.catch(e => { queue.length = 0; throw e; })));
+    orgState.repos = results;
+    renderOrgResults(results, org, performance.now() - t0);
+    document.getElementById('orgResults').classList.remove('hidden');
+    setTimeout(() => document.getElementById('orgResults').scrollIntoView({ behavior: 'smooth' }), 200);
+  } catch (e) {
+    const msg = e instanceof NBError ? e.message : 'Organization scan failed: ' + (e && e.message ? e.message : e);
+    document.getElementById('orgErrorMsg').innerHTML = msg;
+    document.getElementById('orgError').classList.remove('hidden');
+    nbLog('ORG SCAN ABORTED — ' + msg.replace(/<[^>]+>/g, ''), 'err');
+  } finally {
+    state.scanning = false;
+    btn.disabled = false;
+  }
+}
+
+function renderOrgResults(repos, org, ms) {
+  document.getElementById('orgNameLabel').textContent = `· ${org}`;
+  const totalCritical = repos.reduce((a, r) => a + r.counts.critical, 0);
+  const totalHigh = repos.reduce((a, r) => a + r.counts.high, 0);
+  const safe = repos.filter(r => r.verdict === 'READY').length;
+  const safePct = repos.length ? Math.round(safe / repos.length * 100) : 0;
+  document.getElementById('orgTotals').textContent =
+    `${repos.length} repos · ${totalCritical} critical · ${totalHigh} high · ${safePct}% safe · ${(ms / 1000).toFixed(1)}s`;
+  const sorted = repos.slice().sort((a, b) => a.score - b.score || b.counts.critical - a.counts.critical);
+  const sevBadge = (n, cls) => `<span class="mono ${n ? cls : 'text-slate-600'}">${n}</span>`;
+  document.getElementById('orgTableBody').innerHTML = sorted.map(r => `
+    <tr class="hover:bg-white/[0.03]">
+      <td class="px-3 py-2.5 mono text-[11px]"><a href="${esc(r.url)}" target="_blank" rel="noopener" class="text-nbcyan/90 hover:underline">${esc(r.name)}</a></td>
+      <td class="px-3 py-2.5"><span class="mono font-bold" style="color:${scoreColor(r.score)}">${r.score}</span></td>
+      <td class="px-3 py-2.5">${sevBadge(r.counts.critical, 'text-nbred font-bold')}</td>
+      <td class="px-3 py-2.5">${sevBadge(r.counts.high, 'text-[#ff9d5c]')}</td>
+      <td class="px-3 py-2.5">${sevBadge(r.counts.medium, 'text-nbamber')}</td>
+      <td class="px-3 py-2.5"><span class="mono text-[10px] tracking-widest border rounded-full px-2 py-0.5 ${verdictClass(r.verdict)}">${r.verdict}</span></td>
+      <td class="px-3 py-2.5 text-right"><button data-deep="${esc(r.name)}" class="btn-ghost mono text-[10px] rounded-lg px-2.5 py-1.5 transition">DEEP SCAN ▸</button></td>
+    </tr>`).join('');
+  document.getElementById('orgTableBody').querySelectorAll('[data-deep]').forEach(b => {
+    b.addEventListener('click', () => {
+      const full = b.dataset.deep;
+      switchScanMode('repo');
+      document.getElementById('repoInput').value = full;
+      runScan(full);
+    });
+  });
+  const worst = repos.flatMap(r => r.findings.map(f => Object.assign({ repo: r.name }, f)))
+    .sort((a, b) => sevOrder(a.severity) - sevOrder(b.severity)).slice(0, 10);
+  document.getElementById('orgWorst').innerHTML = worst.length ? worst.map(f => `
+    <div class="flex items-start gap-2.5 rounded-lg border border-nbline bg-[#080d14] px-3.5 py-2.5">
+      <span class="sev-chip mono text-[10px] tracking-widest border rounded-full px-2 py-0.5 sev-${f.severity} shrink-0">${f.severity.toUpperCase()}</span>
+      <div class="min-w-0">
+        <div class="text-[12.5px] text-slate-200">${esc(f.name)}</div>
+        <div class="mono text-[10px] text-slate-500 mt-0.5">${esc(f.repo)} · ${esc(f.file)}${f.line ? ':' + f.line : ''}</div>
+      </div>
+    </div>`).join('')
+    : '<div class="text-sm text-emerald-200/80">No findings across the scanned repositories. 🎉</div>';
+}
+
+function switchScanMode(mode) {
+  const repo = mode === 'repo';
+  document.getElementById('scanForm').classList.toggle('hidden', !repo);
+  document.getElementById('orgForm').classList.toggle('hidden', repo);
+  const on = 'mode-tab mono text-[11px] tracking-[.18em] px-5 py-2 rounded-t-lg border border-b-0 border-nbgreen/50 text-nbgreen bg-nbgreen/10';
+  const off = 'mode-tab mono text-[11px] tracking-[.18em] px-5 py-2 rounded-t-lg border border-b-0 border-nbline text-slate-400';
+  document.getElementById('tabRepoScan').className = repo ? on : off;
+  document.getElementById('tabOrgScan').className = repo ? off : on;
+}
+
 /* ================= main scan pipeline ================= */
 async function runScan(input) {
   if (state.scanning) return;
@@ -1922,6 +2801,8 @@ async function runScan(input) {
   btn.disabled = true;
   const t0 = performance.now();
   logStart = performance.now();
+  progressStart = performance.now();
+  nbProgress(1, 'initializing…');
   document.getElementById('scanError').classList.add('hidden');
   document.getElementById('scanLog').classList.remove('hidden');
   document.getElementById('logBody').innerHTML = '';
@@ -1940,12 +2821,14 @@ async function runScan(input) {
     const sigCount = SIGNATURES.length;
     nbLog(`Loaded ${sigCount} secret & OWASP signatures · entropy thresholds 4.5/4.8 · OSV.dev feed online.`);
 
+    nbProgress(3, 'connecting to GitHub…');
     nbLog(`Resolving ${repo.owner}/${repo.name} via GitHub API…`);
     const meta = await ghFetch(`/repos/${repo.owner}/${repo.name}`);
     const branch = repo.branch || meta.default_branch || 'main';
     repo.branch = branch;
     nbLog(`Repository resolved — "${meta.full_name}" · default branch "${branch}"${meta.stargazers_count !== undefined ? ` · ★ ${meta.stargazers_count}` : ''}.`);
 
+    nbProgress(8, 'Layer 0/4 · indexing file tree');
     const treeData = await ghFetch(`/repos/${repo.owner}/${repo.name}/git/trees/${encodeURIComponent(branch)}?recursive=1`);
     const blobs = (treeData.tree || []).filter(e => e.type === 'blob');
     if (!blobs.length) throw new NBError('No files found on that branch. Check the branch name.');
@@ -1956,12 +2839,15 @@ async function runScan(input) {
     nbLog(`${blobs.length} tracked files → ${relevant.length} relevant${relevant.length > chosen.length ? `, prioritized to ${chosen.length} (repo too large for full download)` : ''}.`);
 
     nbLog(`Fetching file contents${state.github ? ' via GitHub contents API (token)' : ' via raw.githubusercontent.com'}…`);
-    const files = (await fetchFileContents(repo.owner, repo.name, branch, chosen)).filter(f => f.content);
+    nbProgress(10, 'Layer 0/4 · fetching sources');
+    const files = (await fetchFileContents(repo.owner, repo.name, branch, chosen,
+      (done, total) => nbProgress(10 + 32 * done / Math.max(1, total), 'Layer 0/4 · fetching sources'))).filter(f => f.content);
     const totalBytes = files.reduce((a, f) => a + f.content.length, 0);
     nbLog(`Downloaded ${files.length} files (${(totalBytes / 1024).toFixed(0)} KB).`, 'ok');
     if (!files.length) throw new NBError('No scannable source files could be downloaded from this repository.');
 
     /* Layer 1 + 2 */
+    nbProgress(48, 'Layer 1/4 · Shannon entropy pass');
     nbLog(`Layer 1 — computing Shannon entropy across every string literal…`);
     let findings = [];
     let stringsTotal = 0;
@@ -1972,6 +2858,7 @@ async function runScan(input) {
     }
     nbLog(`Layer 1 complete — ${stringsTotal} candidate strings entropy-tested, ${findings.length} high-entropy flags.`, 'ok');
 
+    nbProgress(56, 'Layer 2/4 · ' + SIGNATURES.length + ' signature patterns');
     nbLog(`Layer 2 — cross-referencing ${SIGNATURES.length} secret signatures & OWASP patterns…`);
     let patternCount = 0;
     for (const f of files) {
@@ -1982,6 +2869,7 @@ async function runScan(input) {
     nbLog(`Layer 2 complete — ${patternCount} signature matches.`, 'ok');
 
     /* Layer 3 */
+    nbProgress(62, 'Layer 3/4 · parsing manifests');
     nbLog('Layer 3 — parsing dependency manifests (package.json / requirements.txt / go.mod / Gemfile.lock)…');
     const manifests = files.filter(f => isManifestOrSensitive(f.path) && /package\.json|requirements|go\.mod|gemfile\.lock/i.test(f.path));
     const deps = parseManifests(manifests);
@@ -1992,7 +2880,7 @@ async function runScan(input) {
     let osvQueried = 0;
     if (deps.length) {
       try {
-        const osv = await queryOSV(deps);
+        const osv = await queryOSV(deps, (done, total) => nbProgress(64 + 16 * done / total, 'Layer 3/4 · OSV.dev CVE lookups'));
         osvFindings = osv.findings;
         osvQueried = osv.queried;
         nbLog(`OSV.dev responded — ${osvQueried} packages checked, ${osvFindings.length} vulnerable packages/advisories confirmed.`, osvFindings.length ? 'warn' : 'ok');
@@ -2001,6 +2889,18 @@ async function runScan(input) {
       }
     }
     findings.push(...osvFindings);
+
+    /* Layer 3b — supply chain */
+    nbProgress(82, 'Layer 3/4 · supply-chain registry checks');
+    nbLog('Layer 3b — supply-chain analysis: dependency confusion (live registry checks) + typosquatting…');
+    let supply = { findings: [], checked: 0, confusion: 0, recent: 0, typos: 0 };
+    try {
+      supply = await supplyChainScan(deps);
+      findings.push(...supply.findings);
+      nbLog(`Supply chain: ${supply.checked} packages checked on live registries → ${supply.confusion} confusion risk · ${supply.recent} recently-published · ${supply.typos} typosquat flags.`, supply.findings.length ? 'warn' : 'ok');
+    } catch (e) {
+      nbLog('Supply-chain layer failed: ' + e.message + ' — continuing without it.', 'err');
+    }
 
     /* dedupe + sort */
     const seen = new Set();
@@ -2015,17 +2915,48 @@ async function runScan(input) {
     /* scoring */
     const { score, counts, exploitHits } = computeScore(findings);
     const verdict = verdictFor(score, counts);
+    nbProgress(86, 'scoring…');
     nbLog(`Score model: 100 − 20×${counts.critical} − 12×${counts.high} − 5×${counts.medium} − 2×${counts.low}${exploitHits ? ` − 10×${exploitHits} (known-exploit CVEs)` : ''} → ${score}/100 (${verdict}).`, score >= 85 && counts.critical === 0 ? 'ok' : 'warn');
 
     /* AI layer */
     let ai = { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried: 0, failures: [] };
+    let aiLogic = { text: null, provider: null, failures: [] };
+    let aiExploits = { text: null, provider: null, failures: [] };
+    let logicFindings = [];
     { /* the Core Engine is embedded & always-on — the AI layer is never skipped */
       const context = buildAIContext(files, findings);
       nbLog(`Assembling AI context: ${context.fileCount} files${context.sampled ? ' (risk-ranked sample of ' + files.length + ')' : ' (full contents)'}${context.truncated ? ', truncated to context budget' : ''}.`);
       const promptRepo = { owner: repo.owner, name: repo.name, branch, score, counts, filesScanned: files.length };
       const prompt = buildAIPrompt(promptRepo, findings, context);
       ai = await aiCascade(prompt);
-      if (!ai.text) nbLog('AI reasoning layer unavailable this run (' + (ai.failures.join('; ') || 'no keys') + ') — static + OSV results remain fully usable.', 'warn');
+      if (!ai.text) {
+        nbLog('AI reasoning layer unavailable this run (' + (ai.failures.join('; ') || 'no keys') + ') — static + OSV results remain fully usable.', 'warn');
+      } else {
+        /* Pass 2 — logic-bug hunt */
+        nbProgress(90, 'Layer 4/4 · AI logic-bug hunt');
+        nbLog('AI Pass 2/3 — logic-bug hunt: IDOR · missing authz · race conditions · mass assignment · SSRF…');
+        const r2 = await aiCascade(buildLogicPrompt(promptRepo, findings, context));
+        aiLogic = { text: r2.text, provider: r2.provider, failures: r2.failures };
+        if (r2.text) {
+          logicFindings = parseAIFindings(r2.text, /^#{1,4}\s*LOGIC FINDINGS.*$/im, 'ailogic');
+          if (logicFindings.length) {
+            const seenL = new Set(findings.map(f => f.id));
+            for (const f of logicFindings) if (!seenL.has(f.id)) { findings.push(f); seenL.add(f.id); }
+            nbLog(`AI logic hunt: ${logicFindings.length} new logic-level finding(s) merged into the table.`, 'warn');
+          } else {
+            nbLog('AI logic hunt: no NEW logic-level issues beyond the static layers.', 'ok');
+          }
+        } else {
+          nbLog('AI logic hunt unavailable (' + (r2.failures.join('; ').slice(0, 90) || 'no keys') + ').', 'warn');
+        }
+        /* Pass 3 — exploit PoCs for the 3 worst findings across all passes */
+        nbProgress(95, 'Layer 4/4 · exploit PoC generation');
+        nbLog('AI Pass 3/3 — generating exploit PoCs for the 3 most critical findings…');
+        const r3 = await aiCascade(buildExploitPrompt(promptRepo, pickTopFindings(findings, 3)));
+        aiExploits = { text: r3.text, provider: r3.provider, failures: r3.failures };
+        if (r3.text) nbLog('Exploit PoC write-ups generated (3 findings, with fixes).', 'ok');
+        else nbLog('Exploit PoC pass unavailable (' + (r3.failures.join('; ').slice(0, 90) || 'no keys') + ').', 'warn');
+      }
     }
 
     const durationMs = performance.now() - t0;
@@ -2039,8 +2970,10 @@ async function runScan(input) {
       ai: ai.text
         ? { provider: ai.provider, text: ai.text, origin: ai.origin, usedBuiltin: ai.usedBuiltin, userKeysTried: ai.userKeysTried, exhausted: !!ai.exhaustedHit, failures: ai.failures }
         : { unavailable: true, reason: ai.failures.join('; ') || 'no keys available' },
-      aiFindings: ai.text ? parseAIFindings(ai.text) : [],
-      stats: { filesTracked: blobs.length, filesRelevant: relevant.length, filesScanned: files.length, bytes: totalBytes, stringsChecked: stringsTotal, signatures: SIGNATURES.length, depsQueried: osvQueried, durationMs: Math.round(durationMs) }
+      aiLogic: aiLogic.text ? { provider: aiLogic.provider, text: aiLogic.text } : { unavailable: true, reason: aiLogic.failures.join('; ') || (ai.text ? 'no issues returned' : 'pass 1 failed or was skipped') },
+      aiExploits: aiExploits.text ? { provider: aiExploits.provider, text: aiExploits.text } : { unavailable: true, reason: aiExploits.failures.join('; ') || (ai.text ? 'no output returned' : 'pass 1 failed or was skipped') },
+      aiFindings: (ai.text ? parseAIFindings(ai.text) : []).concat(logicFindings),
+      stats: { filesTracked: blobs.length, filesRelevant: relevant.length, filesScanned: files.length, bytes: totalBytes, stringsChecked: stringsTotal, signatures: SIGNATURES.length, depsQueried: osvQueried, supplyChecked: supply.checked, durationMs: Math.round(durationMs) }
     };
 
     if (report.aiFindings.length) {
@@ -2054,9 +2987,12 @@ async function runScan(input) {
       nbLog(`AI layer contributed ${report.findings.length - before} additional findings — score re-computed → ${report.score}/100.`, 'warn');
     }
 
+    nbProgress(100, 'scan complete');
     nbLog(`SCAN COMPLETE in ${(durationMs / 1000).toFixed(1)}s — ${report.findings.length} total findings · score ${report.score}/100 · verdict ${report.verdict}.`, report.verdict === 'READY' ? 'ok' : 'warn');
     state.report = report;
     renderResults(report);
+    saveScanHistory(report);
+    renderHistoryDrop();
     document.getElementById('results').classList.remove('hidden');
     setTimeout(() => document.getElementById('results').scrollIntoView({ behavior: 'smooth' }), 250);
     if (report.verdict === 'READY' && report.counts.critical === 0) triggerCleanPulse();
@@ -2156,6 +3092,23 @@ function fallbackCopy(text, done) {
   document.body.removeChild(ta);
 }
 
+function switchAiTab(which) {
+  state.aiTab = which;
+  const panes = { brief: 'aiPaneBrief', logic: 'aiPaneLogic', exploits: 'aiPaneExploits' };
+  for (const [key, id] of Object.entries(panes)) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', key !== which);
+  }
+  document.querySelectorAll('.ai-tab').forEach(b => {
+    const on = b.dataset.aiTab === which;
+    b.classList.toggle('border-nbgreen/50', on);
+    b.classList.toggle('text-nbgreen', on);
+    b.classList.toggle('bg-nbgreen/10', on);
+    b.classList.toggle('border-nbline', !on);
+    b.classList.toggle('text-slate-400', !on);
+  });
+}
+
 /* ================= score colors ================= */
 function scoreColor(score) { return score >= 80 ? '#00ff9d' : score >= 60 ? '#ffb703' : '#ff3b5c'; }
 function verdictClass(v) {
@@ -2209,6 +3162,32 @@ function renderResults(r) {
     if (r.ai.usedBuiltin) { bn.classList.remove('hidden'); showToast('Heads-up: served by the NULLBREACH Core Engine (your key missing/exhausted)'); }
     else bn.classList.add('hidden');
     typeAIContent(r.ai.text || '');
+    /* pass 2 + 3 panes */
+    state.aiTexts = { brief: r.ai.text || '', logic: '', exploits: '' };
+    const logicPane = document.getElementById('aiLogicContent');
+    const explPane = document.getElementById('aiExploitContent');
+    if (r.aiLogic && !r.aiLogic.unavailable) {
+      state.aiTexts.logic = r.aiLogic.text;
+      logicPane.innerHTML = renderMarkdown(r.aiLogic.text).map(b => `<div>${b}</div>`).join('');
+      const n = (r.aiFindings || []).filter(f => f.layer === 'ai').length;
+      document.getElementById('aiLogicCount').textContent = n ? `· ${n}` : '';
+    } else {
+      state.aiTexts.logic = '';
+      const reason = r.aiLogic ? truncate(r.aiLogic.reason || '', 160) : 'pass 1 failed';
+      logicPane.innerHTML = `<p class="text-amber-300"># Logic analysis pass unavailable</p><p class="text-slate-500">${esc(reason)}</p>`;
+      document.getElementById('aiLogicCount').textContent = '';
+    }
+    if (r.aiExploits && !r.aiExploits.unavailable) {
+      state.aiTexts.exploits = r.aiExploits.text;
+      explPane.innerHTML = renderMarkdown(r.aiExploits.text).map(b => `<div>${b}</div>`).join('');
+      document.getElementById('aiExploitCount').textContent = '· ' + ((r.aiExploits.text.match(/^#{1,4}\s*EXPLOIT:/gim) || []).length);
+    } else {
+      state.aiTexts.exploits = '';
+      const reason = r.aiExploits ? truncate(r.aiExploits.reason || '', 160) : 'pass 1 failed';
+      explPane.innerHTML = `<p class="text-amber-300"># Exploit PoC pass unavailable</p><p class="text-slate-500">${esc(reason)}</p>`;
+      document.getElementById('aiExploitCount').textContent = '';
+    }
+    switchAiTab('brief');
   }
 
   /* gauge */
@@ -2235,8 +3214,10 @@ function renderResults(r) {
   /* findings table + deps + remediation */
   applyFilters();
   renderDeps(r);
+  renderSupply(r);
   renderRemediation(r);
   renderBadge(r);
+  renderSeverityTimeline(r);
 }
 
 /* ================= glitch / pulse ================= */
@@ -2253,7 +3234,7 @@ function triggerCleanPulse() {
 }
 
 /* ================= findings table ================= */
-const LAYER_ORDER = { entropy: 0, pattern: 1, osv: 2, ai: 3 };
+const LAYER_ORDER = { entropy: 0, pattern: 1, osv: 2, 'supply-chain': 3, ai: 4 };
 function applyFilters() {
   const r = state.report;
   if (!r) return;
@@ -2351,6 +3332,37 @@ function renderDeps(r) {
       </div>
       <div class="mt-2 text-[13px] text-slate-300">${esc(truncate(v.desc, 280))}</div>
       <div class="mono text-[11px] text-slate-500 mt-2">affected: ${esc((v.packages || []).join(', '))} · manifest: ${esc(v.file)}</div>
+      <div class="text-[12px] text-emerald-200/80 mt-2">▸ ${esc(v.remed)}</div>
+    </div>`).join('');
+}
+
+/* ================= supply chain panel ================= */
+function renderSupply(r) {
+  const summary = document.getElementById('supplySummary');
+  const list = document.getElementById('supplyList');
+  const items = r.findings.filter(f => f.layer === 'supply-chain');
+  const sec = document.getElementById('nb-supply');
+  if (!r.dependencies.parsed.length) {
+    summary.innerHTML = '<span class="text-slate-500">No dependency manifests found in this repository — supply-chain checks not applicable.</span>';
+    list.innerHTML = '';
+    return;
+  }
+  if (!items.length) {
+    summary.innerHTML = `<span class="text-slate-300">${r.stats.supplyChecked || 0} packages checked on live registries · 0 typosquat hits.</span> <span class="text-nbgreen">All dependency names look legitimate.</span>`;
+    list.innerHTML = `<div class="rounded-lg border border-nbgreen/30 bg-nbgreen/5 px-5 py-4 flex items-center gap-3">
+      <i data-lucide="check-circle-2" class="w-5 h-5 text-nbgreen"></i>
+      <span class="text-sm text-emerald-100/85">No dependency-confusion or typosquatting indicators across the manifests parsed in this scan.</span></div>`;
+    return;
+  }
+  summary.innerHTML = `<span class="text-slate-300">${r.stats.supplyChecked || 0} packages checked on live registries</span> → <span class="text-nbred">${items.length} supply-chain flag${items.length === 1 ? '' : 's'}</span>.`;
+  list.innerHTML = items.map(v => `
+    <div class="rounded-lg border ${v.severity === 'critical' ? 'border-nbred/40' : 'border-[#ff9d5c]/35'} bg-[#080d14] px-4 py-3.5">
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <span class="sev-chip mono text-[10px] tracking-widest border rounded-full px-2 py-0.5 sev-${v.severity}">${v.severity.toUpperCase()}</span>
+        <span class="mono text-[10px] layer-chip layer-supply-chain">SUPPLY-CHAIN</span>
+        <span class="text-[13px] font-semibold text-slate-200">${esc(v.name)}</span>
+      </div>
+      <div class="mt-2 text-[13px] text-slate-400">${esc(truncate(v.desc, 320))}</div>
       <div class="text-[12px] text-emerald-200/80 mt-2">▸ ${esc(v.remed)}</div>
     </div>`).join('');
 }
@@ -2476,6 +3488,16 @@ function buildMarkdownReport(r) {
   if (r.ai && r.ai.unavailable) L.push('_AI layer unavailable: ' + r.ai.reason + '_');
   else L.push('_via ' + (r.ai.provider || 'AI') + (r.ai.usedBuiltin ? ' — NULLBREACH Core Engine (embedded fallback)' : ' — user key') + '_\n\n' + (r.ai.text || ''));
   L.push('');
+  L.push('## AI Logic-Bug Analysis (Pass 2)');
+  L.push('');
+  if (r.aiLogic && !r.aiLogic.unavailable) L.push(r.aiLogic.text);
+  else L.push('_Logic pass unavailable: ' + ((r.aiLogic && r.aiLogic.reason) || 'n/a') + '_');
+  L.push('');
+  L.push('## Exploit PoCs (Pass 3)');
+  L.push('');
+  if (r.aiExploits && !r.aiExploits.unavailable) L.push(r.aiExploits.text);
+  else L.push('_Exploit pass unavailable: ' + ((r.aiExploits && r.aiExploits.reason) || 'n/a') + '_');
+  L.push('');
   L.push('---');
   L.push('NULLBREACH combines entropy-based secret detection, a 40+ signature pattern library, real CVE data from OSV.dev, and AI semantic analysis. It is a strong first-pass triage tool but not a certified replacement for a full professional security audit. Always verify critical findings before acting.');
   return L.join('\n');
@@ -2552,7 +3574,7 @@ function initScrollSpy() {
       }
     }
   }, { rootMargin: '-30% 0px -60% 0px' });
-  ['nb-summary', 'nb-findings', 'nb-deps', 'nb-ai', 'nb-remediation', 'nb-export'].forEach(id => {
+  ['nb-summary', 'nb-findings', 'nb-deps', 'nb-supply', 'nb-ai', 'nb-remediation', 'nb-export'].forEach(id => {
     const el = document.getElementById(id);
     if (el) io.observe(el);
   });
@@ -2567,6 +3589,24 @@ document.addEventListener('DOMContentLoaded', () => {
   initParticles();
   initScrollSpy();
 
+  document.getElementById('btnHistory').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const drop = document.getElementById('historyDrop');
+    const showing = !drop.classList.contains('hidden');
+    drop.classList.toggle('hidden', showing);
+    if (!showing) renderHistoryDrop();
+  });
+  document.addEventListener('click', (e) => {
+    const drop = document.getElementById('historyDrop');
+    if (drop && !drop.classList.contains('hidden') && !drop.contains(e.target) && e.target.id !== 'btnHistory') drop.classList.add('hidden');
+  });
+  document.getElementById('btnCloseCompare').addEventListener('click', () => document.getElementById('compareSection').classList.add('hidden'));
+  document.getElementById('btnShareReport').addEventListener('click', () => {
+    if (!state.report) return;
+    const hash = buildShareHash(state.report);
+    try { history.replaceState(null, '', hash); } catch (e) { /* sandboxed */ }
+    copyText(location.origin + location.pathname + hash, 'Shareable report URL copied');
+  });
   document.getElementById('btnSettings').addEventListener('click', openSettings);
   document.getElementById('btnCloseSettings').addEventListener('click', closeSettings);
   document.getElementById('settingsBackdrop').addEventListener('click', closeSettings);
@@ -2611,6 +3651,12 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     runScan(document.getElementById('repoInput').value);
   });
+  document.getElementById('tabRepoScan').addEventListener('click', () => switchScanMode('repo'));
+  document.getElementById('tabOrgScan').addEventListener('click', () => switchScanMode('org'));
+  document.getElementById('orgForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    runOrgScan(document.getElementById('orgInput').value.trim(), document.getElementById('orgForks').checked);
+  });
   document.querySelectorAll('.example-repo').forEach(b => {
     b.addEventListener('click', () => {
       document.getElementById('repoInput').value = b.textContent.trim();
@@ -2645,9 +3691,18 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('aiCopy').addEventListener('click', () => {
-    const r = state.report;
-    if (!r || !r.ai) return;
-    copyText(r.ai.unavailable ? 'AI layer unavailable: ' + r.ai.reason : r.ai.text, 'AI briefing copied');
+    const active = state.aiTab || 'brief';
+    const texts = state.aiTexts || {};
+    if (active === 'brief' && state.report && state.report.ai) {
+      copyText(state.report.ai.unavailable ? 'AI layer unavailable: ' + state.report.ai.reason : state.report.ai.text, 'Executive brief copied');
+    } else if (texts[active]) {
+      copyText(texts[active], (active === 'logic' ? 'Logic analysis' : 'Exploit write-ups') + ' copied');
+    } else {
+      showToast('This tab has no content to copy');
+    }
+  });
+  document.querySelectorAll('.ai-tab').forEach(btn => {
+    btn.addEventListener('click', () => switchAiTab(btn.dataset.aiTab));
   });
   document.getElementById('btnExportJson').addEventListener('click', () => {
     if (!state.report) return;
@@ -2665,6 +3720,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   lucide.createIcons();
+  /* shared report via #report=BASE64 */
+  const shared = parseShareHash();
+  if (shared && shared.repo) {
+    state.report = shared;
+    document.getElementById('results').classList.remove('hidden');
+    renderResults(shared);
+    showToast('Shared report loaded (static snapshot — run a fresh scan for live CVE data)');
+    setTimeout(() => document.getElementById('results').scrollIntoView({ behavior: 'smooth' }), 300);
+  }
 });
 </script>
 </body>
