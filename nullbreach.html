@@ -1,0 +1,2474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NULLBREACH — AI-Powered GitHub Security Auditor</title>
+<meta name="description" content="NULLBREACH: entropy-based secret detection, 40+ signatures, real CVE data from OSV.dev and AI semantic reasoning — in one single-file, zero-backend scanner.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,4 92,22 92,58 50,96 8,58 8,22' fill='%2305070a' stroke='%2300ff9d' stroke-width='6'/%3E%3Ccircle cx='50' cy='45' r='14' fill='none' stroke='%2300ff9d' stroke-width='5'/%3E%3Cpath d='M50 59 L50 76 M38 66 L62 66' stroke='%2300ff9d' stroke-width='5'/%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        nbbg: '#05070a',
+        nbgreen: '#00ff9d',
+        nbcyan: '#22d3ee',
+        nbamber: '#ffb703',
+        nbred: '#ff3b5c',
+        nbpanel: '#0a0f16',
+        nbline: '#131c28'
+      },
+      fontFamily: {
+        body: ['"Space Grotesk"', 'Inter', 'ui-sans-serif', 'sans-serif'],
+        mono: ['"JetBrains Mono"', '"Fira Code"', 'ui-monospace', 'monospace']
+      }
+    }
+  }
+};
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+:root { --nbgreen:#00ff9d; --nbcyan:#22d3ee; --nbamber:#ffb703; --nbred:#ff3b5c; }
+html { scroll-behavior: smooth; }
+body { background:#05070a; color:#dbe4ee; font-family:'Space Grotesk',Inter,sans-serif; overflow-x:hidden; }
+.mono { font-family:'JetBrains Mono','Fira Code',monospace; }
+
+/* ---------- background grid + particles ---------- */
+#bgfx { position:fixed; inset:0; z-index:0; pointer-events:none; }
+.grid-overlay{
+  position:fixed; inset:-50px; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,255,157,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,157,.045) 1px, transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(ellipse 90% 70% at 50% 0%, black 25%, transparent 78%);
+          mask-image:radial-gradient(ellipse 90% 70% at 50% 0%, black 25%, transparent 78%);
+  animation:gridpan 30s linear infinite;
+}
+@keyframes gridpan { to { background-position: 44px 44px; } }
+.hero-glow{
+  position:fixed; top:-180px; left:50%; transform:translateX(-50%);
+  width:900px; height:520px; z-index:0; pointer-events:none;
+  background:radial-gradient(closest-side, rgba(0,255,157,.10), rgba(34,211,238,.05) 55%, transparent 75%);
+  filter:blur(10px);
+}
+
+/* ---------- terminal scan log ---------- */
+.log-shell{
+  background:linear-gradient(180deg,#070b11,#05080d);
+  border:1px solid rgba(0,255,157,.18);
+  box-shadow:0 0 0 1px rgba(0,0,0,.6), 0 20px 60px -20px rgba(0,255,157,.15), inset 0 0 60px rgba(0,255,157,.03);
+}
+.log-body{ max-height:260px; overflow-y:auto; }
+.log-line{ animation:login .18s ease-out; }
+@keyframes login { from { opacity:0; transform:translateY(3px);} to { opacity:1; transform:none;} }
+.log-body::-webkit-scrollbar{ width:8px; }
+.log-body::-webkit-scrollbar-thumb{ background:#12212c; border-radius:4px; }
+
+.cursor{ display:inline-block; width:9px; height:15px; background:var(--nbgreen); vertical-align:-2px; animation:blink 1.05s steps(1) infinite; }
+@keyframes blink { 50% { opacity:0; } }
+
+/* ---------- glitch / flicker (critical findings) ---------- */
+@keyframes glitchA{
+  0%   { transform:translate(0,0); text-shadow:none; clip-path:inset(0 0 0 0); }
+  18%  { transform:translate(-2px,1px); text-shadow:3px 0 #ff3b5c, -3px 0 #22d3ee; clip-path:inset(12% 0 58% 0); }
+  36%  { transform:translate(2px,-1px); text-shadow:-3px 0 #ff3b5c, 3px 0 #22d3ee; clip-path:inset(52% 0 8% 0); }
+  54%  { transform:translate(-1px,2px);  text-shadow:2px 0 #ff3b5c, -2px 0 #22d3ee; clip-path:inset(24% 0 34% 0); }
+  72%  { transform:translate(1px,-2px);  text-shadow:-2px 0 #ff3b5c, 2px 0 #22d3ee; clip-path:inset(66% 0 4% 0); }
+  100% { transform:translate(0,0); text-shadow:none; clip-path:inset(0 0 0 0); }
+}
+.glitching{ animation:glitchA .16s steps(2,end) 6; }
+@keyframes flickerfx {
+  0%,100% { opacity:0; } 8% { opacity:.55; } 12% { opacity:.06; } 20% { opacity:.4; }
+  28% { opacity:.04; } 44% { opacity:.3; } 70% { opacity:0; } 86% { opacity:.12; }
+}
+#critFlicker{ position:fixed; inset:0; z-index:60; pointer-events:none; opacity:0;
+  background:linear-gradient(180deg, rgba(255,59,92,.10), rgba(255,59,92,.02) 40%, transparent); }
+#critFlicker.on{ animation:flickerfx .9s linear 1; }
+
+/* ---------- calm green pulse (clean result) ---------- */
+@keyframes pulseG { 0%,100% { filter:drop-shadow(0 0 4px rgba(0,255,157,.25)); } 50% { filter:drop-shadow(0 0 22px rgba(0,255,157,.65)); } }
+.pulse-clean{ animation:pulseG 2.6s ease-in-out infinite; }
+
+/* ---------- gauge ---------- */
+#gaugeFg{ transition: stroke-dashoffset 1.5s cubic-bezier(.22,.9,.28,1); }
+
+/* ---------- tooltip ---------- */
+.tip{ position:relative; }
+.tipbox{
+  display:none; position:absolute; bottom:130%; left:50%; transform:translateX(-50%);
+  width:300px; padding:12px 14px; border-radius:10px; z-index:80; font-size:12px; line-height:1.55;
+  background:#0a1017; border:1px solid rgba(0,255,157,.35); color:#c8d6e2;
+  box-shadow:0 12px 40px rgba(0,0,0,.7); text-align:left;
+}
+.tip:hover .tipbox{ display:block; }
+
+/* ---------- generic panel ---------- */
+.panel{ background:linear-gradient(180deg, rgba(13,20,29,.85), rgba(8,12,18,.9)); border:1px solid rgba(34,211,238,.12); border-radius:14px; }
+.panel-glow{ box-shadow:0 0 0 1px rgba(0,0,0,.5), 0 24px 70px -30px rgba(0,255,157,.18); }
+
+/* ---------- findings table ---------- */
+#findTableWrap{ max-height:620px; overflow:auto; }
+#findTableWrap::-webkit-scrollbar{ width:9px; height:9px; }
+#findTableWrap::-webkit-scrollbar-thumb{ background:#14212e; border-radius:5px; }
+#findTableWrap::-webkit-scrollbar-track{ background:#070b10; }
+#findTable thead th{ position:sticky; top:0; background:#0a1119; z-index:5; }
+.sev-critical{ color:#ff3b5c; border-color:rgba(255,59,92,.5); background:rgba(255,59,92,.1); }
+.sev-high{ color:#ff9d5c; border-color:rgba(255,157,92,.45); background:rgba(255,157,92,.08); }
+.sev-medium{ color:#ffb703; border-color:rgba(255,183,3,.45); background:rgba(255,183,3,.08); }
+.sev-low{ color:#22d3ee; border-color:rgba(34,211,238,.4); background:rgba(34,211,238,.08); }
+.layer-chip{ font-size:10px; letter-spacing:.08em; padding:2px 7px; border-radius:999px; border:1px solid; }
+.layer-entropy{ color:#22d3ee; border-color:rgba(34,211,238,.5); background:rgba(34,211,238,.07); }
+.layer-pattern{ color:#00ff9d; border-color:rgba(0,255,157,.45); background:rgba(0,255,157,.06); }
+.layer-osv{ color:#ffb703; border-color:rgba(255,183,3,.5); background:rgba(255,183,3,.06); }
+.layer-ai{ color:#a78bfa; border-color:rgba(167,139,250,.5); background:rgba(167,139,250,.07); }
+
+tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
+@keyframes critrow { 0% { background:rgba(255,59,92,.28);} 100% { background:transparent; } }
+
+/* ---------- remediation checklist ---------- */
+.rem-item input:checked ~ .rem-text{ text-decoration:line-through; opacity:.45; }
+
+/* ---------- AI terminal ---------- */
+#aiPanel{ background:#04070b; border:1px solid rgba(0,255,157,.22); border-radius:12px;
+  box-shadow:inset 0 0 80px rgba(0,255,157,.04), 0 20px 60px -30px rgba(0,255,157,.2); }
+#aiContent h3{ color:#00ff9d; font-weight:700; margin:18px 0 8px; font-size:15px; letter-spacing:.02em; }
+#aiContent h4{ color:#22d3ee; font-weight:600; margin:14px 0 6px; font-size:14px; }
+#aiContent p{ margin:6px 0; }
+#aiContent ul,#aiContent ol{ margin:8px 0 8px 20px; list-style:disc; }
+#aiContent ol{ list-style:decimal; }
+#aiContent li{ margin:4px 0; }
+#aiContent code{ background:rgba(0,255,157,.08); border:1px solid rgba(0,255,157,.2); padding:1px 5px; border-radius:4px; font-size:12px; }
+#aiContent pre{ background:#060a10; border:1px solid #142030; border-radius:8px; padding:12px; overflow-x:auto; margin:10px 0; }
+#aiContent pre code{ background:none; border:none; padding:0; }
+#aiContent strong{ color:#e8f2ee; }
+
+/* ---------- shareable badge ---------- */
+#badgePreview{ background:linear-gradient(135deg,#070c12 0%, #0b1420 60%, #081018 100%);
+  border:1px solid rgba(0,255,157,.35); border-radius:12px; position:relative; overflow:hidden; }
+#badgePreview::before{ content:''; position:absolute; inset:0; padding:1px; border-radius:12px; pointer-events:none;
+  background:linear-gradient(120deg, rgba(0,255,157,.6), rgba(34,211,238,.35), transparent 60%); }
+
+.btn-primary{
+  background:linear-gradient(180deg, rgba(0,255,157,.16), rgba(0,255,157,.07));
+  border:1px solid rgba(0,255,157,.5); color:#9fffd9;
+}
+.btn-primary:hover:not(:disabled){ background:linear-gradient(180deg, rgba(0,255,157,.28), rgba(0,255,157,.12)); box-shadow:0 0 24px rgba(0,255,157,.25); }
+.btn-primary:disabled{ opacity:.45; cursor:not-allowed; }
+.btn-ghost{ border:1px solid rgba(34,211,238,.3); color:#9fdcec; }
+.btn-ghost:hover{ background:rgba(34,211,238,.08); }
+
+input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !important; box-shadow:0 0 0 1px rgba(0,255,157,.25), 0 0 18px rgba(0,255,157,.08); }
+::placeholder{ color:#3d4d5c; }
+
+#toast{ transition: transform .25s ease, opacity .25s ease; }
+@media (prefers-reduced-motion: reduce){
+  .grid-overlay, .cursor, .pulse-clean, #critFlicker.on { animation:none !important; }
+  .glitching{ animation:none !important; }
+}
+</style>
+</head>
+<body class="font-body min-h-screen">
+
+<canvas id="bgfx"></canvas>
+<div class="grid-overlay"></div>
+<div class="hero-glow"></div>
+<div id="critFlicker"></div>
+
+<!-- ================= HEADER ================= -->
+<header class="relative z-40 border-b border-emerald-500/10 backdrop-blur-sm">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="#" class="flex items-center gap-3 group">
+      <svg width="30" height="30" viewBox="0 0 100 100" class="group-hover:drop-shadow-[0_0_10px_rgba(0,255,157,.7)] transition">
+        <polygon points="50,4 92,22 92,58 50,96 8,58 8,22" fill="#05070a" stroke="#00ff9d" stroke-width="6"/>
+        <circle cx="50" cy="45" r="14" fill="none" stroke="#00ff9d" stroke-width="5"/>
+        <path d="M50 59 L50 76 M38 66 L62 66" stroke="#00ff9d" stroke-width="5"/>
+      </svg>
+      <div class="leading-none">
+        <div class="mono font-extrabold tracking-[.18em] text-lg text-transparent bg-clip-text bg-gradient-to-r from-nbgreen to-nbcyan">NULLBREACH</div>
+        <div class="mono text-[9px] tracking-[.3em] text-slate-500 mt-1">AI GITHUB SECURITY AUDITOR</div>
+      </div>
+    </a>
+    <div class="flex items-center gap-3">
+      <span class="hidden md:flex mono text-[10px] tracking-widest text-slate-500 border border-nbline rounded-full px-3 py-1.5" id="engineBadge">ENGINE v1.0 · ENTROPY + SIGS + OSV.DEV + AI</span>
+      <button id="btnSettings" class="btn-ghost flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm transition" title="API keys & settings">
+        <i data-lucide="settings-2" class="w-4 h-4"></i>
+        <span class="hidden sm:inline">API Keys</span>
+        <span id="keyDot" class="w-2 h-2 rounded-full bg-amber-400" title="No AI keys configured"></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ================= SETTINGS DRAWER ================= -->
+<div id="settingsDrawer" class="fixed inset-0 z-[70] hidden">
+  <div id="settingsBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+  <aside id="settingsPanel" class="absolute right-0 top-0 h-full w-full max-w-md bg-[#070b11] border-l border-emerald-500/20 shadow-2xl translate-x-full transition-transform duration-300 flex flex-col">
+    <div class="flex items-center justify-between px-6 h-16 border-b border-nbline">
+      <div class="flex items-center gap-2.5">
+        <i data-lucide="key-round" class="w-5 h-5 text-nbgreen"></i>
+        <h2 class="font-semibold tracking-wide">Provider Keys</h2>
+      </div>
+      <button id="btnCloseSettings" class="p-2 rounded-lg hover:bg-white/5 text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+      <p class="text-xs leading-relaxed text-slate-400">
+        NULLBREACH runs a fallback cascade across AI providers. Configure at least one key to enable
+        the AI reasoning layer. The static layers (entropy, 40+ signatures) and the OSV.dev CVE feed need <span class="text-nbgreen">no keys at all</span>.
+      </p>
+
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label for="keyGroq" class="text-sm font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-nbgreen" id="dotGroq"></span>Groq API Key <span class="mono text-[10px] text-slate-500">PRIMARY</span></label>
+        </div>
+        <div class="relative">
+          <input id="keyGroq" type="password" autocomplete="off" spellcheck="false" placeholder="gsk_…"
+            class="mono w-full bg-[#0a0f16] border border-nbline rounded-lg px-3 py-2.5 pr-10 text-sm text-slate-200">
+          <button type="button" data-eye="keyGroq" class="eye-toggle absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-500 hover:text-nbgreen">
+            <i data-lucide="eye" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <p class="mono text-[10px] text-slate-500 mt-1.5">model: llama-3.3-70b-versatile</p>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label for="keyGemini" class="text-sm font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-slate-600" id="dotGemini"></span>Gemini API Key <span class="mono text-[10px] text-slate-500">FALLBACK 1</span></label>
+        </div>
+        <div class="relative">
+          <input id="keyGemini" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…"
+            class="mono w-full bg-[#0a0f16] border border-nbline rounded-lg px-3 py-2.5 pr-10 text-sm text-slate-200">
+          <button type="button" data-eye="keyGemini" class="eye-toggle absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-500 hover:text-nbgreen">
+            <i data-lucide="eye" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <p class="mono text-[10px] text-slate-500 mt-1.5">model: gemini-2.0-flash</p>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label for="keyMistral" class="text-sm font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-slate-600" id="dotMistral"></span>Mistral API Key <span class="mono text-[10px] text-slate-500">FALLBACK 2</span></label>
+        </div>
+        <div class="relative">
+          <input id="keyMistral" type="password" autocomplete="off" spellcheck="false" placeholder="…"
+            class="mono w-full bg-[#0a0f16] border border-nbline rounded-lg px-3 py-2.5 pr-10 text-sm text-slate-200">
+          <button type="button" data-eye="keyMistral" class="eye-toggle absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-500 hover:text-nbgreen">
+            <i data-lucide="eye" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <p class="mono text-[10px] text-slate-500 mt-1.5">model: mistral-large-latest</p>
+      </div>
+
+      <div class="pt-2 border-t border-nbline">
+        <div class="flex items-center justify-between mb-1.5">
+          <label for="keyGithub" class="text-sm font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-slate-600" id="dotGithub"></span>GitHub Token <span class="mono text-[10px] text-slate-500">OPTIONAL</span></label>
+        </div>
+        <div class="relative">
+          <input id="keyGithub" type="password" autocomplete="off" spellcheck="false" placeholder="ghp_… / github_pat_…"
+            class="mono w-full bg-[#0a0f16] border border-nbline rounded-lg px-3 py-2.5 pr-10 text-sm text-slate-200">
+          <button type="button" data-eye="keyGithub" class="eye-toggle absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-500 hover:text-nbgreen">
+            <i data-lucide="eye" class="w-4 h-4"></i>
+          </button>
+        </div>
+        <p class="mono text-[10px] text-slate-500 mt-1.5">optional — lifts rate limit to 5,000 req/h and enables private repos</p>
+      </div>
+
+      <div class="flex items-start gap-2.5 rounded-lg border border-nbgreen/25 bg-nbgreen/5 px-4 py-3">
+        <i data-lucide="shield-check" class="w-4 h-4 text-nbgreen mt-0.5 shrink-0"></i>
+        <p class="text-[11px] leading-relaxed text-emerald-100/80">
+          Keys never leave your browser. They are stored only in this browser's <span class="mono text-nbgreen">localStorage</span>
+          and sent directly over HTTPS to the provider you configured — there is no NULLBREACH backend.
+        </p>
+      </div>
+    </div>
+
+    <div class="px-6 py-4 border-t border-nbline flex items-center gap-3">
+      <button id="btnSaveKeys" class="btn-primary flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition flex items-center justify-center gap-2">
+        <i data-lucide="save" class="w-4 h-4"></i> Save Keys
+      </button>
+      <button id="btnClearKeys" class="btn-ghost rounded-lg px-4 py-2.5 text-sm transition flex items-center gap-2">
+        <i data-lucide="eraser" class="w-4 h-4"></i> Clear
+      </button>
+    </div>
+  </aside>
+</div>
+
+<!-- ================= HERO / SCAN ================= -->
+<main class="relative z-10">
+<section class="max-w-5xl mx-auto px-6 pt-14 pb-10">
+  <div class="text-center">
+    <div class="inline-flex items-center gap-2 mono text-[10px] tracking-[.22em] text-emerald-300/80 border border-nbgreen/25 bg-nbgreen/5 rounded-full px-4 py-1.5 mb-6">
+      <span class="w-1.5 h-1.5 rounded-full bg-nbgreen animate-pulse"></span>
+      ENTROPY SECRETS · <span id="heroSigCount">40+</span> SIGNATURES · OSV.DEV LIVE CVES · GROQ → GEMINI → MISTRAL
+    </div>
+    <h1 class="mono text-4xl sm:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-nbgreen via-emerald-200 to-nbcyan drop-shadow-[0_0_25px_rgba(0,255,157,.25)]">
+      NULLBREACH
+    </h1>
+    <p class="mt-4 text-slate-400 max-w-2xl mx-auto text-[15px] leading-relaxed">
+      Point it at any GitHub repository. NULLBREACH computes Shannon entropy on every string, cross-references
+      <span class="text-slate-200">40+ secret &amp; OWASP signatures</span>, pulls <span class="text-slate-200">real CVE data from OSV.dev</span>,
+      then engages an AI security reasoning cascade — all in your browser, zero backend.
+    </p>
+  </div>
+
+  <form id="scanForm" class="mt-9 max-w-3xl mx-auto">
+    <div class="flex flex-col sm:flex-row gap-3">
+      <div class="relative flex-1">
+        <i data-lucide="github" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+        <input id="repoInput" type="text" spellcheck="false" autocomplete="off"
+          placeholder="https://github.com/owner/repo  ·  or  owner/repo"
+          class="mono w-full bg-[#0a0f16]/90 border border-nbline rounded-xl pl-12 pr-4 py-3.5 text-sm text-slate-200">
+      </div>
+      <button id="btnScan" type="submit" class="btn-primary mono rounded-xl px-7 py-3.5 text-sm font-bold tracking-[.14em] transition flex items-center justify-center gap-2">
+        <i data-lucide="play" class="w-4 h-4"></i> RUN SCAN
+      </button>
+    </div>
+    <div class="mt-3 flex flex-wrap items-center gap-2 justify-center">
+      <span class="mono text-[10px] text-slate-600 mr-1">try:</span>
+      <button type="button" class="example-repo mono text-[10px] px-2.5 py-1 rounded-full border border-nbline text-slate-400 hover:text-nbgreen hover:border-nbgreen/40 transition">OWASP/NodeGoat</button>
+      <button type="button" class="example-repo mono text-[10px] px-2.5 py-1 rounded-full border border-nbline text-slate-400 hover:text-nbgreen hover:border-nbgreen/40 transition">expressjs/express</button>
+      <button type="button" class="example-repo mono text-[10px] px-2.5 py-1 rounded-full border border-nbline text-slate-400 hover:text-nbgreen hover:border-nbgreen/40 transition">pallets/flask</button>
+      <button type="button" class="example-repo mono text-[10px] px-2.5 py-1 rounded-full border border-nbline text-slate-400 hover:text-nbgreen hover:border-nbgreen/40 transition">google/gson</button>
+    </div>
+  </form>
+
+  <div id="scanError" class="hidden mt-6 max-w-3xl mx-auto rounded-xl border border-nbred/40 bg-nbred/10 px-5 py-4 text-sm text-red-200 flex items-start gap-3">
+    <i data-lucide="shield-alert" class="w-5 h-5 text-nbred shrink-0 mt-0.5"></i>
+    <span id="scanErrorMsg"></span>
+  </div>
+
+  <div id="scanLog" class="hidden mt-8 max-w-3xl mx-auto log-shell rounded-xl overflow-hidden">
+    <div class="flex items-center justify-between px-4 h-9 bg-[#0a1017] border-b border-nbline">
+      <div class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f57]"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-[#febc2e]"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-[#28c840]"></span>
+      </div>
+      <span class="mono text-[10px] tracking-[.25em] text-slate-500">NULLBREACH://scan-engine</span>
+      <span id="logTimer" class="mono text-[10px] text-slate-500">00:00</span>
+    </div>
+    <div id="logBody" class="log-body mono text-[12px] leading-[1.7] px-4 py-3 text-emerald-100/90"></div>
+  </div>
+</section>
+
+<!-- ================= RESULTS ================= -->
+<section id="results" class="hidden">
+  <nav class="sticky top-0 z-40 border-b border-emerald-500/10 bg-[#05070a]/85 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-6 py-2.5 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-1 overflow-x-auto">
+        <a href="#nb-summary"     class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-summary">SUMMARY</a>
+        <a href="#nb-findings"    class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-findings">FINDINGS</a>
+        <a href="#nb-deps"        class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-deps">DEPENDENCIES</a>
+        <a href="#nb-ai"          class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-ai">AI BRIEFING</a>
+        <a href="#nb-remediation" class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-remediation">REMEDIATION</a>
+        <a href="#nb-export"      class="nav-link mono text-[11px] tracking-widest px-3 py-2 rounded-lg text-slate-400 hover:text-nbgreen whitespace-nowrap transition" data-target="nb-export">EXPORT</a>
+      </div>
+      <div class="hidden md:flex items-center gap-3 shrink-0">
+        <span id="navRepo" class="mono text-[11px] text-slate-500"></span>
+        <span id="navScore" class="mono text-[12px] font-bold px-2.5 py-1 rounded-lg border"></span>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-6xl mx-auto px-6 py-9 space-y-14">
+
+    <!-- SUMMARY -->
+    <div id="nb-summary" class="scroll-mt-24">
+      <div class="grid lg:grid-cols-[340px_1fr] gap-7 items-stretch">
+        <div class="panel panel-glow p-7 flex flex-col items-center justify-center relative">
+          <div class="tip absolute top-4 right-4">
+            <i data-lucide="info" class="w-4 h-4 text-slate-500 cursor-help"></i>
+            <div class="tipbox mono">
+              <div class="text-nbgreen font-bold mb-1.5">HOW IS THIS CALCULATED?</div>
+              score = 100<br>
+              &nbsp;&nbsp;− 20 × critical<br>
+              &nbsp;&nbsp;− 12 × high<br>
+              &nbsp;&nbsp;− 5 × medium<br>
+              &nbsp;&nbsp;− 2 × low<br>
+              &nbsp;&nbsp;− 10 × OSV CVE w/ known-exploit indicators<br>
+              floored at 0, capped at 100.<br>
+              <span class="text-slate-500">"Known-exploit" flags are a heuristic from advisory text (RCE / auth-bypass / privilege-escalation phrasing) — not a KEV feed.</span>
+            </div>
+          </div>
+          <div class="relative w-48 h-48" id="gaugeWrap">
+            <svg viewBox="0 0 200 200" class="w-full h-full -rotate-90">
+              <defs>
+                <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#00ff9d"/><stop offset="100%" stop-color="#22d3ee"/>
+                </linearGradient>
+              </defs>
+              <circle cx="100" cy="100" r="82" fill="none" stroke="#101a24" stroke-width="14"/>
+              <circle id="gaugeFg" cx="100" cy="100" r="82" fill="none" stroke="url(#gaugeGrad)" stroke-width="14"
+                stroke-linecap="round" stroke-dasharray="515.2" stroke-dashoffset="515.2"/>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <div id="scoreNum" class="mono text-5xl font-extrabold text-slate-100">0</div>
+              <div class="mono text-[10px] tracking-[.3em] text-slate-500 mt-1">/ 100</div>
+            </div>
+          </div>
+          <div id="scoreVerdict" class="mono mt-4 text-sm font-bold tracking-[.25em] px-4 py-1.5 rounded-lg border">ANALYZING…</div>
+          <div id="scoreSub" class="mono text-[10px] text-slate-500 mt-3 text-center"></div>
+        </div>
+
+        <div class="flex flex-col gap-5">
+          <div class="panel p-6">
+            <div class="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <h2 id="repoMeta" class="mono text-lg font-bold text-slate-100 break-all">—</h2>
+                <p id="repoDesc" class="text-sm text-slate-400 mt-1.5 max-w-xl"></p>
+              </div>
+              <a id="repoLink" href="#" target="_blank" rel="noopener" class="btn-ghost mono text-[11px] rounded-lg px-3 py-2 flex items-center gap-2 shrink-0">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> OPEN REPO
+              </a>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
+              <div class="rounded-lg border border-nbline bg-[#080d14] px-3.5 py-3">
+                <div class="mono text-[9px] tracking-[.2em] text-slate-500">FILES SCANNED</div>
+                <div id="statFiles" class="mono text-xl font-bold text-slate-100 mt-1">—</div>
+              </div>
+              <div class="rounded-lg border border-nbline bg-[#080d14] px-3.5 py-3">
+                <div class="mono text-[9px] tracking-[.2em] text-slate-500">STRINGS ENTROPY-TESTED</div>
+                <div id="statStrings" class="mono text-xl font-bold text-slate-100 mt-1">—</div>
+              </div>
+              <div class="rounded-lg border border-nbline bg-[#080d14] px-3.5 py-3">
+                <div class="mono text-[9px] tracking-[.2em] text-slate-500">DEPS CHECKED ON OSV</div>
+                <div id="statDeps" class="mono text-xl font-bold text-slate-100 mt-1">—</div>
+              </div>
+              <div class="rounded-lg border border-nbline bg-[#080d14] px-3.5 py-3">
+                <div class="mono text-[9px] tracking-[.2em] text-slate-500">SCAN DURATION</div>
+                <div id="statDuration" class="mono text-xl font-bold text-slate-100 mt-1">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel p-6">
+            <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-4">SEVERITY DISTRIBUTION</div>
+            <div class="flex flex-wrap gap-3">
+              <div class="sev-chip flex items-center gap-2.5 rounded-xl border px-4 py-2.5 sev-critical">
+                <span class="w-2.5 h-2.5 rounded-full bg-nbred"></span>
+                <span class="mono text-xs tracking-widest">CRITICAL</span>
+                <span id="chipCritical" class="mono text-lg font-extrabold">0</span>
+              </div>
+              <div class="flex items-center gap-2.5 rounded-xl border px-4 py-2.5 sev-high">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#ff9d5c]"></span>
+                <span class="mono text-xs tracking-widest">HIGH</span>
+                <span id="chipHigh" class="mono text-lg font-extrabold">0</span>
+              </div>
+              <div class="flex items-center gap-2.5 rounded-xl border px-4 py-2.5 sev-medium">
+                <span class="w-2.5 h-2.5 rounded-full bg-nbamber"></span>
+                <span class="mono text-xs tracking-widest">MEDIUM</span>
+                <span id="chipMedium" class="mono text-lg font-extrabold">0</span>
+              </div>
+              <div class="flex items-center gap-2.5 rounded-xl border px-4 py-2.5 sev-low">
+                <span class="w-2.5 h-2.5 rounded-full bg-nbcyan"></span>
+                <span class="mono text-xs tracking-widest">LOW</span>
+                <span id="chipLow" class="mono text-lg font-extrabold">0</span>
+              </div>
+            </div>
+            <div id="aiBanner" class="hidden mt-5 rounded-lg border border-nbamber/40 bg-nbamber/10 px-4 py-3 text-[13px] text-amber-200 flex items-start gap-2.5">
+              <i data-lucide="cloud-off" class="w-4 h-4 mt-0.5 shrink-0"></i>
+              <span><b>AI unavailable</b> — every configured provider failed (<span id="aiFailReason" class="mono">no keys</span>).
+              Showing full Layer 1–3 static results only; add a Groq / Gemini / Mistral key in <b>API Keys</b> for semantic review.</span>
+            </div>
+            <div id="aiOkLine" class="hidden mt-5 mono text-[11px] text-emerald-300/80 flex items-center gap-2">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              AI reasoning layer engaged via <span id="aiProvider" class="text-nbgreen font-bold"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINDINGS -->
+    <div id="nb-findings" class="scroll-mt-24">
+      <div class="flex items-end justify-between flex-wrap gap-3 mb-4">
+        <div>
+          <h2 class="mono text-xl font-bold tracking-wide text-slate-100">// FINDINGS</h2>
+          <p class="text-sm text-slate-500 mt-1">Layer 1 (entropy) · Layer 2 (signatures) · Layer 3 (OSV.dev CVEs) · AI — filter, sort, click to open source.</p>
+        </div>
+        <span id="findCount" class="mono text-[11px] text-slate-500"></span>
+      </div>
+      <div class="panel p-4">
+        <div class="flex flex-wrap items-center gap-3 mb-4">
+          <div class="flex flex-wrap gap-1.5" id="filtSev">
+            <button data-sev="critical" class="sev-filter mono text-[10px] tracking-widest px-3 py-1.5 rounded-full border border-nbred/50 text-nbred bg-nbred/10">CRITICAL</button>
+            <button data-sev="high" class="sev-filter mono text-[10px] tracking-widest px-3 py-1.5 rounded-full border border-[#ff9d5c]/50 text-[#ff9d5c] bg-[#ff9d5c]/10">HIGH</button>
+            <button data-sev="medium" class="sev-filter mono text-[10px] tracking-widest px-3 py-1.5 rounded-full border border-nbamber/50 text-nbamber bg-nbamber/10">MEDIUM</button>
+            <button data-sev="low" class="sev-filter mono text-[10px] tracking-widest px-3 py-1.5 rounded-full border border-nbcyan/50 text-nbcyan bg-nbcyan/10">LOW</button>
+            <button data-sev="all" class="sev-filter mono text-[10px] tracking-widest px-3 py-1.5 rounded-full border border-slate-600 text-slate-300 bg-slate-500/10">ALL</button>
+          </div>
+          <select id="filtLayer" class="mono text-[11px] bg-[#0a0f16] border border-nbline rounded-lg px-3 py-2 text-slate-300">
+            <option value="all">ALL LAYERS</option>
+            <option value="entropy">ENTROPY</option>
+            <option value="pattern">PATTERN</option>
+            <option value="osv">OSV.DEV</option>
+            <option value="ai">AI</option>
+          </select>
+          <div class="relative flex-1 min-w-[180px]">
+            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
+            <input id="filtSearch" type="text" placeholder="filter by file, CVE, keyword…"
+              class="mono w-full bg-[#0a0f16] border border-nbline rounded-lg pl-9 pr-3 py-2 text-[12px] text-slate-300">
+          </div>
+        </div>
+        <div id="findTableWrap" class="rounded-lg border border-nbline">
+          <table class="w-full text-left text-[12px]" id="findTable">
+            <thead class="mono text-[10px] tracking-[.15em] text-slate-500">
+              <tr class="border-b border-nbline">
+                <th class="px-3 py-2.5 cursor-pointer hover:text-nbgreen select-none sortable" data-sort="severity">SEVERITY <span class="sort-ind"></span></th>
+                <th class="px-3 py-2.5 cursor-pointer hover:text-nbgreen select-none sortable" data-sort="layer">LAYER <span class="sort-ind"></span></th>
+                <th class="px-3 py-2.5 cursor-pointer hover:text-nbgreen select-none sortable" data-sort="file">FILE <span class="sort-ind"></span></th>
+                <th class="px-3 py-2.5 cursor-pointer hover:text-nbgreen select-none sortable" data-sort="line">LINE <span class="sort-ind"></span></th>
+                <th class="px-3 py-2.5 cursor-pointer hover:text-nbgreen select-none sortable" data-sort="name">DESCRIPTION <span class="sort-ind"></span></th>
+                <th class="px-3 py-2.5 cursor-pointer hover:text-nbgreen select-none sortable" data-sort="cve">CVE / GHSA <span class="sort-ind"></span></th>
+              </tr>
+            </thead>
+            <tbody id="findTableBody" class="divide-y divide-[#0d151f]"></tbody>
+          </table>
+        </div>
+        <div id="findNote" class="mono text-[10px] text-slate-600 mt-2"></div>
+      </div>
+    </div>
+
+    <!-- DEPENDENCIES -->
+    <div id="nb-deps" class="scroll-mt-24">
+      <div class="mb-4">
+        <h2 class="mono text-xl font-bold tracking-wide text-slate-100">// DEPENDENCIES <span class="text-slate-500 text-sm">· real CVE data via OSV.dev</span></h2>
+        <p class="text-sm text-slate-500 mt-1">Manifests (package.json / requirements.txt / go.mod / Gemfile.lock) are parsed and every pinned version is queried against the public OSV.dev batch API — the same class of CVE data Trivy consumes.</p>
+      </div>
+      <div class="panel p-5">
+        <div id="depsSummary" class="mono text-[12px] text-slate-400 mb-4"></div>
+        <div id="depsList" class="space-y-3"></div>
+      </div>
+    </div>
+
+    <!-- AI BRIEFING -->
+    <div id="nb-ai" class="scroll-mt-24">
+      <div class="flex items-end justify-between flex-wrap gap-3 mb-4">
+        <div>
+          <h2 class="mono text-xl font-bold tracking-wide text-slate-100">// AI EXECUTIVE BRIEFING</h2>
+          <p class="text-sm text-slate-500 mt-1">Semantic review of the highest-risk code: business-logic flaws, auth-bypass patterns, design-level issues no static rule can catch.</p>
+        </div>
+        <button id="aiCopy" class="btn-ghost mono text-[11px] rounded-lg px-3 py-2 flex items-center gap-2">
+          <i data-lucide="copy" class="w-3.5 h-3.5"></i> COPY BRIEFING
+        </button>
+      </div>
+      <div id="aiPanel">
+        <div class="flex items-center justify-between px-4 h-9 border-b border-nbline">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#ff5f57]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#febc2e]"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#28c840]"></span>
+          </div>
+          <span id="aiProviderLabel" class="mono text-[10px] tracking-[.25em] text-slate-500">AI://standby</span>
+        </div>
+        <div id="aiContent" class="mono text-[12.5px] leading-[1.75] text-emerald-50/90 px-5 py-4 max-h-[560px] overflow-y-auto whitespace-pre-wrap"></div>
+      </div>
+    </div>
+
+    <!-- REMEDIATION -->
+    <div id="nb-remediation" class="scroll-mt-24">
+      <div class="flex items-end justify-between flex-wrap gap-3 mb-4">
+        <div>
+          <h2 class="mono text-xl font-bold tracking-wide text-slate-100">// REMEDIATION CHECKLIST</h2>
+          <p class="text-sm text-slate-500 mt-1">Prioritized, deduplicated fix plan derived from every finding — most severe first.</p>
+        </div>
+        <span id="remedProgress" class="mono text-[11px] text-slate-500"></span>
+      </div>
+      <div class="panel p-5">
+        <div id="remedList" class="space-y-2.5"></div>
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div id="nb-export" class="scroll-mt-24">
+      <div class="mb-4">
+        <h2 class="mono text-xl font-bold tracking-wide text-slate-100">// EXPORT &amp; SHARE</h2>
+        <p class="text-sm text-slate-500 mt-1">Take the report with you, or drop the badge in your README — that's how NULLBREACH spreads.</p>
+      </div>
+      <div class="grid lg:grid-cols-2 gap-7">
+        <div class="panel p-6">
+          <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-4">DOWNLOAD REPORT</div>
+          <div class="flex flex-wrap gap-3">
+            <button id="btnExportJson" class="btn-primary rounded-lg px-5 py-2.5 text-sm font-semibold flex items-center gap-2 transition">
+              <i data-lucide="braces" class="w-4 h-4"></i> .json
+            </button>
+            <button id="btnExportMd" class="btn-primary rounded-lg px-5 py-2.5 text-sm font-semibold flex items-center gap-2 transition">
+              <i data-lucide="file-text" class="w-4 h-4"></i> .md
+            </button>
+            <button id="btnCopyBadge" class="btn-ghost rounded-lg px-5 py-2.5 text-sm flex items-center gap-2 transition">
+              <i data-lucide="badge-check" class="w-4 h-4"></i> Copy README badge
+            </button>
+          </div>
+          <div class="mono text-[10px] tracking-[.25em] text-slate-500 mt-7 mb-3">SHAREABLE SCAN BADGE</div>
+          <div id="badgePreview" class="p-5">
+            <div class="flex items-center gap-4">
+              <svg width="34" height="34" viewBox="0 0 100 100"><polygon points="50,4 92,22 92,58 50,96 8,58 8,22" fill="#05070a" stroke="#00ff9d" stroke-width="6"/><circle cx="50" cy="45" r="14" fill="none" stroke="#00ff9d" stroke-width="5"/><path d="M50 59 L50 76 M38 66 L62 66" stroke="#00ff9d" stroke-width="5"/></svg>
+              <div>
+                <div class="mono text-[10px] tracking-[.25em] text-slate-400">SCANNED WITH NULLBREACH</div>
+                <div class="mono text-2xl font-extrabold mt-1"><span id="badgeScore" class="text-nbgreen">—</span> <span class="text-slate-600 text-lg">/100</span></div>
+              </div>
+            </div>
+            <div id="badgeLine" class="mono text-[11px] text-slate-400 mt-3">—</div>
+          </div>
+          <textarea id="badgeMd" readonly rows="3" class="mono w-full mt-4 bg-[#080d14] border border-nbline rounded-lg px-3 py-2.5 text-[11px] text-slate-400 resize-none"></textarea>
+        </div>
+        <div class="panel p-6">
+          <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-4">SCAN REPRODUCIBILITY</div>
+          <ul class="text-[13px] text-slate-400 space-y-3 leading-relaxed">
+            <li class="flex gap-2.5"><i data-lucide="git-branch" class="w-4 h-4 text-nbcyan shrink-0 mt-0.5"></i><span>Re-run any time — static layers are deterministic; the AI layer may phrase things differently between runs.</span></li>
+            <li class="flex gap-2.5"><i data-lucide="database" class="w-4 h-4 text-nbcyan shrink-0 mt-0.5"></i><span>Dependency CVEs come live from <span class="mono text-slate-300">api.osv.dev/v1/querybatch</span> at scan time.</span></li>
+            <li class="flex gap-2.5"><i data-lucide="lock" class="w-4 h-4 text-nbcyan shrink-0 mt-0.5"></i><span>Source code is only sent to your configured AI provider for the semantic layer — never to NULLBREACH (there is no NULLBREACH server).</span></li>
+            <li class="flex gap-2.5"><i data-lucide="badge-check" class="w-4 h-4 text-nbcyan shrink-0 mt-0.5"></i><span>JSON export includes every finding with layer, severity, location and remediation for ticketing.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="relative z-10 border-t border-nbline mt-16">
+  <div class="max-w-6xl mx-auto px-6 py-10">
+    <div class="rounded-xl border border-nbamber/25 bg-nbamber/5 px-6 py-5 text-[13px] leading-relaxed text-amber-100/80 max-w-4xl mx-auto">
+      <span class="mono font-bold text-nbamber tracking-wide">HONESTY FOOTER ·</span>
+      NULLBREACH combines entropy-based secret detection, a 40+ signature pattern library, real CVE data from OSV.dev,
+      and AI semantic analysis. It is a strong first-pass triage tool but not a certified replacement for a full
+      professional security audit. Always verify critical findings before acting.
+    </div>
+    <div class="mt-6 text-center mono text-[10px] tracking-[.2em] text-slate-600">
+      NULLBREACH v1.0 · SINGLE-FILE · ZERO-BACKEND · ENTROPY + SIGNATURES + OSV.DEV + AI CASCADE · <span id="year"></span>
+    </div>
+  </div>
+</footer>
+
+<div id="toast" class="fixed bottom-6 right-6 z-[90] translate-y-24 opacity-0 mono text-[12px] rounded-lg border border-nbgreen/40 bg-[#071410] text-nbgreen px-5 py-3 shadow-2xl"></div>
+
+<script id="nb-engine">
+/*ENGINE-START*/
+'use strict';
+const NB_VERSION = '1.0.0';
+
+/* ================= Layer 1 — Shannon entropy (Gitleaks technique) ================= */
+function shannonEntropy(str) {
+  if (!str.length) return 0;
+  const freq = {};
+  for (const ch of str) freq[ch] = (freq[ch] || 0) + 1;
+  return Object.values(freq).reduce((sum, count) => {
+    const p = count / str.length;
+    return sum - p * Math.log2(p);
+  }, 0);
+}
+
+const SECRET_HINT_RE   = /(secret|token|key|password|passwd|pwd|auth|credential|api|bearer|private|signing|cert|apikey)/i;
+const UUID_RE          = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const SEMVER_RE        = /^v?\d+(\.\d+){1,3}([-\w.]*)?$/;
+const ENTROPY_NOISE_RE = /^(https?:|\/\/|www\.|data:|mailto:|\.\/|\.\.\/|\/|\{\{|\$\{|@@|#!)/;
+
+function isNoiseString(v) {
+  if (v.length < 20) return true;
+  if (ENTROPY_NOISE_RE.test(v)) return true;
+  if (UUID_RE.test(v)) return true;
+  if (SEMVER_RE.test(v)) return true;
+  if (/^[\s\d.,;:_\-+()[\]{}]+$/.test(v)) return true;
+  if (/^(.)\1+$/.test(v)) return true;
+  const lower = v.toLowerCase();
+  if (lower.includes('example') || lower.includes('sample') || lower.includes('placeholder') ||
+      lower.includes('lorem') || lower.includes('todo') || lower.includes('dummy') || lower.startsWith('<')) return true;
+  if ((v.match(/\//g) || []).length >= 3) return true;          // file paths / URLs
+  if (/^[a-z]+(\s+[a-z]+)+$/i.test(v)) return true;              // plain sentences
+  return false;
+}
+
+function tokenClass(t) {
+  if (/^[0-9a-fA-F]+$/.test(t)) return 'hex';
+  if (/^[A-Za-z0-9+/=_-]+$/.test(t)) {
+    if (/[A-Z]/.test(t) && /[a-z]/.test(t)) return 'base64';
+    if (/[a-z]/.test(t) && /[0-9]/.test(t)) return 'base64';
+    if (/[A-Z]/.test(t) && /[0-9]/.test(t)) return 'base64';
+    return 'alnum';
+  }
+  return 'alnum';
+}
+
+function entropyThreshold(kind) { return kind === 'hex' ? 4.5 : kind === 'base64' ? 4.8 : 5.1; }
+
+function makeLineIndex(text) {
+  const starts = [0];
+  for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) === 10) starts.push(i + 1);
+  return function idxToLine(idx) {
+    let lo = 0, hi = starts.length - 1;
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (starts[mid] <= idx) lo = mid; else hi = mid - 1; }
+    return lo + 1;
+  };
+}
+
+function scanEntropyInFile(file) {
+  const text = file.content || '';
+  if (!text) return { findings: [], stringsChecked: 0 };
+  const out = [];
+  const lineAt = makeLineIndex(text);
+  const perLine = new Map();
+  let stringsChecked = 0;
+  const MAX_PER_FILE = 14;
+
+  const consider = (value, index, kind) => {
+    if (out.length >= MAX_PER_FILE) return;
+    if (isNoiseString(value)) return;
+    stringsChecked++;
+    const cls = kind === 'bare' ? tokenClass(value) : tokenClass(value);
+    const thr = entropyThreshold(cls);
+    const e = shannonEntropy(value);
+    if (e < thr) return;
+    const line = lineAt(index);
+    const n = perLine.get(line) || 0;
+    if (n >= 2) return;
+    perLine.set(line, n + 1);
+    const hinted = SECRET_HINT_RE.test(text.split('\n')[line - 1] || '');
+    out.push({
+      id: 'entropy:' + file.path + ':' + line + ':' + n,
+      severity: hinted ? 'high' : 'medium',
+      layer: 'entropy',
+      file: file.path,
+      line: line,
+      name: hinted ? 'High-entropy string near secret keyword' : 'High-entropy string',
+      desc: `${cls}-like string (len ${value.length}, Shannon entropy ${e.toFixed(2)}, threshold ${thr}) — patternless secrets like this are invisible to regex-only scanners`,
+      snippet: (text.split('\n')[line - 1] || '').trim().slice(0, 160),
+      value: value.slice(0, 20) + '…',
+      remed: 'If this is a real credential, revoke and rotate it immediately, purge it from git history, and load it from a secrets manager or environment variables instead.',
+      cwe: 'CWE-798'
+    });
+  };
+
+  const dq = /"([^"\\\n]{20,600})"/g;
+  let m;
+  while ((m = dq.exec(text)) !== null) consider(m[1], m.index, 'quoted');
+  const sq = /'([^'\\\n]{20,600})'/g;
+  while ((m = sq.exec(text)) !== null) consider(m[1], m.index, 'quoted');
+  const bare = /(?<![A-Za-z0-9+/=_-])[A-Za-z0-9+/=_-]{20,600}(?![A-Za-z0-9+/=_-])/g;
+  while ((m = bare.exec(text)) !== null) consider(m[0], m.index, 'bare');
+
+  return { findings: out, stringsChecked };
+}
+
+/* ================= Layer 2 — signature library ================= */
+/* Generic-assignment false-positive filter: env lookups, templates, placeholders are not literals. */
+function rejectEnvAssignment(m, line) {
+  const v = m[2] || '';
+  if (/^(process\.env|os\.environ|getenv|ENV\[|config\[|settings\.|import\.meta\.env|System\.getenv|\$ENV|\$\{|\$[A-Z_]{2,}|<[\w.]*>|your[_-]?|xxx+|\*\*\*|null|true|false|None|undefined|changemeplease)/i.test(v)) return true;
+  if (v.includes('${') || v.includes('%s') || v.includes('{{')) return true;
+  if (/^(getenv|environ|env|config|settings)\s*\(/i.test(v)) return true;
+  return false;
+}
+
+function rejectVersionIP(m, line) {
+  if (/version|revision|copyright|\bv\d/i.test(line)) return true;
+  return false;
+}
+
+const SIGNATURES = [
+  /* ---- hardcoded secrets ---- */
+  { id:'sec.aws.access',  name:'AWS Access Key ID', cat:'secret', sev:'critical', cwe:'CWE-798',
+    rx:/\b(?:AKIA|ASIA|ABIA|ACCA)[0-9A-Z]{16}\b/g,
+    desc:'Hardcoded AWS Access Key ID. Anyone with repo access can pivot into your cloud account until the key is rotated.',
+    remed:'Deactivate the key in the IAM console, rotate credentials, purge it from git history (git filter-repo), and move to IAM roles or a secrets manager.' },
+  { id:'sec.aws.secret',  name:'AWS Secret Access Key', cat:'secret', sev:'critical', cwe:'CWE-798',
+    rx:/aws(?:[\w-]*access)?[\w-]*secret[\w-]*key["']?\s*(?:[:=]|=>)\s*["']([A-Za-z0-9/+=]{40})["']/gi,
+    desc:'Hardcoded AWS Secret Access Key (40-char base64 material) — full programmatic access to the linked AWS account.',
+    remed:'Rotate the secret immediately, audit CloudTrail for abuse, and load credentials from the environment or AWS Secrets Manager.' },
+  { id:'sec.gcp.api',     name:'GCP API Key', cat:'secret', sev:'high', cwe:'CWE-798',
+    rx:/\bAIza[0-9A-Za-z_-]{35}\b/g,
+    desc:'Google Cloud / Firebase API key committed in source. Keys of this shape also appear in leaked service configs.',
+    remed:'Restrict the key (HTTP referrer / IP / API restrictions) in Google Cloud Console and rotate it; prefer workload identities.' },
+  { id:'sec.azure.storage', name:'Azure Storage Account Key', cat:'secret', sev:'high', cwe:'CWE-798',
+    rx:/AccountKey=[A-Za-z0-9+/=]{60,100}/g,
+    desc:'Azure Storage connection string with embedded account key — grants full read/write/delete on the storage account.',
+    remed:'Regenerate the storage key, use SAS tokens or managed identity, and remove the connection string from source.' },
+  { id:'sec.azure.secret', name:'Azure Client Secret', cat:'secret', sev:'high', cwe:'CWE-798',
+    rx:/\b(?:client_?secret|clientSecret|azureClientSecret)\b\s*(?:[:=]|=>)\s*["']([A-Za-z0-9~._-]{16,})["']/g,
+    desc:'Azure AD app client secret hardcoded in source — enables app-identity impersonation.',
+    remed:'Create a new secret, update the deployment secret store, delete the leaked one, and prefer managed identities.' },
+  { id:'sec.stripe.live', name:'Stripe Live Secret Key', cat:'secret', sev:'critical', cwe:'CWE-798',
+    rx:/\b(?:sk|rk)_live_[0-9a-zA-Z]{16,}\b/g,
+    desc:'Stripe LIVE secret key — attackers can read customer data, issue refunds, and create charges.',
+    remed:'Roll the live key in the Stripe dashboard now, then move it to environment variables; audit recent API activity.' },
+  { id:'sec.stripe.test', name:'Stripe Test Secret Key', cat:'secret', sev:'medium', cwe:'CWE-798',
+    rx:/\bsk_test_[0-9a-zA-Z]{16,}\b/g,
+    desc:'Stripe test-mode secret key committed to source — lower impact but normalizes secret sprawl.',
+    remed:'Remove from source and inject via environment; rotate if the test data is sensitive.' },
+  { id:'sec.stripe.whsec', name:'Stripe Webhook Signing Secret', cat:'secret', sev:'high', cwe:'CWE-798',
+    rx:/\bwhsec_[0-9a-zA-Z]{24,}\b/g,
+    desc:'Stripe webhook signing secret allows attackers to forge webhook events (e.g., fake payment_success).',
+    remed:'Rotate the webhook endpoint secret in Stripe and verify signatures server-side with the new one.' },
+  { id:'sec.github.pat',  name:'GitHub Personal Access Token (classic)', cat:'secret', sev:'critical', cwe:'CWE-798',
+    rx:/\bghp_[0-9A-Za-z]{36}\b/g,
+    desc:'GitHub classic PAT — grants repo read/write and potentially org access under the owner account.',
+    remed:'Revoke the token at github.com/settings/tokens, check the security log for abuse, and use fine-grained tokens or GitHub Apps.' },
+  { id:'sec.github.fine', name:'GitHub Fine-Grained PAT', cat:'secret', sev:'critical', cwe:'CWE-798',
+    rx:/\bgithub_pat_[0-9A-Za-z_]{20,250}\b/g,
+    desc:'GitHub fine-grained personal access token committed in source.',
+    remed:'Revoke in developer settings, review audit logs, and switch to short-lived tokens from a GitHub App.' },
+  { id:'sec.github.oauth', name:'GitHub OAuth / App / Refresh Token', cat:'secret', sev:'high', cwe:'CWE-798',
+    rx:/\bgh[ousr]_[0-9A-Za-z]{36}\b/g,
+    desc:'GitHub OAuth/app/refresh token (gho_/ghu_/ghs_/ghr_ prefix) exposed in source.',
+    remed:'Revoke the credential and rotate the integration that minted it.' },
+  { id:'sec.gitlab.pat',  name:'GitLab Personal Access Token', cat:'secret', sev:'critical', cwe:'CWE-798',
+    rx:/\bglpat-[0-9A-Za-z_-]{20,}\b/g,
+    desc:'GitLab PAT (glpat_) — repo and registry access under the token owner.',
+    remed:'Revoke in GitLab user settings, audit token usage events, and use project access tokens with expiry.' },
+  { id:'sec.slack.token', name:'Slack Token', cat:'secret', sev:'critical', cwe:'CWE-798',
+    rx:/\bxox[abeprs]-[0-9A-Za-z-]{10,}\b/g,
+    desc:'Slack bot/user/app token — attackers can read channels, exfiltrate files, and post phishing as your workspace.',
+    remed:'Revoke in Slack app management, rotate, and load from a secrets manager; audit access logs.' },
+  { id:'sec.slack.webhook', name:'Slack Incoming Webhook URL', cat:'secret', sev:'high', cwe:'CWE-798',
+    rx:/https:\/\/hooks\.slack\.com\/services\/T[A-Za-z0-9_]+\/B[A-Za-z0-9_]+\/[A-Za-z0-9]{16,}/g,
+    desc:'Slack incoming webhook URL — anyone holding it can post arbitrary messages to the channel (phishing vector).',
+    remed:'Delete the webhook in Slack and regenerate; keep the URL in configuration, not code.' },
+  { id:'sec.discord.webhook', name:'Discord Webhook URL', cat:'secret', sev:'high', cwe:'CWE-798',
+    rx:/https:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/api\/(?:v\d{1,2}\/)?webhooks\/\d{5,}\/[A-Za-z0-9_-]{20,}/g,
+    desc:'Discord webhook URL exposed — commonly abused to spam/deface channels from compromised repos.',
+    remed:'Delete and recreate the webhook; store the URL outside the codebase.' },
+  { id:'sec.firebase.sa', name:'Firebase/GCP Service-Account JSON', cat:'secret', sev:'critical', cwe:'CWE-798',
+    rx:/"type"\s*:\s*"service_account"/g,
+    desc:'A GCP/Firebase service-account key file appears to be committed — this is the equivalent of handing out root cloud credentials.',
+    remed:'Delete the key from the repo AND git history, disable the service-account key in IAM, and switch to workload identity/federated auth.' },
+  { id:'sec.twilio.api',  name:'Twilio API Key', cat:'secret', sev:'high', cwe:'CWE-798',
+    rx:/\bSK[0-9a-fA-F]{32}\b/g,
+    desc:'Twilio API key (SK + 32 hex) — can send SMS/voice at your expense and read message logs.',
+    remed:'Delete the key in the Twilio console and rotate; store in environment variables.' },
+  { id:'sec.sendgrid',    name:'SendGrid API Key', cat:'secret', sev:'critical', cwe:'CWE-798',
+    rx:/\bSG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}\b/g,
+    desc:'SendGrid API key — attacker can send email as your domain (phishing) and harvest recipient lists.',
+    remed:'Revoke in SendGrid, audit email activity, and rotate with scoped permissions.' },
+  { id:'sec.mailgun',     name:'Mailgun API Key', cat:'secret', sev:'high', cwe:'CWE-798',
+    rx:/\bkey-[0-9a-zA-Z]{32}\b/g,
+    desc:'Mailgun API key pattern — email sending/spoofing risk on your domains.',
+    remed:'Rotate the Mailgun private API key and restrict it to the sending domain.' },
+  { id:'sec.npm',         name:'npm Access Token', cat:'secret', sev:'critical', cwe:'CWE-798',
+    rx:/\bnpm_[0-9A-Za-z]{36}\b/g,
+    desc:'npm publish token — attacker can publish backdoored versions of your packages (supply-chain takeover).',
+    remed:'Revoke at npmjs.com access tokens, enable 2FA + provenance, and use granular CI tokens.' },
+  { id:'sec.pypi',        name:'PyPI Upload Token', cat:'secret', sev:'critical', cwe:'CWE-798',
+    rx:/\bpypi-[A-Za-z0-9_-]{80,}\b/g,
+    desc:'PyPI API token — allows publishing malicious releases of your Python packages.',
+    remed:'Revoke on pypi.org, rotate, and use Trusted Publishers (OIDC) for CI deploys.' },
+  { id:'sec.dockerhub',   name:'Docker Hub PAT', cat:'secret', sev:'high', cwe:'CWE-798',
+    rx:/\bdckr_pat_[A-Za-z0-9_-]{20,}\b/g,
+    desc:'Docker Hub personal access token — push access enables image tampering (supply-chain risk).',
+    remed:'Revoke the token in Docker Hub settings and use scoped, short-lived tokens in CI.' },
+  { id:'sec.jwt.hardcoded', name:'Hardcoded JWT', cat:'secret', sev:'high', cwe:'CWE-798',
+    rx:/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g,
+    desc:'A signed JWT is embedded in source. Even expired tokens confirm weak secret hygiene; long-lived ones may still authenticate.',
+    remed:'Never commit tokens; short TTLs, rotate signing keys, and inject tokens at runtime.' },
+  { id:'sec.privatekey',  name:'Private Key Block', cat:'secret', sev:'critical', cwe:'CWE-321',
+    rx:/-----BEGIN [A-Z0-9 ]*PRIVATE KEY(?: BLOCK)?-----/g,
+    desc:'A PEM private key (RSA/EC/OpenSSH/PGP) is committed in plain text — total identity compromise for that key.',
+    remed:'Treat the key as compromised: revoke/replace certificates, rotate SSH keys, and scrub history with git filter-repo.' },
+  { id:'sec.db.url',      name:'DB Connection String with Credentials', cat:'secret', sev:'high', cwe:'CWE-798',
+    rx:/\b(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|redis|amqps?|mssql):\/\/[^\s"'@:/]+:[^\s"'@]+@[^\s"']+/g,
+    desc:'Database URL with embedded username:password — direct data-store access if leaked.',
+    remed:'Move credentials to environment variables, rotate the DB password, and restrict network access to the database.' },
+  { id:'sec.creds.url',   name:'Credentials Embedded in HTTPS URL', cat:'secret', sev:'high', cwe:'CWE-798',
+    rx:/https?:\/\/[^\s"'@/:]+:[^\s"'@]+@[^\s"']+/g,
+    desc:'Basic-auth credentials embedded in an https URL (user:password@host pattern).',
+    remed:'Use auth headers built from environment config instead of URL-embedded credentials, and rotate the exposed password.' },
+  { id:'sec.generic.assign', name:'Hardcoded Credential Assignment', cat:'secret', sev:'medium', cwe:'CWE-798',
+    rx:/\b(api[_-]?key|apikey|secret|secret[_-]?key|client[_-]?secret|auth[_-]?token|access[_-]?token|password|passwd|pwd)\b\s*(?:[:=]|=>)\s*["']([^"']{8,120})["']/gi,
+    reject:rejectEnvAssignment,
+    desc:'Literal assigned to a credential-named variable. Even if it is a dev value, it trains copy-paste secrets into code.',
+    remed:'Load from environment/secret store; if a real credential was committed, rotate it.' },
+  { id:'sec.hardcoded.ip', name:'Hardcoded IP Endpoint', cat:'config', sev:'low', cwe:'CWE-472',
+    rx:/\b(?:\d{1,3}\.){3}\d{1,3}(?::\d{2,5})?\b/g,
+    reject:rejectVersionIP,
+    desc:'Hardcoded IP endpoint — config smell: brittle deploys and accidental exposure of internal infrastructure.',
+    remed:'Move endpoints to configuration/environment; restrict and document any intentionally pinned IPs.' },
+  { id:'sec.localhost', name:'Pinned Localhost Endpoint', cat:'config', sev:'low', cwe:'CWE-472',
+    rx:/\b(?:localhost|127\.0\.0\.1|0\.0\.0\.0):(?:3000|4200|5000|5432|6379|8000|8080|8081|8888|9000|9200|27017)\b/g,
+    desc:'Pinned localhost/port endpoint in source — will silently break outside dev or leak internal topology.',
+    remed:'Read host/port from configuration with sane defaults; keep environment-specific values out of code.' },
+  { id:'sec.dotenv.committed', name:'.env File Committed', cat:'secret', sev:'high', cwe:'CWE-798',
+    fileTest: (f) => /(^|\/)\.env(\..+)?$/.test(f.path) && !/\.example$|\.template$|\.sample$/.test(f.path),
+    rx:/(?!)/g,
+    desc:'A dotenv-style file with real assignments is tracked in the repository.',
+    remed:'Remove from the repo and history, add to .gitignore, rotate every value it contains, and commit a *.example template instead.' },
+  { id:'sec.keyfile.committed', name:'Key/PEM File Committed', cat:'secret', sev:'critical', cwe:'CWE-321',
+    fileTest: (f) => /\.(pem|pkey|key|keystore|pfx)$|(^|\/)id_rsa/.test(f.path),
+    rx:/(?!)/g,
+    desc:'A key/keystore file is tracked in the repository.',
+    remed:'Remove it, rotate the underlying key/certificate, and add the pattern to .gitignore.' },
+
+  /* ---- OWASP-style code patterns ---- */
+  { id:'code.sqli.concat', name:'SQL Built via String Concatenation', cat:'owasp', sev:'high', cwe:'CWE-89',
+    rx:/["'](SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM)[^"'\n]{0,150}["']\s*\+\s*(?!["'\s]*$)/gim,
+    desc:'SQL statement assembled with string concatenation — classic SQL injection if any fragment is user-controlled.',
+    remed:'Use parameterized queries / prepared statements or an ORM query builder; never interpolate input into SQL text.' },
+  { id:'code.sqli.fstring', name:'SQL via f-string / %-format', cat:'owasp', sev:'high', cwe:'CWE-89',
+    rx:/f["'][^"'\n]{0,150}(?:SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM)[^"'\n]{0,120}\{/gim,
+    desc:'Python f-string embeds values into a SQL statement — injection when the interpolated value is user input.',
+    remed:'Switch to cursor.execute(sql, params) with bound parameters.' },
+  { id:'code.eval', name:'eval() on Dynamic Content', cat:'owasp', sev:'high', cwe:'CWE-95',
+    rx:/\beval\s*\(/g,
+    desc:'eval() executes arbitrary strings as code — RCE if any input reaches it.',
+    remed:'Replace with safe parsing (JSON.parse, ast.literal_eval) or explicit logic; if unavoidable, strictly allowlist the input.' },
+  { id:'code.new.function', name:'new Function() Constructor', cat:'owasp', sev:'high', cwe:'CWE-95',
+    rx:/new\s+Function\s*\(/g,
+    desc:'new Function() compiles strings to executable code — equivalent risk surface to eval().',
+    remed:'Refactor to pass data, not code; use lookup maps for dynamic behavior.' },
+  { id:'code.py.exec', name:'Python exec() Usage', cat:'owasp', sev:'medium', cwe:'CWE-95',
+    rx:/(^|[^\w.])exec\s*\(\s*["'$\w]/g,
+    desc:'exec() runs dynamically-built Python code — code injection if inputs are tainted.',
+    remed:'Remove dynamic execution; represent logic as data structures instead.' },
+  { id:'code.cmd.template', name:'Shell Command with Interpolation', cat:'owasp', sev:'high', cwe:'CWE-78',
+    rx:/\b(?:exec|execSync|spawnSync|spawn)\s*\(\s*[`"'][^`"'\n]{0,120}\$\{/g,
+    desc:'Child-process call interpolates values into a shell command line — command injection via tainted input.',
+    remed:'Use execFile/spawn with argument arrays (no shell), or shell-escape every interpolated value.' },
+  { id:'code.cmd.concat', name:'Shell Command Concatenation', cat:'owasp', sev:'high', cwe:'CWE-78',
+    rx:/\bexec(?:Sync)?\s*\(\s*[^)\n;]{0,80}\+\s*(?:req\.(?:query|body|params)|request\.|params\[|input|userInput|args\b)/g,
+    desc:'Command string is concatenated with what looks like request data — OS command injection.',
+    remed:'Pass arguments as arrays to spawn/execFile and never build shell strings from request data.' },
+  { id:'code.py.shelltrue', name:'subprocess with shell=True', cat:'owasp', sev:'high', cwe:'CWE-78',
+    rx:/subprocess\.(?:call|run|Popen|check_output)\s*\([^)]{0,200}shell\s*=\s*True/g,
+    desc:'subprocess invoked with shell=True — injection risk when any part of the command is tainted.',
+    remed:'Use a list form (shell=False) and pass arguments separately.' },
+  { id:'code.innerHTML', name:'Unsanitized innerHTML Assignment', cat:'owasp', sev:'high', cwe:'CWE-79',
+    rx:/\.innerHTML\s*=[^=]/g,
+    desc:'Direct innerHTML assignment — stored/reflected XSS if any part of the string is user-controlled.',
+    remed:'Use textContent for text, or sanitize with DOMPurify before injecting HTML.' },
+  { id:'code.dangerous.html', name:'dangerouslySetInnerHTML', cat:'owasp', sev:'high', cwe:'CWE-79',
+    rx:/dangerouslySetInnerHTML/g,
+    desc:'React dangerouslySetInnerHTML bypasses JSX escaping — XSS vector for tainted data.',
+    remed:'Sanitize with DOMPurify and confirm the content can never contain user input.' },
+  { id:'code.vhtml', name:'v-html Directive', cat:'owasp', sev:'medium', cwe:'CWE-79',
+    rx:/v-html\s*=/g,
+    desc:'Vue v-html renders raw HTML — XSS if the bound value is tainted.',
+    remed:'Prefer interpolation/components; sanitize with DOMPurify when HTML is truly required.' },
+  { id:'code.document.write', name:'document.write Usage', cat:'owasp', sev:'medium', cwe:'CWE-79',
+    rx:/document\.write(?:ln)?\s*\(/g,
+    desc:'document.write injects raw markup into the DOM — legacy XSS vector and performance hazard.',
+    remed:'Create nodes via DOM APIs or set textContent.' },
+  { id:'code.deserialize.pickle', name:'Insecure Deserialization (pickle)', cat:'owasp', sev:'high', cwe:'CWE-502',
+    rx:/\bpickle\.loads?\s*\(/g,
+    desc:'pickle deserializes attacker-controllable bytes into code execution — never feed it untrusted data.',
+    remed:'Use JSON or signed+versioned formats; if pickle is required, authenticate the blob with HMAC and restrict its origin.' },
+  { id:'code.deserialize.yaml', name:'yaml.load without SafeLoader', cat:'owasp', sev:'high', cwe:'CWE-502',
+    rx:/yaml\.loads?\s*\((?![^)\n]{0,80}Loader\s*=)/g,
+    desc:'yaml.load without Loader=SafeLoader can instantiate arbitrary Python objects (RCE).',
+    remed:'Use yaml.safe_load or pass Loader=yaml.SafeLoader.' },
+  { id:'code.deserialize.php', name:'PHP unserialize on Input', cat:'owasp', sev:'high', cwe:'CWE-502',
+    rx:/unserialize\s*\(\s*\$/g,
+    desc:'PHP unserialize of a variable — object injection / POP chains with tainted input.',
+    remed:'Use json_decode instead; never unserialize untrusted data.' },
+  { id:'code.deserialize.java', name:'Java ObjectInputStream Deserialization', cat:'owasp', sev:'medium', cwe:'CWE-502',
+    rx:/ObjectInputStream|\.readObject\s*\(/g,
+    desc:'Native Java deserialization — gadget-chain RCE class (Commons-Collections style).',
+    remed:'Prefer JSON; if required, use look-ahead object-input filters with strict allowlists.' },
+  { id:'code.tls.node', name:'TLS Verification Disabled (Node)', cat:'owasp', sev:'high', cwe:'CWE-295',
+    rx:/rejectUnauthorized["']?\s*[:=]\s*false|NODE_TLS_REJECT_UNAUTHORIZED\s*=\s*["']?0/gi,
+    desc:'Certificate validation disabled — enables machine-in-the-middle interception of TLS traffic.',
+    remed:'Remove the flag; install proper CA certificates (NODE_EXTRA_CA_CERTS) for self-signed environments.' },
+  { id:'code.tls.python', name:'TLS Verification Disabled (Python)', cat:'owasp', sev:'high', cwe:'CWE-295',
+    rx:/verify\s*=\s*False|ssl\._create_unverified_context|CERT_NONE|check_hostname\s*=\s*False/g,
+    desc:'Requests/ssl calls skip certificate verification — MITM exposure.',
+    remed:'Keep verify=True and provide a CA bundle; remove CERT_NONE contexts.' },
+  { id:'code.tls.go', name:'TLS Verification Disabled (Go)', cat:'owasp', sev:'high', cwe:'CWE-295',
+    rx:/InsecureSkipVerify\s*:\s*true/g,
+    desc:'Go http.Transport skips TLS chain verification.',
+    remed:'Remove InsecureSkipVerify; trust a custom root CA pool instead.' },
+  { id:'code.cors.wildcard', name:'Permissive CORS Wildcard', cat:'owasp', sev:'medium', cwe:'CWE-942',
+    rx:/Access-Control-Allow-Origin["']?\s*[,:=]\s*["']\*["']/gi,
+    desc:'CORS policy reflects wildcard origin — any site can read responses; combined with credentials it breaks the same-origin trust model.',
+    remed:'Echo an explicit allowlist of origins; only send ACAO:* for truly public, non-credentialed endpoints.' },
+  { id:'code.cors.pkg', name:'cors() with origin "*" or no origin check', cat:'owasp', sev:'medium', cwe:'CWE-942',
+    rx:/cors\s*\(\s*\{[^}\n]{0,120}origin\s*:\s*["']\*["']/gi,
+    desc:'CORS middleware configured with wildcard origin.',
+    remed:'Pass an explicit origin array/function and enable credentials only for known origins.' },
+  { id:'code.weakcrypto.password', name:'Fast Hash (MD5/SHA1) on Secrets', cat:'owasp', sev:'high', cwe:'CWE-916',
+    rx:/(?:md5|sha1)\s*\([^)\n]{0,60}(?:pass|pwd|token|secret|cred)/gi,
+    desc:'MD5/SHA-1 used over password-like material — GPU-crackable and collision-broken.',
+    remed:'Use argon2id/bcrypt/scrypt with per-user salt and appropriate cost factors.' },
+  { id:'code.weakcrypto.md5', name:'MD5/SHA-1 Primitive Usage', cat:'owasp', sev:'medium', cwe:'CWE-327',
+    rx:/hashlib\.(?:md5|sha1)\(|createHash\(\s*["'](md5|sha1)["']\s*\)|MessageDigest\.getInstance\(\s*"(MD5|SHA-?1)"/gi,
+    desc:'Broken/weak hash primitive referenced — fine for checksums, unsafe for signatures or credentials.',
+    remed:'Move to SHA-256+ for digests and a KDF for secrets.' },
+  { id:'code.weakcrypto.ecb', name:'Weak Cipher Mode (ECB/DES/RC4)', cat:'owasp', sev:'medium', cwe:'CWE-327',
+    rx:/(?:AES\/ECB|["']DES[-/]?ECB["']|DESede|RC4|createCipheriv\(\s*["']des)/gi,
+    desc:'Legacy cipher/mode that leaks structure (ECB) or is practically broken (DES/RC4).',
+    remed:'Use AES-GCM (or ChaCha20-Poly1305) with random nonces.' },
+  { id:'code.random.session', name:'Math.random for Security Values', cat:'owasp', sev:'high', cwe:'CWE-338',
+    rx:/Math\.random\(\)[^\n;]{0,70}(?:token|secret|session|otp|password|auth|api[_-]?key)/gi,
+    desc:'Math.random() is predictable — tokens/sessions derived from it can be guessed.',
+    remed:'Use crypto.getRandomValues / crypto.randomBytes / secrets module.' },
+  { id:'code.py.random.token', name:'random module for Security Values', cat:'owasp', sev:'high', cwe:'CWE-338',
+    rx:/random\.(?:random|randint|choice|randrange)\s*\([^\n;]{0,70}(?:token|secret|password|otp|session)/gi,
+    desc:'Python random module is a PRNG, not CSPRNG — insecure for tokens/OTPs.',
+    remed:'Use the secrets module (secrets.token_urlsafe, secrets.choice).' },
+  { id:'code.csrf.exempt', name:'CSRF Protection Bypassed', cat:'owasp', sev:'high', cwe:'CWE-352',
+    rx:/csrf_exempt|verify_csrf\s*=\s*False|@csrf\.exempt/g,
+    desc:'A view/route opts out of CSRF protection — state-changing endpoints become CSRF-able.',
+    remed:'Remove the exemption and make the endpoint require a valid CSRF token; for APIs use SameSite/Authorization headers.' },
+  { id:'code.cookie.insecure', name:'Session Cookie Hardening Disabled', cat:'owasp', sev:'medium', cwe:'CWE-1004',
+    rx:/httpOnly\s*[:=]\s*false|SESSION_COOKIE_SECURE\s*=\s*False|CSRF_COOKIE_SECURE\s*=\s*False/gi,
+    desc:'Cookies configured without httpOnly/Secure — script-readable and sniffable session material.',
+    remed:'Set httpOnly, Secure, SameSite on every session/identity cookie.' },
+  { id:'code.debug.prod', name:'Debug Mode Enabled', cat:'owasp', sev:'low', cwe:'CWE-489',
+    rx:/DEBUG\s*=\s*True\b|app\.run\([^)\n]{0,60}debug\s*=\s*True|FLASK_DEBUG\s*=\s*1/g,
+    desc:'Debug mode in committed config — stack traces, interactive consoles, and source disclosure in production.',
+    remed:'Drive debug flags from environment; never enable in deploys.' },
+  { id:'code.open.redirect', name:'Open Redirect from Request Data', cat:'owasp', sev:'medium', cwe:'CWE-601',
+    rx:/redirect\s*\([^)\n]{0,80}(?:request\.(?:GET|POST|args|form)|req\.(?:query|body|params))/gi,
+    desc:'Redirect target comes from request-controlled data — phishing lever and OAuth token theft.',
+    remed:'Validate against a path allowlist or relative-URL check before redirecting.' },
+  { id:'code.admin.clientflag', name:'Client-Controlled Privilege Flag', cat:'owasp', sev:'high', cwe:'CWE-807',
+    rx:/\bisAdmin\s*[:=][^;\n]{0,60}(?:req\.(?:query|body|params|headers)|request\.|params\[|body\[|query\[)/gi,
+    desc:'A privilege flag is derived from client-supplied data — trivial auth bypass.',
+    remed:'Derive authorization exclusively from the server-side session/token claims.' },
+  { id:'code.path.traversal', name:'File Read from Request Path', cat:'owasp', sev:'high', cwe:'CWE-22',
+    rx:/\b(?:readFile|readFileSync|createReadStream|sendFile|open)\s*\([^)\n]{0,90}(?:req\.(?:query|params|body)|request\.(?:GET|args))/g,
+    desc:'Filesystem call consumes request-controlled paths — directory traversal / arbitrary file read.',
+    remed:'Resolve against a fixed base dir, reject `..`, and allowlist filenames (e.g., path.resolve + startsWith check).' },
+  { id:'code.mongo.where', name:'MongoDB $where with Interpolation', cat:'owasp', sev:'high', cwe:'CWE-943',
+    rx:/\$where["']?\s*[:=][^;\n]{0,100}(?:\+\s*\w+|\$\{|\breq\.(?:query|body|params)|\bparams\b|\bbody\b|\bquery\b)/gi,
+    desc:'MongoDB $where executes JavaScript server-side — NoSQL injection when built from tainted data.',
+    remed:'Avoid $where; express filters as plain query documents.' },
+  { id:'code.graphql.introspection', name:'GraphQL Introspection Enabled', cat:'owasp', sev:'low', cwe:'CWE-200',
+    rx:/introspection\s*:\s*true/gi,
+    desc:'GraphQL introspection left on — eases attacker schema mapping in production.',
+    remed:'Disable introspection (and validation depth limits) for public deployments.' }
+];
+/*ENGINE-END*/
+</script>
+
+<script id="nb-engine2">
+/*ENGINE-START2*/
+'use strict';
+/* ================= Layer 2 runner ================= */
+function scanFileStatic(file) {
+  const text = file.content || '';
+  const findings = [];
+  if (!text) {
+    for (const sig of SIGNATURES) {
+      if (sig.fileTest && sig.fileTest(file)) {
+        findings.push(mkFinding(sig, file, 0, ''));
+      }
+    }
+    return findings;
+  }
+  for (const sig of SIGNATURES) {
+    if (sig.fileTest) {
+      if (sig.fileTest(file)) findings.push(mkFinding(sig, file, 0, ''));
+      continue;
+    }
+    if (!sig.rx) continue;
+    sig.rx.lastIndex = 0;
+    let m, count = 0;
+    const cap = sig.cat === 'secret' ? 6 : 5;
+    while ((m = sig.rx.exec(text)) !== null) {
+      if (count >= cap) break;
+      if (sig.reject) {
+        const lineNo = idxToLineFallback(text, m.index);
+        const lineText = text.slice(text.lastIndexOf('\n', m.index) + 1, text.indexOf('\n', m.index) === -1 ? text.length : text.indexOf('\n', m.index));
+        if (sig.reject(m, lineText)) continue;
+      }
+      const lineNo = idxToLineFallback(text, m.index);
+      const lineText = text.slice(text.lastIndexOf('\n', m.index) + 1, (text.indexOf('\n', m.index) === -1 ? text.length : text.indexOf('\n', m.index)));
+      findings.push(mkFinding(sig, file, lineNo, lineText.trim().slice(0, 160)));
+      count++;
+      if (m.index === sig.rx.lastIndex) sig.rx.lastIndex++;
+    }
+  }
+  return findings;
+}
+
+function idxToLineFallback(text, idx) {
+  let line = 1;
+  for (let i = 0; i < idx; i++) if (text.charCodeAt(i) === 10) line++;
+  return line;
+}
+
+function mkFinding(sig, file, line, snippet) {
+  return {
+    id: sig.id + '@' + file.path + (line ? ':' + line : ''),
+    severity: sig.sev,
+    layer: 'pattern',
+    file: file.path,
+    line: line,
+    name: sig.name,
+    desc: sig.desc,
+    snippet: snippet,
+    remed: sig.remed,
+    cwe: sig.cwe || null,
+    sig: sig.id
+  };
+}
+
+/* ================= Layer 3 — manifest parsing ================= */
+function parseManifests(files) {
+  const deps = [];
+  const seen = new Set();
+  const add = (name, version, ecosystem, manifest) => {
+    if (!name || !version) return;
+    name = name.trim(); version = version.trim();
+    const key = ecosystem + ':' + name + '@' + version;
+    if (seen.has(key)) return;
+    seen.add(key);
+    deps.push({ name, version, ecosystem, manifest });
+  };
+  for (const f of files) {
+    const base = (f.path.split('/').pop() || '').toLowerCase();
+    const content = f.content || '';
+    if (!content) continue;
+    try {
+      if (base === 'package.json') {
+        const json = JSON.parse(content.replace(/^\uFEFF/, ''));
+        const sections = [['dependencies', 'npm'], ['devDependencies', 'npm'], ['peerDependencies', 'npm']];
+        for (const [section, eco] of sections) {
+          const obj = json[section];
+          if (!obj || typeof obj !== 'object') continue;
+          for (const [name, spec] of Object.entries(obj)) {
+            const v = String(spec).replace(/^[\^~><=\s*vx]+/, '');
+            if (!v || v.includes('*') || v.includes(' ') || /git|file:|link:|latest/.test(String(spec))) {
+              add(name, String(spec), eco, f.path);
+            } else add(name, v, eco, f.path);
+          }
+        }
+      } else if (/^requirements[\w.-]*\.txt$/.test(base) || base === 'requirements.in') {
+        const re = /^\s*([A-Za-z0-9][A-Za-z0-9._-]*)\s*={2,3}\s*([A-Za-z0-9._!+]+(?:\.[A-Za-z0-9._!+]+)*)/gm;
+        let m;
+        while ((m = re.exec(content)) !== null) add(m[1], m[2], 'PyPI', f.path);
+      } else if (base === 'go.mod') {
+        const lines = content.split('\n');
+        let inBlock = false;
+        for (const raw of lines) {
+          const line = raw.trim();
+          if (/^require\s*\(/.test(line)) { inBlock = true; continue; }
+          if (inBlock && /^\)/.test(line)) { inBlock = false; continue; }
+          if (inBlock) {
+            const m = line.match(/^([A-Za-z0-9_./-]+)\s+(v[0-9][^\s]+)/);
+            if (m) add(m[1], m[2], 'Go', f.path);
+          } else if (/^require\s+[^\s(]+\s+v[0-9]/.test(line)) {
+            const m = line.match(/^require\s+([A-Za-z0-9_./-]+)\s+(v[0-9][^\s]+)/);
+            if (m) add(m[1], m[2], 'Go', f.path);
+          }
+        }
+      } else if (base === 'gemfile.lock') {
+        const re = /^\s{4}([a-z][a-z0-9_-]{1,60})\s+\(([^)\s]+)\)/gm;
+        let m;
+        while ((m = re.exec(content)) !== null) add(m[1], m[2], 'RubyGems', f.path);
+      }
+    } catch (e) { /* malformed manifest — skip */ }
+  }
+  return deps;
+}
+
+/* ================= OSV.dev query + response parsing ================= */
+function buildOSVBatch(deps) {
+  return {
+    queries: deps.slice(0, 800).map(d => ({
+      package: { name: d.name, ecosystem: d.ecosystem },
+      version: d.version.replace(/^v/, '')
+    }))
+  };
+}
+
+/* CVSS v3.0/3.1 base score from a vector string */
+function cvssBaseScore(vector) {
+  if (!vector || typeof vector !== 'string') return null;
+  const m = {};
+  for (const part of vector.split('/')) {
+    const kv = part.split(':');
+    if (kv.length === 2) m[kv[0].toUpperCase()] = kv[1].toUpperCase();
+  }
+  const W_AV = { N: 0.85, A: 0.62, L: 0.55, P: 0.2 };
+  const W_AC = { L: 0.77, H: 0.44 };
+  const W_PR = { N: 0.85, L: 0.62, H: 0.27 };
+  const W_PR_C = { N: 0.85, L: 0.68, H: 0.5 };
+  const W_UI = { N: 0.85, R: 0.62 };
+  const CIA = { N: 0, L: 0.22, H: 0.56 };
+  if (!W_AV[m.AV] || !W_AC[m.AC] || !m.PR || !m.UI || !m.S || !(m.C in CIA) || !(m.I in CIA) || !(m.A in CIA)) return null;
+  const scopeChanged = m.S === 'C';
+  const prWeight = scopeChanged ? W_PR_C[m.PR] : W_PR[m.PR];
+  const ISS = 1 - (1 - CIA[m.C]) * (1 - CIA[m.I]) * (1 - CIA[m.A]);
+  const Impact = scopeChanged
+    ? 7.52 * (ISS - 0.029) - 3.25 * Math.pow(ISS - 0.02, 15)
+    : 6.42 * ISS;
+  if (Impact <= 0) return 0;
+  const Exploitability = 8.22 * W_AV[m.AV] * W_AC[m.AC] * prWeight * W_UI[m.UI];
+  const base = scopeChanged ? Math.min(1.08 * (Impact + Exploitability), 10) : Math.min(Impact + Exploitability, 10);
+  return Math.ceil(base * 10) / 10; /* CVSS v3.1 spec: round UP to one decimal */
+}
+
+function scoreFromCVSS(s) {
+  if (s === null || s === undefined || isNaN(s)) return null;
+  if (s >= 9.0) return 'critical';
+  if (s >= 7.0) return 'high';
+  if (s >= 4.0) return 'medium';
+  return 'low';
+}
+
+function severityFromVuln(v) {
+  const ds = v.database_specific && v.database_specific.severity;
+  if (typeof ds === 'string') {
+    const map = { CRITICAL: 'critical', HIGH: 'high', MODERATE: 'medium', MEDIUM: 'medium', LOW: 'low' };
+    if (map[ds.toUpperCase()]) return map[ds.toUpperCase()];
+  }
+  const sevArr = v.severity || [];
+  for (const s of sevArr) {
+    if (s && typeof s.score === 'string' && /CVSS:3/.test(s.score)) {
+      const sc = scoreFromCVSS(cvssBaseScore(s.score));
+      if (sc) return sc;
+    }
+  }
+  const refs = (v.aliases || []).join(' ');
+  if (/CVE-\d{4}-\d{4,}/.test(refs) && (v.summary || '').length) return 'medium';
+  return 'medium';
+}
+
+function fixedVersionFromVuln(v, ecosystem, name) {
+  for (const a of (v.affected || [])) {
+    const p = a.package || {};
+    if ((p.name || '').toLowerCase() !== name.toLowerCase()) continue;
+    if (p.ecosystem && ecosystem && p.ecosystem.toLowerCase() !== ecosystem.toLowerCase()) continue;
+    for (const r of (a.ranges || [])) {
+      for (const ev of (r.events || [])) if (ev.fixed) return ev.fixed;
+    }
+    if (a.versions && a.versions.length) return null;
+  }
+  return null;
+}
+
+const EXPLOIT_HINT_RE = /(remote code execution|\bRCE\b|arbitrary code|arbitrary command|privilege escalation|sandbox escape|authentication bypass|auth bypass|bypasses? (?:the )?(?:authentication|authorization)|account takeover|execute arbitrary|exploit(?:ed|ation)? (?:in the wild|available)|pre-?auth(?:entication)?|unauthenticated attacker|prototype pollution)/i;
+
+function normalizeOSVVuln(v, dep, score, sev) {
+  const cve = (v.aliases || []).find(a => /^CVE-\d{4}-\d{4,}$/i.test(a)) || null;
+  const summary = (v.summary || (v.details || '').split('. ')[0] || 'Vulnerability in dependency').trim();
+  const knownExploit = !!(cve && EXPLOIT_HINT_RE.test((v.summary || '') + ' ' + (v.details || '')));
+  return {
+    id: 'osv:' + v.id + '@' + dep.name,
+    severity: sev,
+    layer: 'osv',
+    file: dep.manifest,
+    line: 0,
+    name: (v.id || 'OSV advisory') + ' — ' + dep.name + '@' + dep.version,
+    desc: summary + (score !== null ? ` (CVSS ${score})` : '') + ` — affects ${dep.name} ${dep.version} in ${dep.manifest} (${dep.ecosystem})`,
+    snippet: '',
+    remed: (fixedVersionFromVuln(v, dep.ecosystem, dep.name)
+      ? `Upgrade ${dep.name} to ${fixedVersionFromVuln(v, dep.ecosystem, dep.name)} or later. `
+      : `Check the advisory for patched versions of ${dep.name}. `) +
+      `Review ${v.id} on OSV.dev and confirm the vulnerable code path is reachable in your app.`,
+    cwe: (v.database_specific && v.database_specific.cwe_ids && v.database_specific.cwe_ids[0]) || null,
+    cveId: cve,
+    osvId: v.id,
+    cvss: score,
+    knownExploit: knownExploit,
+    packages: [dep.name + '@' + dep.version],
+    url: 'https://osv.dev/vulnerability/' + v.id
+  };
+}
+
+/* Merge querybatch results into normalized findings. deps parallels results. */
+function mergeOSVResults(deps, results) {
+  const findings = [];
+  const byId = new Map();
+  for (let i = 0; i < deps.length; i++) {
+    const r = results && results[i];
+    if (!r || !r.vulns) continue;
+    for (const v of r.vulns) {
+      if (!v || !v.id) continue;
+      const score = (() => {
+        const arr = v.severity || [];
+        for (const s of arr) if (s && typeof s.score === 'string' && /CVSS:3/.test(s.score)) return cvssBaseScore(s.score);
+        return null;
+      })();
+      const sev = severityFromVuln(v);
+      const norm = normalizeOSVVuln(v, deps[i], score, sev);
+      if (byId.has(v.id)) {
+        const existing = byId.get(v.id);
+        for (const p of norm.packages) if (!existing.packages.includes(p)) existing.packages.push(p);
+        if (sevOrder(existing.severity) > sevOrder(norm.severity)) existing.severity = norm.severity;
+        if (!existing.cveId && norm.cveId) existing.cveId = norm.cveId;
+        existing.knownExploit = existing.knownExploit || norm.knownExploit;
+        if (!existing.cvss && norm.cvss) existing.cvss = norm.cvss;
+      } else {
+        byId.set(v.id, norm);
+        findings.push(norm);
+      }
+    }
+  }
+  return findings;
+}
+
+function sevOrder(s) { return { critical: 0, high: 1, medium: 2, low: 3 }[s] ?? 4; }
+
+/* ================= Scoring model ================= */
+function computeScore(findings) {
+  const counts = { critical: 0, high: 0, medium: 0, low: 0 };
+  let exploitHits = 0;
+  for (const f of findings) {
+    if (counts[f.severity] !== undefined) counts[f.severity]++;
+    if (f.layer === 'osv' && f.cveId && f.knownExploit) exploitHits++;
+  }
+  const raw = 100
+    - counts.critical * 20
+    - counts.high * 12
+    - counts.medium * 5
+    - counts.low * 2
+    - exploitHits * 10;
+  const score = Math.max(0, Math.min(100, raw));
+  return { score, counts, exploitHits };
+}
+
+function verdictFor(score, counts) {
+  if (counts.critical > 0 || score < 40) return 'BLOCKED';
+  if (score < 85) return 'NEEDS FIXES';
+  return 'READY';
+}
+
+/* ================= AI context assembly ================= */
+const AI_BUDGET_CHARS = 78000;
+const AI_ENTRY_INTEREST_RE = /(^|\/)(index|main|app|server|routes?|api|auth|login|session|token|jwt|admin|user|account|config|settings|middleware|security|crypto|password|payment|upload|db|database|models?|utils?|controllers?)\.[^.]+$|(^|\/)(app|main|server|manage|wsgi|settings)\.(py|js|ts|rb|go|php)$/i;
+
+function rankFileForAI(file, findingsByFile) {
+  let s = 0;
+  const sev = findingsByFile.get(file.path);
+  if (sev) s += sev * 10;
+  if (AI_ENTRY_INTEREST_RE.test(file.path)) s += 6;
+  if (/(^|\/)(package\.json|requirements[\w.-]*\.txt|go\.mod|Gemfile\.lock)$/i.test(file.path)) s += 4;
+  if (/(auth|secret|credential|token|admin|payment|crypto)/i.test(file.path)) s += 8;
+  s += Math.max(0, 4 - (file.path.split('/').length - 1));
+  return s;
+}
+
+function buildAIContext(files, findings) {
+  const findingsByFile = new Map();
+  const weight = { critical: 4, high: 3, medium: 1, low: 0.5 };
+  for (const f of findings) {
+    const w = weight[f.severity] || 0.5;
+    findingsByFile.set(f.path, (findingsByFile.get(f.path) || 0) + w);
+  }
+  let selected;
+  const withContent = files.filter(f => (f.content || '').length > 0);
+  if (withContent.length <= 30) {
+    selected = withContent.slice();
+  } else {
+    selected = withContent
+      .map(f => ({ f, s: rankFileForAI(f, findingsByFile) }))
+      .sort((a, b) => b.s - a.s)
+      .slice(0, 25)
+      .map(x => x.f);
+  }
+  let budget = AI_BUDGET_CHARS;
+  const blocks = [];
+  let truncated = false;
+  for (const f of selected) {
+    const header = `\n=== FILE: ${f.path} ===\n`;
+    const room = budget - header.length;
+    if (room < 400) { truncated = true; break; }
+    let c = f.content;
+    if (c.length > room - 60) { c = c.slice(0, Math.max(400, room - 60)) + '\n… [truncated for context budget]'; truncated = true; }
+    blocks.push(header + c);
+    budget -= header.length + c.length;
+  }
+  return { text: blocks.join('\n'), fileCount: blocks.length, truncated, sampled: withContent.length > 30 };
+}
+
+function buildAIPrompt(repo, findings, context) {
+  const limit = findings.length > 150 ? findings.slice(0, 150) : findings.slice();
+  const lines = limit.map(f => {
+    const loc = f.line ? `${f.file}:${f.line}` : f.file;
+    return `- ${String(f.severity).toUpperCase()} | ${f.layer.toUpperCase()} | ${loc} | ${f.name}${f.cveId ? ' | ' + f.cveId : ''}${f.osvId && !f.cveId ? ' | ' + f.osvId : ''} | ${f.desc.slice(0, 170)}`;
+  });
+  return `You are a senior application security engineer with OWASP and CVE expertise.
+Given these confirmed static findings (including real CVE/GHSA data from OSV.dev)
+and this code context, produce an English report with:
+1. Executive summary + deployment verdict: READY / NEEDS FIXES / BLOCKED
+2. Critical & high findings explained with real-world exploit impact
+3. Any additional logic-level or design-level vulnerabilities you can identify
+   from the code itself that the static layers wouldn't catch
+4. Specific, prioritized remediation steps
+5. Honest confidence note on scan coverage
+
+REPOSITORY: ${repo.owner}/${repo.name} (branch: ${repo.branch})
+SECURITY SCORE (static model): ${repo.score}/100 — critical:${repo.counts.critical} high:${repo.counts.high} medium:${repo.counts.medium} low:${repo.counts.low}
+FILES ANALYZED STATICALLY: ${repo.filesScanned} | CODE CONTEXT BELOW COVERS: ${context.fileCount} files${context.truncated ? ' (truncated to fit the model context window)' : ''}
+
+CONFIRMED STATIC FINDINGS (${findings.length} total${findings.length > 150 ? ', showing first 150' : ''}):
+${lines.join('\n') || '- none'}
+
+CODE CONTEXT:
+${context.text}
+
+Respond in Markdown. Reference files and lines. Be specific and do not invent vulnerabilities that are not supported by the finding data or the code.
+If you identify ADDITIONAL code-level findings from reading the code, append them at the very end under a heading exactly "## ADDITIONAL FINDINGS" with one finding per line in this exact format:
+- SEVERITY | path/file.ext:LINE | concise description of the issue and its impact
+(Use this format only for issues the static layers above did not already report.)`;
+}
+
+function parseAIFindings(aiText) {
+  const marker = /^#{1,4}\s*ADDITIONAL FINDINGS.*$/im;
+  const m = aiText.match(marker);
+  if (!m || m.index === undefined) return [];
+  const section = aiText.slice(m.index + m[0].length);
+  const out = [];
+  const re = /^[-*]\s*\**\s*(CRITICAL|HIGH|MEDIUM|LOW)\s*\**\s*\|\s*([^|\n]+)\|\s*([^|\n]+)/gim;
+  let mm;
+  while ((mm = re.exec(section)) !== null) {
+    const sev = mm[1].toLowerCase();
+    const loc = mm[2].trim();
+    const desc = mm[3].trim();
+    const lm = loc.match(/([\w.\-/\\]+\.[A-Za-z0-9]{1,8})(?::(\d+))?/);
+    out.push({
+      id: 'ai:' + out.length,
+      severity: sev,
+      layer: 'ai',
+      file: lm ? lm[1] : (loc && loc !== '—' && loc !== '-' ? loc : 'repository-wide'),
+      line: lm && lm[2] ? parseInt(lm[2], 10) : 0,
+      name: 'AI-identified issue',
+      desc: desc,
+      snippet: '',
+      remed: 'Validate against the AI briefing section and apply the prioritized remediation steps.',
+      cwe: null,
+      sig: 'ai.' + out.length
+    });
+    if (out.length >= 25) break;
+  }
+  return out;
+}
+/*ENGINE-END2*/
+</script>
+
+<script id="nb-orchestration">
+'use strict';
+/* ================= state ================= */
+const state = {
+  keys: { groq: '', gemini: '', mistral: '', github: '' },
+  scanning: false,
+  report: null,
+  filtered: [],
+  sort: { key: 'severity', dir: 'asc' },
+  sevFilter: new Set(),
+  layerFilter: 'all',
+  textFilter: ''
+};
+
+const LS_KEY = 'nullbreach.keys.v1';
+
+function loadKeys() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const obj = JSON.parse(raw);
+      for (const k of ['groq', 'gemini', 'mistral', 'github']) {
+        if (typeof obj[k] === 'string') state.keys[k] = obj[k];
+      }
+    }
+  } catch (e) { /* private mode / corrupt storage */ }
+  for (const k of ['groq', 'gemini', 'mistral', 'github']) {
+    const el = document.getElementById(k === 'github' ? 'keyGithub' : 'key' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (el) el.value = state.keys[k];
+  }
+  updateKeyDots();
+}
+
+function persistKeys() {
+  for (const id of ['keyGroq', 'keyGemini', 'keyMistral', 'keyGithub']) {
+    const el = document.getElementById(id);
+    const k = id.replace(/^key/, '').toLowerCase();
+    state.keys[k] = el ? el.value.trim() : '';
+  }
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state.keys)); } catch (e) { /* ignore */ }
+  updateKeyDots();
+}
+
+function updateKeyDots() {
+  const dot = (id, on, optional) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'w-2 h-2 rounded-full ' + (on ? 'bg-nbgreen shadow-[0_0_8px_rgba(0,255,157,.9)]' : (optional ? 'bg-slate-600' : 'bg-amber-400'));
+  };
+  dot('dotGroq', !!state.keys.groq, false);
+  dot('dotGemini', !!state.keys.gemini, false);
+  dot('dotMistral', !!state.keys.mistral, false);
+  dot('dotGithub', !!state.keys.github, true);
+  const anyAI = !!(state.keys.groq || state.keys.gemini || state.keys.mistral);
+  const kd = document.getElementById('keyDot');
+  if (kd) {
+    kd.className = 'w-2 h-2 rounded-full ' + (anyAI ? 'bg-nbgreen' : 'bg-amber-400');
+    kd.title = anyAI ? 'AI keys configured' : 'No AI keys configured — AI layer will be skipped';
+  }
+}
+
+/* ================= helpers ================= */
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function truncate(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n) + '…' : s; }
+function chunk(arr, n) { const out = []; for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n)); return out; }
+
+class NBError extends Error {}
+
+/* ================= scan log ================= */
+let logStart = 0, logTimerIv = null;
+function nbLog(msg, cls) {
+  const body = document.getElementById('logBody');
+  if (!body) return;
+  const t = Math.max(0, (performance.now() - logStart) / 1000);
+  const mm = String(Math.floor(t / 60)).padStart(2, '0');
+  const ss = String(Math.floor(t % 60)).padStart(2, '0');
+  const color = cls === 'err' ? 'text-[#ff8098]' : cls === 'warn' ? 'text-amber-300' : cls === 'ok' ? 'text-nbgreen' : cls === 'dim' ? 'text-slate-500' : 'text-emerald-100/90';
+  const div = document.createElement('div');
+  div.className = 'log-line ' + color;
+  div.innerHTML = `<span class="text-slate-600">[${mm}:${ss}]</span> ${esc(msg)}`;
+  body.appendChild(div);
+  while (body.children.length > 400) body.removeChild(body.firstChild);
+  body.scrollTop = body.scrollHeight;
+}
+
+/* ================= GitHub ================= */
+function parseRepoInput(input) {
+  let s = (input || '').trim();
+  if (!s) throw new NBError('Enter a GitHub repository, e.g. <span class="mono">OWASP/NodeGoat</span>.');
+  s = s.replace(/^git@github\.com:/, 'https://github.com/');
+  const treeM = s.match(/github\.com\/([^\/\s?#]+)\/([^\/\s?#]+)/i);
+  if (treeM) {
+    const out = { owner: treeM[1], name: treeM[2].replace(/\.git$/i, ''), branch: null };
+    const ti = s.toLowerCase().indexOf('/tree/');
+    if (ti > -1) {
+      out.branch = s.slice(ti + 6).split('#')[0].replace(/\/+$/, '').split('/').map(decodeURIComponent).join('/');
+      if (!out.branch) out.branch = null;
+    }
+    return out;
+  }
+  const m = s.match(/^([\w.-]+)\/([\w.-]+)$/);
+  if (m) return { owner: m[1], name: m[2].replace(/\.git$/i, ''), branch: null };
+  throw new NBError('Could not parse that repository reference. Use <span class="mono">owner/repo</span> or a full GitHub URL.');
+}
+
+async function ghFetch(path) {
+  const headers = { 'Accept': 'application/vnd.github+json', 'User-Agent': 'NULLBREACH' };
+  if (state.keys.github) headers['Authorization'] = 'Bearer ' + state.keys.github;
+  const r = await fetch('https://api.github.com' + path, { headers });
+  if (r.status === 404) throw new NBError('Repository not found (404). If it is private, add a GitHub token in the API Keys panel.');
+  if (r.status === 403) {
+    const rem = r.headers.get('x-ratelimit-remaining');
+    if (rem === '0') throw new NBError('GitHub API rate limit exhausted (60 req/h anonymous). Add a GitHub token in the API Keys panel for 5,000 req/h.');
+    throw new NBError('GitHub API refused the request (403).');
+  }
+  if (r.status === 301) throw new NBError('That repository moved (301). Try its new location.');
+  if (!r.ok) throw new NBError('GitHub API error HTTP ' + r.status + '.');
+  return r.json();
+}
+
+const SCAN_SKIP_DIR_RE = /(^|\/)(node_modules|\.git|vendor|dist|build|out|\.next|\.nuxt|\.output|coverage|__pycache__|\.venv|venv|env|target|\.idea|\.vscode|bower_components|site-packages|\.tox|\.mypy_cache|\.pytest_cache|\.svn|bin\/obj|gradle|\.gradle|\.terraform|\.serverless|\.cache)(\/|$)/i;
+const SCAN_BINARY_EXT = new Set(['png','jpg','jpeg','gif','ico','icns','svg','webp','bmp','tiff','woff','woff2','ttf','otf','eot','mp3','mp4','mov','avi','mkv','wav','flac','zip','gz','tar','bz2','7z','rar','jar','class','so','dylib','dll','exe','bin','dat','pdf','doc','docx','xls','xlsx','ppt','pptx','db','sqlite','pyc','pyo','o','a','lib','wasm','map','lock','sum','gem','pack','idx']);
+const SCAN_TEXT_EXT = new Set(['js','jsx','ts','tsx','mjs','cjs','py','pyw','rb','go','php','java','kt','kts','swift','cs','c','cc','cpp','h','hpp','hh','rs','sh','bash','zsh','fish','ps1','bat','cmd','sql','html','htm','vue','svelte','astro','yml','yaml','toml','ini','cfg','conf','properties','gradle','tf','hcl','env','txt','json','xml','plist','groovy','dockerfile','gemfile','rake','erb','hbs','ejs','pug','twig','liquid','jinja','jinja2','j2','proto','graphql','gql','sol','lua','pl','pm','scala','clj','ex','exs','dart','m','mm','ino','vhdl','verilog','md','rst','csv','gitignore','editorconfig','npmrc','babelrc','eslintrc','prettierrc']);
+
+function extOf(path) {
+  const base = path.split('/').pop() || '';
+  if (!base.includes('.')) return base.toLowerCase();
+  return base.split('.').pop().toLowerCase();
+}
+
+function isManifestOrSensitive(path) {
+  const base = (path.split('/').pop() || '').toLowerCase();
+  return base === 'package.json' || /^requirements[\w.-]*\.txt$/.test(base) || base === 'requirements.in' ||
+    base === 'go.mod' || base === 'gemfile.lock' || /^\.env/.test(base) ||
+    /\.(pem|pkey|key|keystore|pfx)$/.test(base) || base === 'id_rsa';
+}
+
+function isRelevantFile(path, size) {
+  if (size !== undefined && size > 400000) return false;
+  if (SCAN_SKIP_DIR_RE.test(path)) return false;
+  if (isManifestOrSensitive(path)) return true;
+  const base = (path.split('/').pop() || '').toLowerCase();
+  if (base === 'package-lock.json' || base === 'yarn.lock' || base === 'pnpm-lock.yaml' ||
+      base === 'pipfile.lock' || base === 'poetry.lock' || base === 'composer.lock' || base === 'cargo.lock' || base === 'go.sum') return false;
+  if (/\.min\.(js|css)$/.test(base)) return false;
+  const ext = extOf(path);
+  if (SCAN_BINARY_EXT.has(ext)) return false;
+  return SCAN_TEXT_EXT.has(ext) || !base.includes('.');
+}
+
+function prioritizeFiles(files, maxCount) {
+  const score = (f) => {
+    let s = 0;
+    if (isManifestOrSensitive(f.path)) s += 100;
+    if (/(^|\/)(index|main|app|server)\.[^.]+$/.test(f.path)) s += 40;
+    if (/(auth|login|session|token|jwt|secret|credential|admin|payment|crypto|config|settings|middleware|permission|user|upload)/i.test(f.path)) s += 30;
+    s += Math.max(0, 20 - (f.path.split('/').length - 1) * 2);
+    s += Math.max(0, 10 - Math.floor((f.path.length || 0) / 40));
+    return s;
+  };
+  if (files.length <= maxCount) return files;
+  return files.map(f => ({ f, s: score(f) })).sort((a, b) => b.s - a.s).slice(0, maxCount).map(x => x.f);
+}
+
+async function fetchFileContents(owner, repo, ref, files) {
+  const out = [];
+  let done = 0;
+  const useAPI = !!state.keys.github;
+  const batches = chunk(files, 8);
+  for (const batch of batches) {
+    const results = await Promise.all(batch.map(async (f) => {
+      try {
+        let r;
+        if (useAPI) {
+          const p = f.path.split('/').map(encodeURIComponent).join('/');
+          r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${p}?ref=${encodeURIComponent(ref)}`,
+            { headers: { 'Accept': 'application/vnd.github.raw', 'Authorization': 'Bearer ' + state.keys.github, 'User-Agent': 'NULLBREACH' } });
+        } else {
+          const p = f.path.split('/').map(encodeURIComponent).join('/');
+          r = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(ref)}/${p}`);
+        }
+        if (!r.ok) return null;
+        const text = await r.text();
+        if (text.length > 500000) return { path: f.path, content: '' };
+        return { path: f.path, content: text };
+      } catch (e) { return null; }
+    }));
+    for (const r of results) if (r) { out.push(r); done++; }
+    done = out.length;
+    nbLog(`Downloading sources… ${done}/${files.length} files`, 'dim');
+    await new Promise(res => setTimeout(res, 30));
+  }
+  return out;
+}
+
+/* ================= OSV.dev ================= */
+async function queryOSV(deps) {
+  if (!deps.length) return { findings: [], queried: 0 };
+  const body = buildOSVBatch(deps);
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 60000);
+  let resp;
+  try {
+    resp = await fetch('https://api.osv.dev/v1/querybatch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: ctrl.signal
+    });
+  } catch (e) {
+    clearTimeout(to);
+    throw new NBError('OSV.dev unreachable: ' + (e && e.name === 'AbortError' ? 'timed out' : 'network/CORS error'));
+  }
+  clearTimeout(to);
+  if (!resp.ok) throw new NBError('OSV.dev API error HTTP ' + resp.status);
+  const data = await resp.json();
+  const results = (data && Array.isArray(data.results)) ? data.results : [];
+  return { findings: mergeOSVResults(deps.slice(0, 800), results), queried: deps.length };
+}
+
+/* ================= AI cascade ================= */
+const AI_PROVIDERS = [
+  { id: 'groq',   label: 'Groq · llama-3.3-70b-versatile', kind: 'openai', keyField: 'groq',
+    url: 'https://api.groq.com/openai/v1/chat/completions', model: 'llama-3.3-70b-versatile' },
+  { id: 'gemini', label: 'Gemini · gemini-2.0-flash', kind: 'gemini', keyField: 'gemini',
+    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', model: 'gemini-2.0-flash' },
+  { id: 'mistral', label: 'Mistral · mistral-large-latest', kind: 'openai', keyField: 'mistral',
+    url: 'https://api.mistral.ai/v1/chat/completions', model: 'mistral-large-latest' }
+];
+
+async function callAIProvider(p, prompt, key) {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 150000);
+  try {
+    let url = p.url, body;
+    if (p.kind === 'gemini') {
+      url += '?key=' + encodeURIComponent(key);
+      body = {
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 8192 }
+      };
+    } else {
+      body = {
+        model: p.model,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.2,
+        max_tokens: 4096
+      };
+    }
+    const headers = { 'Content-Type': 'application/json' };
+    if (p.kind !== 'gemini') headers['Authorization'] = 'Bearer ' + key;
+    const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body), signal: ctrl.signal });
+    let data = null;
+    try { data = await r.json(); } catch (e) { /* non-JSON */ }
+    if (!r.ok) {
+      const msg = data && data.error && (data.error.message || data.error.msg) ? (data.error.message || data.error.msg) : 'HTTP ' + r.status;
+      throw new NBError(msg);
+    }
+    let text = '';
+    if (p.kind === 'gemini') {
+      const cand = data && data.candidates && data.candidates[0];
+      if (cand && cand.content && Array.isArray(cand.content.parts)) text = cand.content.parts.map(x => x.text || '').join('');
+      if (!text) throw new NBError('Gemini returned an empty candidate' + (cand && cand.finishReason ? ' (' + cand.finishReason + ')' : ''));
+    } else {
+      if (data && data.choices && data.choices[0] && data.choices[0].message) text = data.choices[0].message.content || '';
+      if (!text) throw new NBError('Provider returned an empty completion');
+    }
+    return text;
+  } finally {
+    clearTimeout(to);
+  }
+}
+
+async function aiCascade(prompt) {
+  const failures = [];
+  for (const p of AI_PROVIDERS) {
+    const key = state.keys[p.keyField];
+    if (!key) { failures.push(p.id + ': no key'); continue; }
+    nbLog(`Engaging AI reasoning layer → ${p.label}…`);
+    try {
+      const text = await callAIProvider(p, prompt, key);
+      nbLog(`AI briefing complete (${p.label}).`, 'ok');
+      return { text, provider: p.label, failures };
+    } catch (e) {
+      const msg = e && e.name === 'AbortError' ? 'timed out' : (e.message || 'error');
+      nbLog(`${p.id} failed: ${truncate(msg, 120)} — falling back…`, 'warn');
+      failures.push(p.id + ': ' + msg);
+    }
+  }
+  return { text: null, provider: null, failures };
+}
+
+/* ================= main scan pipeline ================= */
+async function runScan(input) {
+  if (state.scanning) return;
+  state.scanning = true;
+  const btn = document.getElementById('btnScan');
+  btn.disabled = true;
+  const t0 = performance.now();
+  logStart = performance.now();
+  document.getElementById('scanError').classList.add('hidden');
+  document.getElementById('scanLog').classList.remove('hidden');
+  document.getElementById('logBody').innerHTML = '';
+  clearInterval(logTimerIv);
+  logTimerIv = setInterval(() => {
+    const t = Math.floor((performance.now() - logStart) / 1000);
+    const el = document.getElementById('logTimer');
+    if (el) el.textContent = String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+  }, 1000);
+
+  let report = null;
+  try {
+    persistKeys(); /* keep keys saved on every scan attempt */
+    const repo = parseRepoInput(input);
+    nbLog('NULLBREACH engine v' + NB_VERSION + ' initialized.');
+    const sigCount = SIGNATURES.length;
+    nbLog(`Loaded ${sigCount} secret & OWASP signatures · entropy thresholds 4.5/4.8 · OSV.dev feed online.`);
+
+    nbLog(`Resolving ${repo.owner}/${repo.name} via GitHub API…`);
+    const meta = await ghFetch(`/repos/${repo.owner}/${repo.name}`);
+    const branch = repo.branch || meta.default_branch || 'main';
+    repo.branch = branch;
+    nbLog(`Repository resolved — "${meta.full_name}" · default branch "${branch}"${meta.stargazers_count !== undefined ? ` · ★ ${meta.stargazers_count}` : ''}.`);
+
+    const treeData = await ghFetch(`/repos/${repo.owner}/${repo.name}/git/trees/${encodeURIComponent(branch)}?recursive=1`);
+    const blobs = (treeData.tree || []).filter(e => e.type === 'blob');
+    if (!blobs.length) throw new NBError('No files found on that branch. Check the branch name.');
+    if (treeData.truncated) nbLog('GitHub reported the file tree as truncated (very large repo) — scanning a prioritized subset.', 'warn');
+
+    const relevant = blobs.filter(b => isRelevantFile(b.path, b.size));
+    const chosen = prioritizeFiles(relevant, 500);
+    nbLog(`${blobs.length} tracked files → ${relevant.length} relevant${relevant.length > chosen.length ? `, prioritized to ${chosen.length} (repo too large for full download)` : ''}.`);
+
+    nbLog(`Fetching file contents${state.keys.github ? ' via GitHub contents API (token)' : ' via raw.githubusercontent.com'}…`);
+    const files = (await fetchFileContents(repo.owner, repo.name, branch, chosen)).filter(f => f.content);
+    const totalBytes = files.reduce((a, f) => a + f.content.length, 0);
+    nbLog(`Downloaded ${files.length} files (${(totalBytes / 1024).toFixed(0)} KB).`, 'ok');
+    if (!files.length) throw new NBError('No scannable source files could be downloaded from this repository.');
+
+    /* Layer 1 + 2 */
+    nbLog(`Layer 1 — computing Shannon entropy across every string literal…`);
+    let findings = [];
+    let stringsTotal = 0;
+    for (const f of files) {
+      const r = scanEntropyInFile(f);
+      findings.push(...r.findings);
+      stringsTotal += r.stringsChecked;
+    }
+    nbLog(`Layer 1 complete — ${stringsTotal} candidate strings entropy-tested, ${findings.length} high-entropy flags.`, 'ok');
+
+    nbLog(`Layer 2 — cross-referencing ${SIGNATURES.length} secret signatures & OWASP patterns…`);
+    let patternCount = 0;
+    for (const f of files) {
+      const pf = scanFileStatic(f);
+      findings.push(...pf);
+      patternCount += pf.length;
+    }
+    nbLog(`Layer 2 complete — ${patternCount} signature matches.`, 'ok');
+
+    /* Layer 3 */
+    nbLog('Layer 3 — parsing dependency manifests (package.json / requirements.txt / go.mod / Gemfile.lock)…');
+    const manifests = files.filter(f => isManifestOrSensitive(f.path) && /package\.json|requirements|go\.mod|gemfile\.lock/i.test(f.path));
+    const deps = parseManifests(manifests);
+    const ecosystems = [...new Set(deps.map(d => d.ecosystem))];
+    nbLog(deps.length ? `Parsed ${deps.length} pinned dependencies across [${ecosystems.join(', ')}]. Querying OSV.dev vulnerability database…`
+                      : 'No supported manifests with pinned versions found — skipping OSV.dev.', deps.length ? '' : 'dim');
+    let osvFindings = [];
+    let osvQueried = 0;
+    if (deps.length) {
+      try {
+        const osv = await queryOSV(deps);
+        osvFindings = osv.findings;
+        osvQueried = osv.queried;
+        nbLog(`OSV.dev responded — ${osvQueried} packages checked, ${osvFindings.length} vulnerable packages/advisories confirmed.`, osvFindings.length ? 'warn' : 'ok');
+      } catch (e) {
+        nbLog('OSV.dev query failed: ' + e.message + ' — continuing without dependency CVEs.', 'err');
+      }
+    }
+    findings.push(...osvFindings);
+
+    /* dedupe + sort */
+    const seen = new Set();
+    findings = findings.filter(f => {
+      const k = f.sig + '|' + f.file + '|' + f.line + '|' + f.name;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+    findings.sort((a, b) => sevOrder(a.severity) - sevOrder(b.severity) || a.file.localeCompare(b.file));
+
+    /* scoring */
+    const { score, counts, exploitHits } = computeScore(findings);
+    const verdict = verdictFor(score, counts);
+    nbLog(`Score model: 100 − 20×${counts.critical} − 12×${counts.high} − 5×${counts.medium} − 2×${counts.low}${exploitHits ? ` − 10×${exploitHits} (known-exploit CVEs)` : ''} → ${score}/100 (${verdict}).`, score >= 85 && counts.critical === 0 ? 'ok' : 'warn');
+
+    /* AI layer */
+    const anyAIKey = state.keys.groq || state.keys.gemini || state.keys.mistral;
+    let ai = { text: null, provider: null, failures: [] };
+    if (anyAIKey) {
+      const context = buildAIContext(files, findings);
+      nbLog(`Assembling AI context: ${context.fileCount} files${context.sampled ? ' (risk-ranked sample of ' + files.length + ')' : ' (full contents)'}${context.truncated ? ', truncated to context budget' : ''}.`);
+      const promptRepo = { owner: repo.owner, name: repo.name, branch, score, counts, filesScanned: files.length };
+      const prompt = buildAIPrompt(promptRepo, findings, context);
+      ai = await aiCascade(prompt);
+    } else {
+      nbLog('No AI keys configured — skipping AI reasoning layer (static + OSV results remain fully usable).', 'warn');
+    }
+
+    const durationMs = performance.now() - t0;
+    report = {
+      tool: 'NULLBREACH', version: NB_VERSION,
+      generatedAt: new Date().toISOString(),
+      repo: { owner: repo.owner, name: repo.name, branch, url: `https://github.com/${repo.owner}/${repo.name}`, description: meta.description || '', stars: meta.stargazers_count, language: meta.language },
+      score, verdict, counts, exploitHits,
+      formula: `100 − 20×${counts.critical} − 12×${counts.high} − 5×${counts.medium} − 2×${counts.low}${exploitHits ? ` − 10×${exploitHits}` : ''} = ${score}`,
+      findings, dependencies: { parsed: deps, queried: osvQueried },
+      ai: ai.text ? { provider: ai.provider, text: ai.text } : { unavailable: true, reason: ai.failures.join('; ') || 'no keys configured' },
+      aiFindings: ai.text ? parseAIFindings(ai.text) : [],
+      stats: { filesTracked: blobs.length, filesRelevant: relevant.length, filesScanned: files.length, bytes: totalBytes, stringsChecked: stringsTotal, signatures: SIGNATURES.length, depsQueried: osvQueried, durationMs: Math.round(durationMs) }
+    };
+
+    if (report.aiFindings.length) {
+      const before = findings.length;
+      const seenAI = new Set(findings.map(f => f.id));
+      for (const af of report.aiFindings) if (!seenAI.has(af.id)) { findings.push(af); seenAI.add(af.id); }
+      const rescored = computeScore(findings);
+      report.score = rescored.score; report.counts = rescored.counts; report.exploitHits = rescored.exploitHits;
+      report.verdict = verdictFor(rescored.score, rescored.counts);
+      report.findings = findings;
+      nbLog(`AI layer contributed ${report.findings.length - before} additional findings — score re-computed → ${report.score}/100.`, 'warn');
+    }
+
+    nbLog(`SCAN COMPLETE in ${(durationMs / 1000).toFixed(1)}s — ${report.findings.length} total findings · score ${report.score}/100 · verdict ${report.verdict}.`, report.verdict === 'READY' ? 'ok' : 'warn');
+    state.report = report;
+    renderResults(report);
+    document.getElementById('results').classList.remove('hidden');
+    setTimeout(() => document.getElementById('results').scrollIntoView({ behavior: 'smooth' }), 250);
+    if (report.verdict === 'READY' && report.counts.critical === 0) triggerCleanPulse();
+    else if (report.counts.critical > 0) triggerGlitch();
+  } catch (e) {
+    const msg = e instanceof NBError ? e.message : 'Unexpected failure: ' + (e && e.message ? e.message : e);
+    nbLog('SCAN ABORTED — ' + msg.replace(/<[^>]+>/g, ''), 'err');
+    const box = document.getElementById('scanError');
+    document.getElementById('scanErrorMsg').innerHTML = msg;
+    box.classList.remove('hidden');
+  } finally {
+    state.scanning = false;
+    btn.disabled = false;
+    clearInterval(logTimerIv);
+  }
+}
+</script>
+
+<script id="nb-ui">
+'use strict';
+/* ================= markdown → html (escaped) ================= */
+function mdSafeLink(u) {
+  const s = String(u || '').trim();
+  return /^https?:\/\//i.test(s) ? s : '#';
+}
+function renderMarkdown(src) {
+  const lines = String(src || '').replace(/\r\n?/g, '\n').split('\n');
+  const blocks = [];
+  let i = 0, listBuf = [], listType = null;
+  const flushList = () => {
+    if (listBuf.length) {
+      blocks.push(`<${listType === 'ol' ? 'ol' : 'ul'}>` + listBuf.map(x => `<li>${x}</li>`).join('') + `</${listType === 'ol' ? 'ol' : 'ul'}>`);
+      listBuf = []; listType = null;
+    }
+  };
+  const inline = (t) => esc(t)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, (m, txt, url) => `<a href="${esc(mdSafeLink(url))}" target="_blank" rel="noopener" class="text-nbcyan underline">${txt}</a>`);
+  while (i < lines.length) {
+    const line = lines[i];
+    if (/^```/.test(line)) {
+      flushList();
+      const buf = [];
+      i++;
+      while (i < lines.length && !/^```/.test(lines[i])) { buf.push(lines[i]); i++; }
+      i++;
+      blocks.push('<pre><code>' + esc(buf.join('\n')) + '</code></pre>');
+      continue;
+    }
+    const h = line.match(/^(#{1,6})\s+(.*)$/);
+    if (h) {
+      flushList();
+      const lvl = h[1].length;
+      blocks.push(lvl <= 2 ? `<h3>${inline(h[2])}</h3>` : `<h4>${inline(h[2])}</h4>`);
+      i++; continue;
+    }
+    const li = line.match(/^\s*(?:[-*]|\d+[.)])\s+(.*)$/);
+    if (li) {
+      const t = li[1];
+      const type = /^\s*\d/.test(line) ? 'ol' : 'ul';
+      if (listType && listType !== type) flushList();
+      listType = type;
+      listBuf.push(inline(t));
+      i++; continue;
+    }
+    if (!line.trim()) { flushList(); i++; continue; }
+    flushList();
+    blocks.push(`<p>${inline(line)}</p>`);
+    i++;
+  }
+  flushList();
+  return blocks;
+}
+
+/* ================= toast ================= */
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.transform = 'translateY(0)';
+  t.style.opacity = '1';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.style.transform = 'translateY(6rem)'; t.style.opacity = '0'; }, 2600);
+}
+function copyText(text, okMsg) {
+  const done = () => showToast(okMsg || 'Copied to clipboard');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { showToast('Copy failed — select manually'); }
+  document.body.removeChild(ta);
+}
+
+/* ================= score colors ================= */
+function scoreColor(score) { return score >= 80 ? '#00ff9d' : score >= 60 ? '#ffb703' : '#ff3b5c'; }
+function verdictClass(v) {
+  return v === 'READY' ? 'text-nbgreen border-nbgreen/50 bg-nbgreen/10'
+    : v === 'NEEDS FIXES' ? 'text-nbamber border-nbamber/50 bg-nbamber/10'
+    : 'text-nbred border-nbred/50 bg-nbred/10';
+}
+
+/* ================= main render ================= */
+function renderResults(r) {
+  /* summary */
+  document.getElementById('repoMeta').textContent = `${r.repo.owner}/${r.repo.name} @ ${r.repo.branch}`;
+  document.getElementById('repoDesc').textContent = r.repo.description || '';
+  document.getElementById('repoLink').href = r.repo.url;
+  document.getElementById('navRepo').textContent = `${r.repo.owner}/${r.repo.name}`;
+  const navScore = document.getElementById('navScore');
+  navScore.textContent = `${r.score}/100 · ${r.verdict}`;
+  navScore.style.color = scoreColor(r.score);
+  navScore.style.borderColor = scoreColor(r.score) + '66';
+
+  document.getElementById('statFiles').textContent = r.stats.filesScanned;
+  document.getElementById('statStrings').textContent = r.stats.stringsChecked.toLocaleString('en-US');
+  document.getElementById('statDeps').textContent = r.stats.depsQueried;
+  document.getElementById('statDuration').textContent = (r.stats.durationMs / 1000).toFixed(1) + 's';
+  document.getElementById('scoreSub').textContent = `${r.findings.length} findings · ${r.stats.signatures} signatures · ${r.stats.filesTracked} files tracked`;
+
+  document.getElementById('chipCritical').textContent = r.counts.critical;
+  document.getElementById('chipHigh').textContent = r.counts.high;
+  document.getElementById('chipMedium').textContent = r.counts.medium;
+  document.getElementById('chipLow').textContent = r.counts.low;
+
+  /* AI status */
+  if (r.ai && r.ai.unavailable) {
+    document.getElementById('aiBanner').classList.remove('hidden');
+    document.getElementById('aiOkLine').classList.add('hidden');
+    document.getElementById('aiFailReason').textContent = truncate(r.ai.reason || 'no keys', 90);
+    document.getElementById('aiProviderLabel').textContent = 'AI://unavailable — static-only report';
+    document.getElementById('aiContent').innerHTML =
+      '<p class="text-amber-300"># AI semantic layer unavailable</p>' +
+      '<p class="text-slate-400">Every configured AI provider failed or no key was present, so this report contains Layer 1–3 results only: entropy secrets, signature matches and real OSV.dev CVEs. Add a Groq / Gemini / Mistral key in the API Keys panel and re-scan for the semantic briefing.</p>' +
+      '<p class="text-slate-500 mt-2">reason: ' + esc(truncate(r.ai.reason || 'n/a', 200)) + '</p>';
+  } else {
+    document.getElementById('aiBanner').classList.add('hidden');
+    document.getElementById('aiOkLine').classList.remove('hidden');
+    document.getElementById('aiProvider').textContent = r.ai.provider || '';
+    document.getElementById('aiProviderLabel').textContent = 'AI://' + (r.ai.provider || 'model');
+    typeAIContent(r.ai.text || '');
+  }
+
+  /* gauge */
+  const C = 515.2;
+  const fg = document.getElementById('gaugeFg');
+  fg.style.strokeDashoffset = C;
+  fg.style.stroke = scoreColor(r.score);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    fg.style.strokeDashoffset = C * (1 - r.score / 100);
+  }));
+  const scoreNum = document.getElementById('scoreNum');
+  scoreNum.style.color = scoreColor(r.score);
+  const t0 = performance.now(), dur = 1300;
+  (function countUp(now) {
+    const p = Math.min(1, (performance.now() - t0) / dur);
+    const eased = 1 - Math.pow(1 - p, 3);
+    scoreNum.textContent = Math.round(r.score * eased);
+    if (p < 1) requestAnimationFrame(countUp);
+  })();
+  const vd = document.getElementById('scoreVerdict');
+  vd.textContent = r.verdict;
+  vd.className = 'mono mt-4 text-sm font-bold tracking-[.25em] px-4 py-1.5 rounded-lg border ' + verdictClass(r.verdict);
+
+  /* findings table + deps + remediation */
+  applyFilters();
+  renderDeps(r);
+  renderRemediation(r);
+  renderBadge(r);
+}
+
+/* ================= glitch / pulse ================= */
+function triggerGlitch() {
+  const targets = [document.getElementById('scoreNum'), document.getElementById('chipCritical')];
+  targets.forEach(el => { if (!el) return; el.classList.remove('glitching'); void el.offsetWidth; el.classList.add('glitching'); });
+  const fx = document.getElementById('critFlicker');
+  fx.classList.remove('on'); void fx.offsetWidth; fx.classList.add('on');
+  setTimeout(() => { targets.forEach(el => el && el.classList.remove('glitching')); fx.classList.remove('on'); }, 1100);
+}
+function triggerCleanPulse() {
+  const w = document.getElementById('gaugeWrap');
+  if (w) w.classList.add('pulse-clean');
+}
+
+/* ================= findings table ================= */
+const LAYER_ORDER = { entropy: 0, pattern: 1, osv: 2, ai: 3 };
+function applyFilters() {
+  const r = state.report;
+  if (!r) return;
+  let list = r.findings.slice();
+  if (state.sevFilter.size) list = list.filter(f => state.sevFilter.has(f.severity));
+  if (state.layerFilter !== 'all') list = list.filter(f => f.layer === state.layerFilter);
+  if (state.textFilter) {
+    const q = state.textFilter.toLowerCase();
+    list = list.filter(f =>
+      (f.file || '').toLowerCase().includes(q) ||
+      (f.name || '').toLowerCase().includes(q) ||
+      (f.desc || '').toLowerCase().includes(q) ||
+      (f.cveId || '').toLowerCase().includes(q) ||
+      (f.osvId || '').toLowerCase().includes(q) ||
+      (f.snippet || '').toLowerCase().includes(q));
+  }
+  const dir = state.sort.dir === 'asc' ? 1 : -1;
+  const k = state.sort.key;
+  list.sort((a, b) => {
+    let va, vb;
+    if (k === 'severity') { va = sevOrder(a.severity); vb = sevOrder(b.severity); }
+    else if (k === 'layer') { va = LAYER_ORDER[a.layer] ?? 9; vb = LAYER_ORDER[b.layer] ?? 9; }
+    else if (k === 'line') { va = a.line || 0; vb = b.line || 0; }
+    else if (k === 'cve') { va = a.cveId || a.osvId || ''; vb = b.cveId || b.osvId || ''; }
+    else { va = String(a.file || '').toLowerCase(); vb = String(b.file || '').toLowerCase(); }
+    if (va < vb) return -1 * dir;
+    if (va > vb) return 1 * dir;
+    return 0;
+  });
+  state.filtered = list;
+  renderTable();
+}
+
+function renderTable() {
+  const r = state.report;
+  const body = document.getElementById('findTableBody');
+  const list = state.filtered;
+  const MAX_ROWS = 400;
+  const shown = list.slice(0, MAX_ROWS);
+  const blobBase = r ? `${r.repo.url}/blob/${encodeURIComponent(r.repo.branch)}/` : '#';
+  body.innerHTML = shown.map(f => {
+    const sevCls = 'sev-' + f.severity;
+    const fileUrl = f.layer === 'osv' ? (f.url || '#') : blobBase + f.file.split('/').map(encodeURIComponent).join('/') + (f.line ? '#L' + f.line : '');
+    const loc = f.line ? `${esc(f.file)}:${f.line}` : esc(f.file);
+    const cve = f.cveId || f.osvId || (f.cwe ? esc(f.cwe) : '—');
+    return `<tr class="find-${f.severity} hover:bg-white/[0.03] align-top">
+      <td class="px-3 py-2.5"><span class="sev-chip mono text-[10px] tracking-widest border rounded-full px-2 py-0.5 ${sevCls}">${esc(f.severity.toUpperCase())}</span></td>
+      <td class="px-3 py-2.5"><span class="layer-chip mono layer-${f.layer}">${esc(f.layer.toUpperCase())}</span></td>
+      <td class="px-3 py-2.5 mono text-[11px] max-w-[220px]"><a href="${esc(fileUrl)}" target="_blank" rel="noopener" class="text-nbcyan/90 hover:text-nbcyan hover:underline break-all">${loc}</a>${f.snippet ? `<div class="text-slate-600 mt-1 break-all">${esc(truncate(f.snippet, 90))}</div>` : ''}</td>
+      <td class="px-3 py-2.5 mono text-slate-400">${f.line || '—'}</td>
+      <td class="px-3 py-2.5 max-w-[420px]"><span class="text-slate-200 font-medium">${esc(f.name)}</span><div class="text-slate-500 mt-0.5">${esc(truncate(f.desc, 220))}${f.packages && f.packages.length > 1 ? `<div class="text-slate-600 mt-1">packages: ${esc(f.packages.slice(0, 6).join(', '))}</div>` : ''}</div></td>
+      <td class="px-3 py-2.5 mono text-[11px] text-amber-200/80">${cve === '—' ? '<span class="text-slate-600">—</span>' : (f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener" class="hover:underline">${esc(cve)}</a>` : esc(cve))}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('findCount').textContent = `${list.length} finding${list.length === 1 ? '' : 's'}${list.length !== r.findings.length ? ` (of ${r.findings.length} total)` : ''}`;
+  document.getElementById('findNote').textContent = list.length > MAX_ROWS ? `showing first ${MAX_ROWS} rows — refine filters to narrow the view` : '';
+  document.querySelectorAll('.sort-ind').forEach(el => el.textContent = '');
+  const active = document.querySelector(`.sortable[data-sort="${state.sort.key}"] .sort-ind`);
+  if (active) active.textContent = state.sort.dir === 'asc' ? '▲' : '▼';
+}
+
+/* ================= dependencies panel ================= */
+function renderDeps(r) {
+  const summary = document.getElementById('depsSummary');
+  const list = document.getElementById('depsList');
+  const deps = r.dependencies.parsed;
+  const vulns = r.findings.filter(f => f.layer === 'osv');
+  if (!deps.length) {
+    summary.innerHTML = '<span class="text-slate-500">No supported dependency manifests (package.json / requirements.txt / go.mod / Gemfile.lock) with pinned versions were found in this repository — OSV.dev check skipped.</span>';
+    list.innerHTML = '';
+    return;
+  }
+  const byEco = {};
+  for (const d of deps) byEco[d.ecosystem] = (byEco[d.ecosystem] || 0) + 1;
+  const ecoStr = Object.entries(byEco).map(([k, v]) => `${v} ${k}`).join(' · ');
+  summary.innerHTML = `<span class="text-slate-300">${deps.length} pinned dependencies</span> <span class="text-slate-500">(${ecoStr})</span> queried live against <span class="text-amber-200">api.osv.dev/v1/querybatch</span> → <span class="${vulns.length ? 'text-nbred' : 'text-nbgreen'}">${vulns.length} known-vulnerability advisor${vulns.length === 1 ? 'y' : 'ies'}</span>.`;
+  if (!vulns.length) {
+    list.innerHTML = `<div class="rounded-lg border border-nbgreen/30 bg-nbgreen/5 px-5 py-4 flex items-center gap-3">
+      <i data-lucide="check-circle-2" class="w-5 h-5 text-nbgreen"></i>
+      <span class="text-sm text-emerald-100/85">No known vulnerabilities published for the pinned versions checked. (Vendored or transitively unpinned dependencies are not covered — see the honesty footer.)</span></div>`;
+    return;
+  }
+  const sevBadge = (s) => `<span class="sev-chip mono text-[10px] tracking-widest border rounded-full px-2 py-0.5 sev-${s}">${s.toUpperCase()}</span>`;
+  list.innerHTML = vulns.map(v => `
+    <div class="rounded-lg border ${v.severity === 'critical' ? 'border-nbred/40' : v.severity === 'high' ? 'border-[#ff9d5c]/35' : 'border-nbline'} bg-[#080d14] px-4 py-3.5">
+      <div class="flex items-start justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-2.5 flex-wrap">
+          ${sevBadge(v.severity)}
+          <a href="${esc(v.url || '#')}" target="_blank" rel="noopener" class="mono text-[12px] font-bold text-amber-200 hover:underline">${esc(v.osvId || '')}</a>
+          ${v.cveId ? `<span class="mono text-[11px] text-slate-400">${esc(v.cveId)}</span>` : ''}
+          ${v.cvss !== null && v.cvss !== undefined ? `<span class="mono text-[10px] text-slate-500 border border-nbline rounded px-1.5 py-0.5">CVSS ${v.cvss}</span>` : ''}
+          ${v.knownExploit ? '<span class="mono text-[10px] text-nbred border border-nbred/50 bg-nbred/10 rounded px-1.5 py-0.5">KNOWN-EXPLOIT INDICATORS (−10)</span>' : ''}
+        </div>
+        <span class="mono text-[11px] text-slate-500">via OSV.dev</span>
+      </div>
+      <div class="mt-2 text-[13px] text-slate-300">${esc(truncate(v.desc, 280))}</div>
+      <div class="mono text-[11px] text-slate-500 mt-2">affected: ${esc((v.packages || []).join(', '))} · manifest: ${esc(v.file)}</div>
+      <div class="text-[12px] text-emerald-200/80 mt-2">▸ ${esc(v.remed)}</div>
+    </div>`).join('');
+}
+
+/* ================= remediation checklist ================= */
+function renderRemediation(r) {
+  const listEl = document.getElementById('remedList');
+  const prog = document.getElementById('remedProgress');
+  const groups = new Map();
+  for (const f of r.findings) {
+    const key = f.sig || f.name;
+    const g = groups.get(key) || { name: f.name, remed: f.remed, sev: f.severity, files: new Set(), count: 0 };
+    g.files.add(f.file + (f.line ? ':' + f.line : ''));
+    g.count++;
+    if (sevOrder(f.severity) < sevOrder(g.sev)) g.sev = f.severity;
+    groups.set(key, g);
+  }
+  const items = [...groups.values()].sort((a, b) => sevOrder(a.sev) - sevOrder(b.sev));
+  prog.textContent = `0 of ${items.length} groups addressed`;
+  listEl.innerHTML = items.map((g, i) => `
+    <label class="rem-item flex items-start gap-3 rounded-lg border border-nbline bg-[#080d14] px-4 py-3 cursor-pointer hover:border-nbgreen/30 transition">
+      <input type="checkbox" class="rem-check mt-1 accent-[#00ff9d] w-4 h-4 shrink-0" data-i="${i}">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="sev-chip mono text-[10px] tracking-widest border rounded-full px-2 py-0.5 sev-${g.sev}">${g.sev.toUpperCase()}</span>
+          <span class="text-[13px] font-semibold text-slate-200">${esc(g.name)}</span>
+          <span class="mono text-[10px] text-slate-500">×${g.count} in ${g.files.size} location${g.files.size === 1 ? '' : 's'}</span>
+        </div>
+        <div class="rem-text text-[12.5px] text-slate-400 mt-1.5 leading-relaxed">${esc(g.remed)}</div>
+        <div class="mono text-[10px] text-slate-600 mt-1 truncate">→ ${esc([...g.files].slice(0, 4).join('  '))}${g.files.size > 4 ? ` +${g.files.size - 4} more` : ''}</div>
+      </div>
+    </label>`).join('');
+  let done = 0;
+  listEl.querySelectorAll('.rem-check').forEach(cb => {
+    cb.addEventListener('change', () => {
+      done = listEl.querySelectorAll('.rem-check:checked').length;
+      prog.textContent = `${done} of ${items.length} groups addressed`;
+    });
+  });
+}
+
+/* ================= AI terminal (progressive reveal) ================= */
+function typeAIContent(text) {
+  const el = document.getElementById('aiContent');
+  const blocks = renderMarkdown(text);
+  el.innerHTML = '';
+  let i = 0;
+  const step = () => {
+    const t0 = performance.now();
+    while (i < blocks.length && performance.now() - t0 < 24) {
+      const div = document.createElement('div');
+      div.innerHTML = blocks[i];
+      el.appendChild(div);
+      i++;
+    }
+    el.scrollTop = el.scrollHeight;
+    if (i < blocks.length) requestAnimationFrame(step);
+    else {
+      const cur = document.createElement('span');
+      cur.className = 'cursor';
+      el.appendChild(cur);
+    }
+  };
+  requestAnimationFrame(step);
+}
+
+/* ================= exports & badge ================= */
+function shieldsEscape(s) { return String(s).replace(/-/g, '--').replace(/_/g, '__').replace(/ /g, '_'); }
+function badgeMarkdown(r) {
+  const right = `${r.score}/100 · ${r.counts.critical} critical`;
+  const color = r.score >= 80 ? '00ff9d' : r.score >= 60 ? 'ffb703' : 'ff3b5c';
+  return `[![NULLBREACH](https://img.shields.io/badge/${shieldsEscape('NULLBREACH')}-${encodeURIComponent(shieldsEscape(right)).replace(/-/g, '--').replace(/_/g, '__')}-${color}?style=flat-square&labelColor=05070a)](${r.repo.url})\nScanned with NULLBREACH — ${r.score}/100 — ${r.counts.critical} critical · ${r.counts.high} high · ${r.counts.medium} medium · ${r.counts.low} low`;
+}
+function renderBadge(r) {
+  document.getElementById('badgeScore').textContent = r.score;
+  document.getElementById('badgeScore').style.color = scoreColor(r.score);
+  document.getElementById('badgeLine').textContent = `Scanned with NULLBREACH — ${r.score}/100 — ${r.counts.critical} critical · ${r.counts.high} high · ${r.counts.medium} medium · ${r.counts.low} low`;
+  document.getElementById('badgeMd').value = badgeMarkdown(r);
+}
+function download(name, content, type) {
+  const blob = new Blob([content], { type: type || 'application/octet-stream' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 400);
+}
+function reportFileName(r, ext) {
+  return `nullbreach-${r.repo.owner}-${r.repo.name}-${r.repo.branch.replace(/[^\w.-]+/g, '_')}.${ext}`;
+}
+function buildMarkdownReport(r) {
+  const L = [];
+  L.push(`# NULLBREACH Security Report — ${r.repo.owner}/${r.repo.name} (${r.repo.branch})`);
+  L.push('');
+  L.push(`**Tool:** NULLBREACH v${r.version} · **Generated:** ${r.generatedAt} · **Repo:** ${r.repo.url}`);
+  L.push('');
+  L.push(`## Security Score: ${r.score}/100 — verdict **${r.verdict}**`);
+  L.push('');
+  L.push(`Score formula: \`${r.formula}\` (floored at 0, capped at 100; −10 per OSV CVE with known-exploit indicators).`);
+  L.push('');
+  L.push(`| Severity | Count |`);
+  L.push(`| --- | --- |`);
+  L.push(`| Critical | ${r.counts.critical} |`);
+  L.push(`| High | ${r.counts.high} |`);
+  L.push(`| Medium | ${r.counts.medium} |`);
+  L.push(`| Low | ${r.counts.low} |`);
+  L.push('');
+  L.push(`**Scan stats:** ${r.stats.filesScanned} files scanned (${r.stats.filesTracked} tracked), ${r.stats.stringsChecked} strings entropy-tested, ${r.stats.signatures} signatures, ${r.stats.depsQueried} dependencies checked on OSV.dev, ${(r.stats.durationMs / 1000).toFixed(1)}s.`);
+  L.push('');
+  L.push('## Findings');
+  for (const f of r.findings) {
+    const loc = f.line ? `${f.file}:${f.line}` : f.file;
+    const id = f.cveId || f.osvId || f.cwe || '';
+    L.push(`### [${f.severity.toUpperCase()}] ${f.name} — ${loc} (${f.layer.toUpperCase()}${id ? ' · ' + id : ''})`);
+    L.push(f.desc);
+    if (f.snippet) L.push('> ' + f.snippet.replace(/\n/g, ' '));
+    L.push('**Fix:** ' + f.remed);
+    L.push('');
+  }
+  L.push('## AI Executive Briefing');
+  L.push('');
+  if (r.ai && r.ai.unavailable) L.push('_AI layer unavailable: ' + r.ai.reason + '_');
+  else L.push('_via ' + (r.ai.provider || 'AI') + '_\n\n' + (r.ai.text || ''));
+  L.push('');
+  L.push('---');
+  L.push('NULLBREACH combines entropy-based secret detection, a 40+ signature pattern library, real CVE data from OSV.dev, and AI semantic analysis. It is a strong first-pass triage tool but not a certified replacement for a full professional security audit. Always verify critical findings before acting.');
+  return L.join('\n');
+}
+
+/* ================= background particles ================= */
+function initParticles() {
+  const canvas = document.getElementById('bgfx');
+  const ctx = canvas.getContext('2d');
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { canvas.style.display = 'none'; return; }
+  let W, H, parts = [];
+  const resize = () => {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    const n = Math.min(90, Math.floor(W * H / 22000));
+    parts = Array.from({ length: n }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.35, vy: (Math.random() - 0.5) * 0.35,
+      r: Math.random() * 1.6 + 0.4,
+      c: Math.random() < 0.6 ? '0,255,157' : '34,211,238'
+    }));
+  };
+  window.addEventListener('resize', resize);
+  resize();
+  (function frame() {
+    ctx.clearRect(0, 0, W, H);
+    for (const p of parts) {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < -10) p.x = W + 10; if (p.x > W + 10) p.x = -10;
+      if (p.y < -10) p.y = H + 10; if (p.y > H + 10) p.y = -10;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${p.c},.5)`;
+      ctx.fill();
+    }
+    for (let i = 0; i < parts.length; i++) for (let j = i + 1; j < parts.length; j++) {
+      const a = parts[i], b = parts[j];
+      const dx = a.x - b.x, dy = a.y - b.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < 12000) {
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+        ctx.strokeStyle = `rgba(0,255,157,${0.10 * (1 - d2 / 12000)})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+    requestAnimationFrame(frame);
+  })();
+}
+
+/* ================= settings drawer ================= */
+function openSettings() {
+  const d = document.getElementById('settingsDrawer');
+  d.classList.remove('hidden');
+  requestAnimationFrame(() => document.getElementById('settingsPanel').classList.remove('translate-x-full'));
+}
+function closeSettings() {
+  const d = document.getElementById('settingsDrawer');
+  document.getElementById('settingsPanel').classList.add('translate-x-full');
+  setTimeout(() => d.classList.add('hidden'), 300);
+}
+
+/* ================= scrollspy ================= */
+function initScrollSpy() {
+  const links = [...document.querySelectorAll('.nav-link')];
+  const map = new Map(links.map(l => [l.dataset.target, l]));
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('text-nbgreen', 'bg-nbgreen/5'));
+        const l = map.get(e.target.id);
+        if (l) l.classList.add('text-nbgreen', 'bg-nbgreen/5');
+      }
+    }
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  ['nb-summary', 'nb-findings', 'nb-deps', 'nb-ai', 'nb-remediation', 'nb-export'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) io.observe(el);
+  });
+}
+
+/* ================= init ================= */
+document.addEventListener('DOMContentLoaded', () => {
+  loadKeys();
+  document.getElementById('heroSigCount').textContent = SIGNATURES.length + '+';
+  document.getElementById('engineBadge').textContent = `ENGINE v${NB_VERSION} · ENTROPY + ${SIGNATURES.length} SIGS + OSV.DEV + AI`;
+  document.getElementById('year').textContent = new Date().getFullYear();
+  initParticles();
+  initScrollSpy();
+
+  document.getElementById('btnSettings').addEventListener('click', openSettings);
+  document.getElementById('btnCloseSettings').addEventListener('click', closeSettings);
+  document.getElementById('settingsBackdrop').addEventListener('click', closeSettings);
+  document.getElementById('btnSaveKeys').addEventListener('click', () => {
+    persistKeys();
+    const anyAI = state.keys.groq || state.keys.gemini || state.keys.mistral;
+    showToast(anyAI ? 'Keys saved in localStorage — AI cascade active' : 'Saved — note: no AI key set, AI layer will be skipped');
+    closeSettings();
+  });
+  document.getElementById('btnClearKeys').addEventListener('click', () => {
+    for (const id of ['keyGroq', 'keyGemini', 'keyMistral', 'keyGithub']) document.getElementById(id).value = '';
+    persistKeys();
+    showToast('Stored keys cleared');
+  });
+  document.querySelectorAll('.eye-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.eye);
+      if (!input) return;
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      btn.innerHTML = `<i data-lucide="${showing ? 'eye' : 'eye-off'}" class="w-4 h-4"></i>`;
+      lucide.createIcons();
+    });
+  });
+
+  document.getElementById('scanForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    runScan(document.getElementById('repoInput').value);
+  });
+  document.querySelectorAll('.example-repo').forEach(b => {
+    b.addEventListener('click', () => {
+      document.getElementById('repoInput').value = b.textContent.trim();
+      runScan(b.textContent.trim());
+    });
+  });
+
+  document.querySelectorAll('.sev-filter').forEach(b => {
+    b.addEventListener('click', () => {
+      const sev = b.dataset.sev;
+      if (sev === 'all') state.sevFilter.clear();
+      else {
+        if (state.sevFilter.has(sev)) state.sevFilter.delete(sev);
+        else state.sevFilter.add(sev);
+      }
+      document.querySelectorAll('.sev-filter').forEach(x => {
+        const on = x.dataset.sev === 'all' ? state.sevFilter.size === 0 : state.sevFilter.has(x.dataset.sev);
+        x.style.opacity = on ? '1' : '.35';
+      });
+      applyFilters();
+    });
+  });
+  document.getElementById('filtLayer').addEventListener('change', (e) => { state.layerFilter = e.target.value; applyFilters(); });
+  document.getElementById('filtSearch').addEventListener('input', (e) => { state.textFilter = e.target.value.trim(); applyFilters(); });
+  document.querySelectorAll('.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.sort;
+      if (state.sort.key === k) state.sort.dir = state.sort.dir === 'asc' ? 'desc' : 'asc';
+      else { state.sort.key = k; state.sort.dir = k === 'severity' ? 'asc' : 'asc'; }
+      applyFilters();
+    });
+  });
+
+  document.getElementById('aiCopy').addEventListener('click', () => {
+    const r = state.report;
+    if (!r || !r.ai) return;
+    copyText(r.ai.unavailable ? 'AI layer unavailable: ' + r.ai.reason : r.ai.text, 'AI briefing copied');
+  });
+  document.getElementById('btnExportJson').addEventListener('click', () => {
+    if (!state.report) return;
+    download(reportFileName(state.report, 'json'), JSON.stringify(state.report, null, 2), 'application/json');
+    showToast('JSON report downloaded');
+  });
+  document.getElementById('btnExportMd').addEventListener('click', () => {
+    if (!state.report) return;
+    download(reportFileName(state.report, 'md'), buildMarkdownReport(state.report), 'text/markdown');
+    showToast('Markdown report downloaded');
+  });
+  document.getElementById('btnCopyBadge').addEventListener('click', () => {
+    if (!state.report) return;
+    copyText(badgeMarkdown(state.report), 'README badge Markdown copied');
+  });
+
+  lucide.createIcons();
+});
+</script>
+</body>
+</html>
