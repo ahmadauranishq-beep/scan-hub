@@ -1,0 +1,83 @@
+name: Security Scanner Engine
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  security-scan:
+    if: contains(github.event.issue.labels.*.name, 'scan-request') || contains(github.event.issue.title, '[فحص]')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - name: جلب ملفات الأداة
+        uses: actions/checkout@v4
+
+      - name: إعداد بيئة Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: استخراج رابط المشروع المطلوب فحصه
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: node scripts/parse-issue.js
+
+      - name: تحميل كود المستودع المستهدف
+        run: |
+          if [ -z "$TARGET_REPO_URL" ]; then
+            echo "لم يتم العثور على رابط صالح"
+            exit 1
+          fi
+          git clone --depth 1 "$TARGET_REPO_URL" target_repo
+
+      - name: فحص الأسرار والتسريبات (Gitleaks)
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz | tar -xz
+          ./gitleaks detect --source=target_repo --report-path=gitleaks.json --report-format=json --no-banner || true
+
+      - name: فحص الثغرات البرمجية (Semgrep)
+        run: |
+          pip install semgrep
+          semgrep scan --config=auto --json --output=semgrep.json target_repo || true
+
+      - name: فحص الحزم والمكتبات (Trivy)
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b . v0.50.1
+          ./trivy fs --format json --output trivy.json target_repo || true
+
+      - name: توحيد النتائج
+        run: node scripts/normalize.js
+
+      - name: تجهيز التقرير النهائي
+        run: node scripts/summarize.js
+
+      - name: نشر التقرير كتعليق على الطلب
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            if (fs.existsSync('summary.md')) {
+              const body = fs.readFileSync('summary.md', 'utf8');
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
+      - name: حفظ التقارير الكاملة
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-scan-reports
+          path: |
+            gitleaks.json
+            semgrep.json
+            trivy.json
+            normalized.json
+            summary.md
