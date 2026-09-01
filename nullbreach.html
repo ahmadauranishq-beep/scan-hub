@@ -219,50 +219,32 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
 
     <div class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
       <p class="text-xs leading-relaxed text-slate-400">
-        NULLBREACH runs a fallback cascade across AI providers. Configure at least one key to enable
-        the AI reasoning layer. The static layers (entropy, 40+ signatures) and the OSV.dev CVE feed need <span class="text-nbgreen">no keys at all</span>.
+        NULLBREACH runs a priority key pool: <span class="text-nbgreen">your keys first</span> (in the order you set),
+        then the <span class="text-nbcyan">built-in community keys</span> as fallback. The static layers (entropy, 65 signatures)
+        and the OSV.dev CVE feed need <span class="text-nbgreen">no keys at all</span>.
       </p>
 
       <div>
-        <div class="flex items-center justify-between mb-1.5">
-          <label for="keyGroq" class="text-sm font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-nbgreen" id="dotGroq"></span>Groq API Key <span class="mono text-[10px] text-slate-500">PRIMARY</span></label>
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-sm font-medium flex items-center gap-2">Your Keys <span class="mono text-[10px] text-nbgreen border border-nbgreen/40 bg-nbgreen/10 rounded px-1.5 py-0.5">MAX PRIORITY</span></label>
+          <button id="btnAddKey" class="btn-ghost mono text-[10px] tracking-widest rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 transition"><i data-lucide="plus" class="w-3.5 h-3.5"></i> ADD KEY</button>
         </div>
-        <div class="relative">
-          <input id="keyGroq" type="password" autocomplete="off" spellcheck="false" placeholder="gsk_…"
-            class="mono w-full bg-[#0a0f16] border border-nbline rounded-lg px-3 py-2.5 pr-10 text-sm text-slate-200">
-          <button type="button" data-eye="keyGroq" class="eye-toggle absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-500 hover:text-nbgreen">
-            <i data-lucide="eye" class="w-4 h-4"></i>
-          </button>
-        </div>
-        <p class="mono text-[10px] text-slate-500 mt-1.5">model: llama-3.3-70b-versatile</p>
+        <div id="userKeysList" class="space-y-2.5"></div>
+        <p class="mono text-[10px] text-slate-500 mt-2 leading-relaxed">first row = maximum priority · reorder with ↑/↓ · when your keys are exhausted or missing, the built-in keys take over automatically (with a notice)</p>
       </div>
 
-      <div>
-        <div class="flex items-center justify-between mb-1.5">
-          <label for="keyGemini" class="text-sm font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-slate-600" id="dotGemini"></span>Gemini API Key <span class="mono text-[10px] text-slate-500">FALLBACK 1</span></label>
+      <div class="rounded-lg border border-nbcyan/25 bg-nbcyan/5 px-4 py-3.5">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="text-[13px] font-semibold text-cyan-100 flex items-center gap-2"><i data-lucide="infinity" class="w-4 h-4 text-nbcyan shrink-0"></i>Built-in Fallback Keys</div>
+            <p class="text-[11px] text-cyan-100/70 mt-1 leading-relaxed">Bundled community keys (Groq → Gemini → Mistral) that make NULLBREACH work with zero setup. Used after your keys, and every use is announced on screen. Shared quota — expect throttling.</p>
+            <div id="builtinList" class="mono text-[10px] text-cyan-100/60 mt-2.5 space-y-1"></div>
+          </div>
+          <label class="relative inline-flex cursor-pointer items-center shrink-0 mt-0.5" title="Toggle built-in key fallback">
+            <input type="checkbox" id="toggleBuiltin" class="peer sr-only" checked>
+            <div class="h-6 w-11 rounded-full bg-slate-700 transition after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-nbcyan/70 peer-checked:after:translate-x-5"></div>
+          </label>
         </div>
-        <div class="relative">
-          <input id="keyGemini" type="password" autocomplete="off" spellcheck="false" placeholder="AIza…"
-            class="mono w-full bg-[#0a0f16] border border-nbline rounded-lg px-3 py-2.5 pr-10 text-sm text-slate-200">
-          <button type="button" data-eye="keyGemini" class="eye-toggle absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-500 hover:text-nbgreen">
-            <i data-lucide="eye" class="w-4 h-4"></i>
-          </button>
-        </div>
-        <p class="mono text-[10px] text-slate-500 mt-1.5">model: gemini-2.0-flash</p>
-      </div>
-
-      <div>
-        <div class="flex items-center justify-between mb-1.5">
-          <label for="keyMistral" class="text-sm font-medium flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-slate-600" id="dotMistral"></span>Mistral API Key <span class="mono text-[10px] text-slate-500">FALLBACK 2</span></label>
-        </div>
-        <div class="relative">
-          <input id="keyMistral" type="password" autocomplete="off" spellcheck="false" placeholder="…"
-            class="mono w-full bg-[#0a0f16] border border-nbline rounded-lg px-3 py-2.5 pr-10 text-sm text-slate-200">
-          <button type="button" data-eye="keyMistral" class="eye-toggle absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-500 hover:text-nbgreen">
-            <i data-lucide="eye" class="w-4 h-4"></i>
-          </button>
-        </div>
-        <p class="mono text-[10px] text-slate-500 mt-1.5">model: mistral-large-latest</p>
       </div>
 
       <div class="pt-2 border-t border-nbline">
@@ -282,8 +264,8 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
       <div class="flex items-start gap-2.5 rounded-lg border border-nbgreen/25 bg-nbgreen/5 px-4 py-3">
         <i data-lucide="shield-check" class="w-4 h-4 text-nbgreen mt-0.5 shrink-0"></i>
         <p class="text-[11px] leading-relaxed text-emerald-100/80">
-          Keys never leave your browser. They are stored only in this browser's <span class="mono text-nbgreen">localStorage</span>
-          and sent directly over HTTPS to the provider you configured — there is no NULLBREACH backend.
+          Your keys never leave your browser — stored only in this browser's <span class="mono text-nbgreen">localStorage</span>
+          and sent directly over HTTPS to the provider. There is no NULLBREACH backend. Built-in community keys are embedded in this file and shared by everyone — treat them as best-effort only.
         </p>
       </div>
     </div>
@@ -476,9 +458,14 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
               <span><b>AI unavailable</b> — every configured provider failed (<span id="aiFailReason" class="mono">no keys</span>).
               Showing full Layer 1–3 static results only; add a Groq / Gemini / Mistral key in <b>API Keys</b> for semantic review.</span>
             </div>
-            <div id="aiOkLine" class="hidden mt-5 mono text-[11px] text-emerald-300/80 flex items-center gap-2">
+            <div id="aiOkLine" class="hidden mt-5 mono text-[11px] text-emerald-300/80 flex items-center gap-2 flex-wrap">
               <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
               AI reasoning layer engaged via <span id="aiProvider" class="text-nbgreen font-bold"></span>
+              <span id="aiOrigin" class="mono text-[10px] rounded px-1.5 py-0.5 border"></span>
+            </div>
+            <div id="builtinNote" class="hidden mt-4 rounded-lg border border-nbcyan/30 bg-nbcyan/5 px-4 py-3 text-[12px] text-cyan-100/85 flex items-start gap-2.5">
+              <i data-lucide="bell-ring" class="w-4 h-4 mt-0.5 shrink-0 text-nbcyan"></i>
+              <span><b>تنبيه · Notice:</b> your key was missing or exhausted, so this briefing was served by the <b>built-in community keys</b> (shared quota, may throttle). Add your own Groq / Gemini / Mistral key in <b>API Keys</b> — it always gets maximum priority.</span>
             </div>
           </div>
         </div>
@@ -1446,7 +1433,9 @@ function parseAIFindings(aiText) {
 'use strict';
 /* ================= state ================= */
 const state = {
-  keys: { groq: '', gemini: '', mistral: '', github: '' },
+  userKeys: [],            /* [{ id, provider: 'groq'|'gemini'|'mistral', key }] — priority = array order */
+  allowBuiltin: true,      /* built-in community keys fallback */
+  github: '',              /* optional repo-access token */
   scanning: false,
   report: null,
   filtered: [],
@@ -1456,51 +1445,142 @@ const state = {
   textFilter: ''
 };
 
-const LS_KEY = 'nullbreach.keys.v1';
+const LS_KEY = 'nullbreach.keys.v2';
+const LS_KEY_V1 = 'nullbreach.keys.v1';
+
+/* ---- built-in community keys (lightly XOR+base64 wrapped so naive scrapers don't harvest them;
+        this is NOT encryption — anyone unpacking the file can recover them) ---- */
+const NB_PAD = 'NULLBREACH';
+function nbUnseed(b64) {
+  try {
+    if (!window.atob) return '';
+    const raw = window.atob(b64);
+    let out = '';
+    for (let i = 0; i < raw.length; i++) out += String.fromCharCode(raw.charCodeAt(i) ^ NB_PAD.charCodeAt(i % NB_PAD.length));
+    return out;
+  } catch (e) { return ''; }
+}
+const NB_BUILTIN_SEEDS = [
+  { provider: 'groq',    b64: 'KSYnEywrFgQaPQYHJQsHOQEIKTsoHn0dFRUhOCF7CAx/BhETBwsnHiANOikjZxMFBjEMFHQccAc=' },
+  { provider: 'gemini',  b64: 'DwRiDSBqFw91AgEhDRklP3ADbhwmGigNCmMQKxwtBDEvGW8EIXEOGjkiLgdwZ3EGBT8eBzs=' },
+  { provider: 'mistral', b64: 'dzJ/HXJqfDF7JCA3fnwkNwISDQo6IXgICwI2FQUrKDw=' }
+];
+const NB_BUILTIN_KEYS = NB_BUILTIN_SEEDS.map(s => ({ provider: s.provider, key: () => nbUnseed(s.b64) }));
+
+function hasUserKeys() { return state.userKeys.some(k => k && k.key && k.key.trim() && AI_PROVIDER_MAP[k.provider]); }
 
 function loadKeys() {
   try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) {
-      const obj = JSON.parse(raw);
-      for (const k of ['groq', 'gemini', 'mistral', 'github']) {
-        if (typeof obj[k] === 'string') state.keys[k] = obj[k];
+    const v1 = localStorage.getItem(LS_KEY_V1);
+    const v2 = localStorage.getItem(LS_KEY);
+    if (v1 && !v2) {
+      const o = JSON.parse(v1);
+      const list = [];
+      for (const prov of ['groq', 'gemini', 'mistral']) {
+        if (typeof o[prov] === 'string' && o[prov].trim()) list.push({ id: 'mig_' + prov, provider: prov, key: o[prov].trim() });
       }
+      state.userKeys = list;
+      state.github = typeof o.github === 'string' ? o.github : '';
+      persistKeys();
+      try { localStorage.removeItem(LS_KEY_V1); } catch (e) { /* ignore */ }
+      syncKeyUI();
+      updateKeyDots();
+      return;
+    }
+    if (v2) {
+      const o = JSON.parse(v2);
+      if (Array.isArray(o.userKeys)) state.userKeys = o.userKeys.filter(k => k && AI_PROVIDERS[k.provider] && typeof k.key === 'string');
+      if (typeof o.allowBuiltin === 'boolean') state.allowBuiltin = o.allowBuiltin;
+      if (typeof o.github === 'string') state.github = o.github;
     }
   } catch (e) { /* private mode / corrupt storage */ }
-  for (const k of ['groq', 'gemini', 'mistral', 'github']) {
-    const el = document.getElementById(k === 'github' ? 'keyGithub' : 'key' + k.charAt(0).toUpperCase() + k.slice(1));
-    if (el) el.value = state.keys[k];
-  }
+  syncKeyUI();
   updateKeyDots();
 }
 
 function persistKeys() {
-  for (const id of ['keyGroq', 'keyGemini', 'keyMistral', 'keyGithub']) {
-    const el = document.getElementById(id);
-    const k = id.replace(/^key/, '').toLowerCase();
-    state.keys[k] = el ? el.value.trim() : '';
-  }
-  try { localStorage.setItem(LS_KEY, JSON.stringify(state.keys)); } catch (e) { /* ignore */ }
+  syncStateFromDOM();
+  try { localStorage.setItem(LS_KEY, JSON.stringify({ userKeys: state.userKeys, allowBuiltin: state.allowBuiltin, github: state.github })); } catch (e) { /* ignore */ }
   updateKeyDots();
 }
 
-function updateKeyDots() {
-  const dot = (id, on, optional) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.className = 'w-2 h-2 rounded-full ' + (on ? 'bg-nbgreen shadow-[0_0_8px_rgba(0,255,157,.9)]' : (optional ? 'bg-slate-600' : 'bg-amber-400'));
-  };
-  dot('dotGroq', !!state.keys.groq, false);
-  dot('dotGemini', !!state.keys.gemini, false);
-  dot('dotMistral', !!state.keys.mistral, false);
-  dot('dotGithub', !!state.keys.github, true);
-  const anyAI = !!(state.keys.groq || state.keys.gemini || state.keys.mistral);
-  const kd = document.getElementById('keyDot');
-  if (kd) {
-    kd.className = 'w-2 h-2 rounded-full ' + (anyAI ? 'bg-nbgreen' : 'bg-amber-400');
-    kd.title = anyAI ? 'AI keys configured' : 'No AI keys configured — AI layer will be skipped';
+function syncStateFromDOM() {
+  const gh = document.getElementById('keyGithub');
+  if (gh) state.github = gh.value.trim();
+  const tb = document.getElementById('toggleBuiltin');
+  if (tb) state.allowBuiltin = !!tb.checked;
+}
+
+function syncKeyUI() {
+  const gh = document.getElementById('keyGithub');
+  if (gh) gh.value = state.github;
+  const tb = document.getElementById('toggleBuiltin');
+  if (tb) tb.checked = state.allowBuiltin;
+  renderUserKeys();
+  renderBuiltinList();
+}
+
+function maskKey(k) { k = String(k || ''); return k.length > 12 ? k.slice(0, 7) + '…' + k.slice(-4) : '••••'; }
+
+function renderUserKeys() {
+  const list = document.getElementById('userKeysList');
+  if (!list) return;
+  if (!state.userKeys.length) {
+    list.innerHTML = '<div class="mono text-[11px] text-slate-600 border border-dashed border-nbline rounded-lg px-3 py-3.5 text-center">no personal keys — the built-in community keys will serve the AI layer</div>';
+    return;
   }
+  list.innerHTML = state.userKeys.map((uk, i) => `
+    <div class="rounded-lg border ${i === 0 ? 'border-nbgreen/40' : 'border-nbline'} bg-[#0a0f16] px-3 py-2.5" data-row="${i}">
+      <div class="flex items-center gap-2">
+        <span class="mono text-[9px] tracking-widest border rounded px-1.5 py-0.5 ${i === 0 ? 'text-nbgreen border-nbgreen/50 bg-nbgreen/10' : 'text-slate-500 border-nbline'}">${i === 0 ? 'PRIMARY' : 'P' + (i + 1)}</span>
+        <select data-act="provider" class="mono text-[11px] bg-[#080d14] border border-nbline rounded px-1.5 py-1 text-slate-300">
+          <option value="groq"${uk.provider === 'groq' ? ' selected' : ''}>Groq · llama-3.3-70b</option>
+          <option value="gemini"${uk.provider === 'gemini' ? ' selected' : ''}>Gemini · 2.0-flash</option>
+          <option value="mistral"${uk.provider === 'mistral' ? ' selected' : ''}>Mistral · large</option>
+        </select>
+        <span class="flex-1"></span>
+        <button type="button" data-act="up" title="raise priority" class="p-1 rounded text-slate-500 hover:text-nbgreen ${i === 0 ? 'opacity-25 pointer-events-none' : ''}"><i data-lucide="arrow-up" class="w-3.5 h-3.5"></i></button>
+        <button type="button" data-act="down" title="lower priority" class="p-1 rounded text-slate-500 hover:text-nbgreen ${i === state.userKeys.length - 1 ? 'opacity-25 pointer-events-none' : ''}"><i data-lucide="arrow-down" class="w-3.5 h-3.5"></i></button>
+        <button type="button" data-act="eye" title="show/hide" class="p-1 rounded text-slate-500 hover:text-nbgreen"><i data-lucide="eye" class="w-3.5 h-3.5"></i></button>
+        <button type="button" data-act="del" title="remove" class="p-1 rounded text-slate-500 hover:text-nbred"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+      </div>
+      <input type="password" data-act="key" value="${esc(uk.key)}" placeholder="paste ${uk.provider} key…" autocomplete="off" spellcheck="false"
+        class="mono w-full mt-2 bg-[#080d14] border border-nbline rounded px-2.5 py-1.5 text-[12px] text-slate-200">
+    </div>`).join('');
+  list.querySelectorAll('[data-row]').forEach(row => {
+    const i = parseInt(row.dataset.row, 10);
+    row.querySelector('[data-act="provider"]').addEventListener('change', (e) => { state.userKeys[i].provider = e.target.value; persistKeys(); renderUserKeys(); });
+    row.querySelector('[data-act="key"]').addEventListener('input', (e) => { state.userKeys[i].key = e.target.value; updateKeyDots(); });
+    row.querySelector('[data-act="up"]').addEventListener('click', () => { if (i > 0) { [state.userKeys[i - 1], state.userKeys[i]] = [state.userKeys[i], state.userKeys[i - 1]]; persistKeys(); renderUserKeys(); } });
+    row.querySelector('[data-act="down"]').addEventListener('click', () => { if (i < state.userKeys.length - 1) { [state.userKeys[i + 1], state.userKeys[i]] = [state.userKeys[i], state.userKeys[i + 1]]; persistKeys(); renderUserKeys(); } });
+    row.querySelector('[data-act="del"]').addEventListener('click', () => { state.userKeys.splice(i, 1); persistKeys(); renderUserKeys(); });
+    row.querySelector('[data-act="eye"]').addEventListener('click', (e) => {
+      const inp = row.querySelector('[data-act="key"]');
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      e.currentTarget.innerHTML = `<i data-lucide="${show ? 'eye-off' : 'eye'}" class="w-3.5 h-3.5"></i>`;
+      lucide.createIcons();
+    });
+  });
+  lucide.createIcons();
+}
+
+function renderBuiltinList() {
+  const el = document.getElementById('builtinList');
+  if (!el) return;
+  el.innerHTML = NB_BUILTIN_KEYS.map((b, i) => {
+    const p = AI_PROVIDER_MAP[b.provider];
+    return `<div class="flex items-center justify-between gap-2"><span>FALLBACK #${i + 1} · ${p.id.toUpperCase()}</span><span class="text-cyan-100/45">${maskKey(b.key())}</span></div>`;
+  }).join('');
+}
+
+function updateKeyDots() {
+  const kd = document.getElementById('keyDot');
+  if (!kd) return;
+  const user = hasUserKeys();
+  const anyAI = user || state.allowBuiltin;
+  kd.className = 'w-2 h-2 rounded-full ' + (user ? 'bg-nbgreen shadow-[0_0_8px_rgba(0,255,157,.9)]' : anyAI ? 'bg-nbcyan' : 'bg-amber-400');
+  kd.title = user ? 'Your keys configured (max priority)' : anyAI ? 'Using built-in community keys' : 'No AI keys available — AI layer disabled';
 }
 
 /* ================= helpers ================= */
@@ -1553,7 +1633,7 @@ function parseRepoInput(input) {
 
 async function ghFetch(path) {
   const headers = { 'Accept': 'application/vnd.github+json', 'User-Agent': 'NULLBREACH' };
-  if (state.keys.github) headers['Authorization'] = 'Bearer ' + state.keys.github;
+  if (state.github) headers['Authorization'] = 'Bearer ' + state.github;
   const r = await fetch('https://api.github.com' + path, { headers });
   if (r.status === 404) throw new NBError('Repository not found (404). If it is private, add a GitHub token in the API Keys panel.');
   if (r.status === 403) {
@@ -1613,7 +1693,7 @@ function prioritizeFiles(files, maxCount) {
 async function fetchFileContents(owner, repo, ref, files) {
   const out = [];
   let done = 0;
-  const useAPI = !!state.keys.github;
+  const useAPI = !!state.github;
   const batches = chunk(files, 8);
   for (const batch of batches) {
     const results = await Promise.all(batch.map(async (f) => {
@@ -1622,7 +1702,7 @@ async function fetchFileContents(owner, repo, ref, files) {
         if (useAPI) {
           const p = f.path.split('/').map(encodeURIComponent).join('/');
           r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${p}?ref=${encodeURIComponent(ref)}`,
-            { headers: { 'Accept': 'application/vnd.github.raw', 'Authorization': 'Bearer ' + state.keys.github, 'User-Agent': 'NULLBREACH' } });
+            { headers: { 'Accept': 'application/vnd.github.raw', 'Authorization': 'Bearer ' + state.github, 'User-Agent': 'NULLBREACH' } });
         } else {
           const p = f.path.split('/').map(encodeURIComponent).join('/');
           r = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(ref)}/${p}`);
@@ -1675,6 +1755,7 @@ const AI_PROVIDERS = [
   { id: 'mistral', label: 'Mistral · mistral-large-latest', kind: 'openai', keyField: 'mistral',
     url: 'https://api.mistral.ai/v1/chat/completions', model: 'mistral-large-latest' }
 ];
+const AI_PROVIDER_MAP = Object.fromEntries(AI_PROVIDERS.map(p => [p.id, p]));
 
 async function callAIProvider(p, prompt, key) {
   const ctrl = new AbortController();
@@ -1719,23 +1800,61 @@ async function callAIProvider(p, prompt, key) {
   }
 }
 
-async function aiCascade(prompt) {
-  const failures = [];
-  for (const p of AI_PROVIDERS) {
-    const key = state.keys[p.keyField];
-    if (!key) { failures.push(p.id + ': no key'); continue; }
-    nbLog(`Engaging AI reasoning layer → ${p.label}…`);
-    try {
-      const text = await callAIProvider(p, prompt, key);
-      nbLog(`AI briefing complete (${p.label}).`, 'ok');
-      return { text, provider: p.label, failures };
-    } catch (e) {
-      const msg = e && e.name === 'AbortError' ? 'timed out' : (e.message || 'error');
-      nbLog(`${p.id} failed: ${truncate(msg, 120)} — falling back…`, 'warn');
-      failures.push(p.id + ': ' + msg);
+/* Priority pool: your keys in your chosen order → then the built-in community keys (Groq → Gemini → Mistral) */
+function buildProviderQueue() {
+  const q = [];
+  const seen = new Set();
+  for (const uk of state.userKeys) {
+    const p = AI_PROVIDER_MAP[uk.provider];
+    const k = (uk.key || '').trim();
+    if (!p || !k) continue;
+    if (seen.has(p.id + ':' + k)) continue;
+    seen.add(p.id + ':' + k);
+    q.push(Object.assign({}, p, { key: k, origin: 'user' }));
+  }
+  if (state.allowBuiltin) {
+    for (const b of NB_BUILTIN_KEYS) {
+      const p = AI_PROVIDER_MAP[b.provider];
+      const k = b.key();
+      if (!p || !k || seen.has(p.id + ':' + k)) continue;
+      seen.add(p.id + ':' + k);
+      q.push(Object.assign({}, p, { key: k, origin: 'builtin' }));
     }
   }
-  return { text: null, provider: null, failures };
+  return q;
+}
+
+const EXHAUSTED_RE = /(rate.?limit|429|quota|exceed|too many requests|insufficient|credits?|billing|usage.?limit)/i;
+
+async function aiCascade(prompt) {
+  const queue = buildProviderQueue();
+  const failures = [];
+  if (!queue.length) return { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried: 0, failures: ['no keys available'] };
+  let userKeysTried = 0, userFailed = false, exhaustedHit = false;
+  for (const p of queue) {
+    if (p.origin === 'user') userKeysTried++;
+    nbLog(`Engaging AI reasoning layer → ${p.label} ${p.origin === 'user' ? '(YOUR key · max priority)' : '(built-in community key)'}…`);
+    try {
+      const text = await callAIProvider(p, prompt, p.key);
+      nbLog(`AI briefing complete (${p.label}${p.origin === 'builtin' ? ' · built-in key' : ''}).`, 'ok');
+      if (p.origin === 'builtin' && userFailed) {
+        showToast('Your key' + (userKeysTried > 1 ? 's were' : ' was') + ' exhausted — built-in community key took over');
+        exhaustedHit = true;
+      }
+      return { text, provider: p.label, origin: p.origin, usedBuiltin: p.origin === 'builtin', userKeysTried, failures, exhaustedHit };
+    } catch (e) {
+      const msg = e && e.name === 'AbortError' ? 'timed out' : (e.message || 'error');
+      if (p.origin === 'user') {
+        userFailed = true;
+        if (EXHAUSTED_RE.test(msg)) nbLog(`Your ${p.id} key looks exhausted/limited (${truncate(msg, 90)}) — falling back to built-in keys…`, 'warn');
+        else nbLog(`Your ${p.id} key failed: ${truncate(msg, 100)} — falling back…`, 'warn');
+      } else {
+        nbLog(`Built-in ${p.id} key failed: ${truncate(msg, 100)} — trying next fallback…`, 'warn');
+      }
+      failures.push(`${p.id}(${p.origin}): ${msg}`);
+    }
+  }
+  return { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried, failures, exhaustedHit };
 }
 
 /* ================= main scan pipeline ================= */
@@ -1779,7 +1898,7 @@ async function runScan(input) {
     const chosen = prioritizeFiles(relevant, 500);
     nbLog(`${blobs.length} tracked files → ${relevant.length} relevant${relevant.length > chosen.length ? `, prioritized to ${chosen.length} (repo too large for full download)` : ''}.`);
 
-    nbLog(`Fetching file contents${state.keys.github ? ' via GitHub contents API (token)' : ' via raw.githubusercontent.com'}…`);
+    nbLog(`Fetching file contents${state.github ? ' via GitHub contents API (token)' : ' via raw.githubusercontent.com'}…`);
     const files = (await fetchFileContents(repo.owner, repo.name, branch, chosen)).filter(f => f.content);
     const totalBytes = files.reduce((a, f) => a + f.content.length, 0);
     nbLog(`Downloaded ${files.length} files (${(totalBytes / 1024).toFixed(0)} KB).`, 'ok');
@@ -1842,8 +1961,8 @@ async function runScan(input) {
     nbLog(`Score model: 100 − 20×${counts.critical} − 12×${counts.high} − 5×${counts.medium} − 2×${counts.low}${exploitHits ? ` − 10×${exploitHits} (known-exploit CVEs)` : ''} → ${score}/100 (${verdict}).`, score >= 85 && counts.critical === 0 ? 'ok' : 'warn');
 
     /* AI layer */
-    const anyAIKey = state.keys.groq || state.keys.gemini || state.keys.mistral;
-    let ai = { text: null, provider: null, failures: [] };
+    const anyAIKey = hasUserKeys() || state.allowBuiltin;
+    let ai = { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried: 0, failures: [] };
     if (anyAIKey) {
       const context = buildAIContext(files, findings);
       nbLog(`Assembling AI context: ${context.fileCount} files${context.sampled ? ' (risk-ranked sample of ' + files.length + ')' : ' (full contents)'}${context.truncated ? ', truncated to context budget' : ''}.`);
@@ -1851,7 +1970,7 @@ async function runScan(input) {
       const prompt = buildAIPrompt(promptRepo, findings, context);
       ai = await aiCascade(prompt);
     } else {
-      nbLog('No AI keys configured — skipping AI reasoning layer (static + OSV results remain fully usable).', 'warn');
+      nbLog('No AI keys available (no personal keys, built-in fallback disabled) — skipping AI layer; static + OSV results remain fully usable.', 'warn');
     }
 
     const durationMs = performance.now() - t0;
@@ -1862,7 +1981,9 @@ async function runScan(input) {
       score, verdict, counts, exploitHits,
       formula: `100 − 20×${counts.critical} − 12×${counts.high} − 5×${counts.medium} − 2×${counts.low}${exploitHits ? ` − 10×${exploitHits}` : ''} = ${score}`,
       findings, dependencies: { parsed: deps, queried: osvQueried },
-      ai: ai.text ? { provider: ai.provider, text: ai.text } : { unavailable: true, reason: ai.failures.join('; ') || 'no keys configured' },
+      ai: ai.text
+        ? { provider: ai.provider, text: ai.text, origin: ai.origin, usedBuiltin: ai.usedBuiltin, userKeysTried: ai.userKeysTried, exhausted: !!ai.exhaustedHit, failures: ai.failures }
+        : { unavailable: true, reason: ai.failures.join('; ') || 'no keys available' },
       aiFindings: ai.text ? parseAIFindings(ai.text) : [],
       stats: { filesTracked: blobs.length, filesRelevant: relevant.length, filesScanned: files.length, bytes: totalBytes, stringsChecked: stringsTotal, signatures: SIGNATURES.length, depsQueried: osvQueried, durationMs: Math.round(durationMs) }
     };
@@ -2025,7 +2146,13 @@ function renderResults(r) {
     document.getElementById('aiBanner').classList.add('hidden');
     document.getElementById('aiOkLine').classList.remove('hidden');
     document.getElementById('aiProvider').textContent = r.ai.provider || '';
-    document.getElementById('aiProviderLabel').textContent = 'AI://' + (r.ai.provider || 'model');
+    const orgEl = document.getElementById('aiOrigin');
+    orgEl.textContent = r.ai.usedBuiltin ? 'BUILT-IN KEY' : 'YOUR KEY';
+    orgEl.className = 'mono text-[10px] rounded px-1.5 py-0.5 border ' + (r.ai.usedBuiltin ? 'text-nbcyan border-nbcyan/40 bg-nbcyan/10' : 'text-nbgreen border-nbgreen/40 bg-nbgreen/10');
+    document.getElementById('aiProviderLabel').textContent = 'AI://' + (r.ai.provider || 'model') + (r.ai.usedBuiltin ? ' · built-in' : '');
+    const bn = document.getElementById('builtinNote');
+    if (r.ai.usedBuiltin) { bn.classList.remove('hidden'); showToast('Heads-up: served by built-in community keys (your key missing/exhausted)'); }
+    else bn.classList.add('hidden');
     typeAIContent(r.ai.text || '');
   }
 
@@ -2292,7 +2419,7 @@ function buildMarkdownReport(r) {
   L.push('## AI Executive Briefing');
   L.push('');
   if (r.ai && r.ai.unavailable) L.push('_AI layer unavailable: ' + r.ai.reason + '_');
-  else L.push('_via ' + (r.ai.provider || 'AI') + '_\n\n' + (r.ai.text || ''));
+  else L.push('_via ' + (r.ai.provider || 'AI') + (r.ai.usedBuiltin ? ' — built-in community key (fallback)' : ' — user key') + '_\n\n' + (r.ai.text || ''));
   L.push('');
   L.push('---');
   L.push('NULLBREACH combines entropy-based secret detection, a 40+ signature pattern library, real CVE data from OSV.dev, and AI semantic analysis. It is a strong first-pass triage tool but not a certified replacement for a full professional security audit. Always verify critical findings before acting.');
@@ -2390,14 +2517,33 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('settingsBackdrop').addEventListener('click', closeSettings);
   document.getElementById('btnSaveKeys').addEventListener('click', () => {
     persistKeys();
-    const anyAI = state.keys.groq || state.keys.gemini || state.keys.mistral;
-    showToast(anyAI ? 'Keys saved in localStorage — AI cascade active' : 'Saved — note: no AI key set, AI layer will be skipped');
+    const n = state.userKeys.filter(k => k.key && k.key.trim()).length;
+    const mode = n ? `${n} personal key${n > 1 ? 's' : ''} (max priority) + built-in fallback ${state.allowBuiltin ? 'ON' : 'OFF'}`
+                   : (state.allowBuiltin ? 'built-in community keys only' : 'no AI keys — AI layer disabled');
+    showToast('Keys saved in localStorage · cascade: ' + mode);
     closeSettings();
   });
   document.getElementById('btnClearKeys').addEventListener('click', () => {
-    for (const id of ['keyGroq', 'keyGemini', 'keyMistral', 'keyGithub']) document.getElementById(id).value = '';
+    state.userKeys = [];
+    state.github = '';
+    const gh = document.getElementById('keyGithub');
+    if (gh) gh.value = '';
     persistKeys();
-    showToast('Stored keys cleared');
+    renderUserKeys();
+    showToast('Personal keys & GitHub token cleared (built-in keys stay active)');
+  });
+  document.getElementById('btnAddKey').addEventListener('click', () => {
+    if (state.userKeys.length >= 6) { showToast('Up to 6 personal keys — remove one first'); return; }
+    state.userKeys.push({ id: 'k' + Date.now(), provider: 'groq', key: '' });
+    persistKeys();
+    renderUserKeys();
+    const rows = document.querySelectorAll('#userKeysList [data-act="key"]');
+    if (rows.length) rows[rows.length - 1].focus();
+  });
+  document.getElementById('toggleBuiltin').addEventListener('change', (e) => {
+    state.allowBuiltin = e.target.checked;
+    persistKeys();
+    showToast(state.allowBuiltin ? 'Built-in fallback keys: ON' : 'Built-in fallback keys: OFF — only your keys will be used');
   });
   document.querySelectorAll('.eye-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
