@@ -9,13 +9,23 @@ let repoUrl = '';
 let branch = 'main';
 
 if (urlMatch) {
-  repoUrl = urlMatch[0].replace(/\.git$/, '');
-}
-
 // استخراج اسم الفرع إذا وجد
 const branchMatch = issueBody.match(/### اسم الفرع \(Branch\)\s+([^\r\n]+)/);
-if (branchMatch && branchMatch[1].trim()) {
-  branch = branchMatch[1].trim();
+if (branchMatch) {
+  let branchName = branchMatch[1].trim();
+  if (
+    branchName &&
+    branchName !== 'No response' &&
+    branchName !== 'No Response' &&
+    branchName.toLowerCase() !== 'no response'
+  ) {
+    branch = branchName;
+  } else {
+    branch = 'main';
+  }
+} else {
+  branch = 'main';
+}
 }
 
 console.log(`REPO_URL=${repoUrl}`);
