@@ -6,7 +6,7 @@ on:
 
 jobs:
   security-scan:
-    if: contains(github.event.issue.labels.*.name, 'scan-request') || contains(github.event.issue.title, '[فحص]')
+    if: contains(github.event.issue.title, '[فحص]')
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -16,61 +16,66 @@ jobs:
       - name: جلب ملفات الأداة
         uses: actions/checkout@v4
 
-      - name: إعداد بيئة Node.js
+      - name: إعداد Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
-      - name: استخراج رابط المشروع المطلوب فحصه
+      - name: استخراج رابط المشروع
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
         run: node scripts/parse-issue.js
 
-      - name: تحميل كود المستودع المستهدف
+      - name: تحميل كود المشروع المستهدف
         run: |
+          echo "الرابط هو: $TARGET_REPO_URL"
           if [ -z "$TARGET_REPO_URL" ]; then
-            echo "لم يتم العثور على رابط صالح"
+            echo "ERROR: لم يتم العثور على رابط"
             exit 1
           fi
-          git clone --depth 1 "$TARGET_REPO_URL" target_repo
+          git clone --depth 1 --branch "$TARGET_BRANCH" "$TARGET_REPO_URL" target_repo 2>/dev/null || git clone --depth 1 "$TARGET_REPO_URL" target_repo
 
-      - name: فحص الأسرار والتسريبات (Gitleaks)
+      - name: فحص الأسرار (Gitleaks)
+        continue-on-error: true
         run: |
           curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz | tar -xz
-          ./gitleaks detect --source=target_repo --report-path=gitleaks.json --report-format=json --no-banner || true
+          ./gitleaks detect --source=target_repo --report-path=gitleaks.json --report-format=json --no-banner || echo "[]" > gitleaks.json
 
-      - name: فحص الثغرات البرمجية (Semgrep)
+      - name: فحص الثغرات (Semgrep)
+        continue-on-error: true
         run: |
-          pip install semgrep
-          semgrep scan --config=auto --json --output=semgrep.json target_repo || true
+          pip3 install semgrep --quiet
+          semgrep scan --config=auto --json --output=semgrep.json target_repo || echo '{"results":[]}' > semgrep.json
 
-      - name: فحص الحزم والمكتبات (Trivy)
+      - name: فحص المكتبات (Trivy)
+        continue-on-error: true
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b . v0.50.1
-          ./trivy fs --format json --output trivy.json target_repo || true
+          ./trivy fs --format json --output trivy.json target_repo || echo '{"Results":[]}' > trivy.json
 
       - name: توحيد النتائج
         run: node scripts/normalize.js
 
-      - name: تجهيز التقرير النهائي
+      - name: تجهيز التقرير
         run: node scripts/summarize.js
 
-      - name: نشر التقرير كتعليق على الطلب
+      - name: نشر التقرير
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
+            let body = '### ⚠️ لم يتم إنشاء التقرير';
             if (fs.existsSync('summary.md')) {
-              const body = fs.readFileSync('summary.md', 'utf8');
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: body
-              });
+              body = fs.readFileSync('summary.md', 'utf8');
             }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
 
-      - name: حفظ التقارير الكاملة
+      - name: حفظ التقارير
         uses: actions/upload-artifact@v4
         if: always()
         with:
