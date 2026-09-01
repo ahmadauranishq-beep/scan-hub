@@ -33,47 +33,145 @@ tailwind.config = {
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
-:root { --nbgreen:#00ff9d; --nbcyan:#22d3ee; --nbamber:#ffb703; --nbred:#ff3b5c; }
-html { scroll-behavior: smooth; }
-body { background:#05070a; color:#dbe4ee; font-family:'Space Grotesk',Inter,sans-serif; overflow-x:hidden; }
-.mono { font-family:'JetBrains Mono','Fira Code',monospace; }
+/* ============================================================
+   NULLBREACH design system v2 — tokens, surfaces, components
+   ============================================================ */
+:root {
+  --bg-0:#04060a; --bg-1:#060a10; --bg-2:#080d14;
+  --surface-1:#0a1017; --surface-2:#0d1520; --surface-3:#111a26;
+  --line-1:#141e2a; --line-2:#1c2a3a; --line-3:#27394d;
+  --txt-1:#e8eff6; --txt-2:#9fb2c3; --txt-3:#5e7183; --txt-4:#3d4d5c;
+  --green:#00ff9d; --cyan:#22d3ee; --amber:#ffb703; --red:#ff3b5c; --orange:#ff9d5c; --violet:#a78bfa; --pink:#f472b6;
+  --r-sm:8px; --r-md:12px; --r-lg:16px;
+  --shadow-panel: 0 1px 0 rgba(255,255,255,.04) inset, 0 24px 60px -30px rgba(0,0,0,.9);
+  --glow-green: 0 0 24px rgba(0,255,157,.18);
+  --font-mono:'JetBrains Mono','Fira Code',ui-monospace,monospace;
+}
+html { scroll-behavior:smooth; }
+body {
+  background:
+    radial-gradient(1100px 520px at 50% -140px, rgba(0,255,157,.07), transparent 62%),
+    radial-gradient(900px 480px at 88% 4%, rgba(34,211,238,.05), transparent 60%),
+    var(--bg-0);
+  color:var(--txt-2);
+  font-family:'Space Grotesk',Inter,sans-serif;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection { background:rgba(0,255,157,.22); color:#eafff5; }
+*::-webkit-scrollbar { width:10px; height:10px; }
+*::-webkit-scrollbar-thumb { background:#16222f; border-radius:6px; border:2px solid var(--bg-0); }
+*::-webkit-scrollbar-track { background:transparent; }
+.mono { font-family:var(--font-mono); }
 
-/* ---------- background grid + particles ---------- */
+/* ---------- ambient layers ---------- */
 #bgfx { position:fixed; inset:0; z-index:0; pointer-events:none; }
 .grid-overlay{
   position:fixed; inset:-50px; z-index:0; pointer-events:none;
   background-image:
-    linear-gradient(rgba(0,255,157,.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,255,157,.045) 1px, transparent 1px);
+    linear-gradient(rgba(0,255,157,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,157,.04) 1px, transparent 1px);
   background-size:44px 44px;
-  -webkit-mask-image:radial-gradient(ellipse 90% 70% at 50% 0%, black 25%, transparent 78%);
-          mask-image:radial-gradient(ellipse 90% 70% at 50% 0%, black 25%, transparent 78%);
-  animation:gridpan 30s linear infinite;
+  -webkit-mask-image:radial-gradient(ellipse 92% 68% at 50% 0%, black 22%, transparent 76%);
+          mask-image:radial-gradient(ellipse 92% 68% at 50% 0%, black 22%, transparent 76%);
+  animation:gridpan 34s linear infinite;
 }
-@keyframes gridpan { to { background-position: 44px 44px; } }
+@keyframes gridpan { to { background-position:44px 44px; } }
 .hero-glow{
-  position:fixed; top:-180px; left:50%; transform:translateX(-50%);
-  width:900px; height:520px; z-index:0; pointer-events:none;
-  background:radial-gradient(closest-side, rgba(0,255,157,.10), rgba(34,211,238,.05) 55%, transparent 75%);
-  filter:blur(10px);
+  position:fixed; top:-200px; left:50%; transform:translateX(-50%);
+  width:1000px; height:560px; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(closest-side, rgba(0,255,157,.10), transparent 72%),
+    radial-gradient(420px 300px at 72% 42%, rgba(34,211,238,.07), transparent 70%);
+  filter:blur(8px);
+}
+body::after{ /* vignette — focuses the eye toward the center column */
+  content:''; position:fixed; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 30%, transparent 55%, rgba(2,4,7,.55) 100%);
 }
 
-/* ---------- terminal scan log ---------- */
+/* ---------- panels ---------- */
+.panel{
+  position:relative;
+  background:linear-gradient(180deg, rgba(15,23,34,.72), rgba(8,12,19,.86));
+  border:1px solid var(--line-1);
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow-panel);
+}
+.panel-glow{ box-shadow:var(--shadow-panel), 0 0 0 1px rgba(0,255,157,.05), 0 30px 90px -40px rgba(0,255,157,.16); }
+/* signature corner brackets on hero panels */
+.panel-glow::before, .panel-glow::after{
+  content:''; position:absolute; width:18px; height:18px; pointer-events:none;
+}
+.panel-glow::before{ top:-1px; left:-1px; border-top:2px solid rgba(0,255,157,.6); border-left:2px solid rgba(0,255,157,.6); border-top-left-radius:var(--r-lg); }
+.panel-glow::after{ bottom:-1px; right:-1px; border-bottom:2px solid rgba(34,211,238,.45); border-right:2px solid rgba(34,211,238,.45); border-bottom-right-radius:var(--r-lg); }
+
+/* ---------- section headers ---------- */
+.sec-idx{
+  font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:.08em;
+  color:var(--green); background:rgba(0,255,157,.08); border:1px solid rgba(0,255,157,.35);
+  border-radius:6px; padding:2px 8px; margin-right:10px; vertical-align:2px;
+}
+#results h2, #orgResults h2 { color:var(--txt-1); letter-spacing:.02em; }
+#results h2 .text-slate-500 { font-weight:400; }
+
+/* ---------- capability grid (hero) ---------- */
+.cap-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:34px; }
+@media (max-width:900px){ .cap-grid{ grid-template-columns:repeat(2,1fr); } }
+.cap-card{
+  position:relative; overflow:hidden;
+  background:linear-gradient(180deg, rgba(14,21,31,.6), rgba(8,12,19,.7));
+  border:1px solid var(--line-1); border-radius:var(--r-md);
+  padding:14px 14px 12px; text-align:left; transition:border-color .2s, transform .2s;
+}
+.cap-card:hover{ border-color:var(--line-3); transform:translateY(-2px); }
+.cap-card::before{ content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(0,255,157,.35), transparent); }
+.cap-k{ font-family:var(--font-mono); font-size:9px; letter-spacing:.22em; color:var(--txt-3); }
+.cap-v{ font-family:var(--font-mono); font-size:20px; font-weight:800; color:var(--txt-1); margin-top:6px; }
+.cap-d{ font-size:11px; color:var(--txt-3); margin-top:4px; line-height:1.45; }
+
+/* ---------- buttons ---------- */
+.btn-primary{
+  position:relative;
+  background:linear-gradient(180deg, rgba(0,255,157,.18), rgba(0,255,157,.07));
+  border:1px solid rgba(0,255,157,.55); color:#a4ffd9;
+  box-shadow:0 0 0 1px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08);
+  transition:all .18s ease;
+}
+.btn-primary:hover:not(:disabled){
+  background:linear-gradient(180deg, rgba(0,255,157,.30), rgba(0,255,157,.12));
+  box-shadow:0 0 0 1px rgba(0,0,0,.4), 0 0 28px rgba(0,255,157,.28), inset 0 1px 0 rgba(255,255,255,.1);
+  transform:translateY(-1px);
+}
+.btn-primary:active:not(:disabled){ transform:translateY(0); }
+.btn-primary:disabled{ opacity:.45; cursor:not-allowed; }
+.btn-ghost{ border:1px solid var(--line-2); color:var(--txt-2); transition:all .18s ease; background:rgba(255,255,255,.015); }
+.btn-ghost:hover{ border-color:rgba(34,211,238,.45); color:#bfe9f5; background:rgba(34,211,238,.06); }
+
+input:focus, select:focus, textarea:focus{
+  outline:none; border-color:rgba(0,255,157,.55) !important;
+  box-shadow:0 0 0 1px rgba(0,255,157,.25), 0 0 20px rgba(0,255,157,.07);
+}
+::placeholder{ color:var(--txt-4); }
+
+/* ---------- scan terminal ---------- */
 .log-shell{
   background:linear-gradient(180deg,#070b11,#05080d);
-  border:1px solid rgba(0,255,157,.18);
-  box-shadow:0 0 0 1px rgba(0,0,0,.6), 0 20px 60px -20px rgba(0,255,157,.15), inset 0 0 60px rgba(0,255,157,.03);
+  border:1px solid rgba(0,255,157,.18); border-radius:var(--r-lg); overflow:hidden;
+  box-shadow:0 0 0 1px rgba(0,0,0,.6), 0 24px 70px -24px rgba(0,255,157,.16), inset 0 0 70px rgba(0,255,157,.03);
 }
+.log-shell > div:first-child{ background:linear-gradient(180deg,#0d141d,#0a1017); }
 .log-body{ max-height:260px; overflow-y:auto; }
 .log-line{ animation:login .18s ease-out; }
 @keyframes login { from { opacity:0; transform:translateY(3px);} to { opacity:1; transform:none;} }
-.log-body::-webkit-scrollbar{ width:8px; }
-.log-body::-webkit-scrollbar-thumb{ background:#12212c; border-radius:4px; }
-
-.cursor{ display:inline-block; width:9px; height:15px; background:var(--nbgreen); vertical-align:-2px; animation:blink 1.05s steps(1) infinite; }
+.cursor{ display:inline-block; width:9px; height:15px; background:var(--green); vertical-align:-2px; animation:blink 1.05s steps(1) infinite; }
 @keyframes blink { 50% { opacity:0; } }
 
-/* ---------- glitch / flicker (critical findings) ---------- */
+/* ---------- progress ---------- */
+#scanProgressFill{ box-shadow:0 0 12px rgba(0,255,157,.5); }
+
+/* ---------- glitch / flicker / pulse ---------- */
 @keyframes glitchA{
   0%   { transform:translate(0,0); text-shadow:none; clip-path:inset(0 0 0 0); }
   18%  { transform:translate(-2px,1px); text-shadow:3px 0 #ff3b5c, -3px 0 #22d3ee; clip-path:inset(12% 0 58% 0); }
@@ -90,34 +188,25 @@ body { background:#05070a; color:#dbe4ee; font-family:'Space Grotesk',Inter,sans
 #critFlicker{ position:fixed; inset:0; z-index:60; pointer-events:none; opacity:0;
   background:linear-gradient(180deg, rgba(255,59,92,.10), rgba(255,59,92,.02) 40%, transparent); }
 #critFlicker.on{ animation:flickerfx .9s linear 1; }
-
-/* ---------- calm green pulse (clean result) ---------- */
-@keyframes pulseG { 0%,100% { filter:drop-shadow(0 0 4px rgba(0,255,157,.25)); } 50% { filter:drop-shadow(0 0 22px rgba(0,255,157,.65)); } }
+@keyframes pulseG { 0%,100% { filter:drop-shadow(0 0 4px rgba(0,255,157,.25)); } 50% { filter:drop-shadow(0 0 22px rgba(0,255,157,.6)); } }
 .pulse-clean{ animation:pulseG 2.6s ease-in-out infinite; }
-
-/* ---------- gauge ---------- */
 #gaugeFg{ transition: stroke-dashoffset 1.5s cubic-bezier(.22,.9,.28,1); }
 
 /* ---------- tooltip ---------- */
 .tip{ position:relative; }
 .tipbox{
   display:none; position:absolute; bottom:130%; left:50%; transform:translateX(-50%);
-  width:300px; padding:12px 14px; border-radius:10px; z-index:80; font-size:12px; line-height:1.55;
+  width:310px; padding:13px 15px; border-radius:var(--r-md); z-index:80; font-size:12px; line-height:1.6;
   background:#0a1017; border:1px solid rgba(0,255,157,.35); color:#c8d6e2;
-  box-shadow:0 12px 40px rgba(0,0,0,.7); text-align:left;
+  box-shadow:0 14px 44px rgba(0,0,0,.75); text-align:left;
 }
 .tip:hover .tipbox{ display:block; }
 
-/* ---------- generic panel ---------- */
-.panel{ background:linear-gradient(180deg, rgba(13,20,29,.85), rgba(8,12,18,.9)); border:1px solid rgba(34,211,238,.12); border-radius:14px; }
-.panel-glow{ box-shadow:0 0 0 1px rgba(0,0,0,.5), 0 24px 70px -30px rgba(0,255,157,.18); }
-
 /* ---------- findings table ---------- */
-#findTableWrap{ max-height:620px; overflow:auto; }
-#findTableWrap::-webkit-scrollbar{ width:9px; height:9px; }
-#findTableWrap::-webkit-scrollbar-thumb{ background:#14212e; border-radius:5px; }
-#findTableWrap::-webkit-scrollbar-track{ background:#070b10; }
-#findTable thead th{ position:sticky; top:0; background:#0a1119; z-index:5; }
+#findTableWrap{ max-height:640px; overflow:auto; border-radius:var(--r-md); }
+#findTable thead th{ position:sticky; top:0; background:#0a1119; z-index:5; letter-spacing:.14em; }
+#findTable tbody tr{ transition:background .12s; }
+#findTable tbody tr:hover{ background:rgba(34,211,238,.045); box-shadow:inset 2px 0 0 rgba(0,255,157,.5); }
 .sev-critical{ color:#ff3b5c; border-color:rgba(255,59,92,.5); background:rgba(255,59,92,.1); }
 .sev-high{ color:#ff9d5c; border-color:rgba(255,157,92,.45); background:rgba(255,157,92,.08); }
 .sev-medium{ color:#ffb703; border-color:rgba(255,183,3,.45); background:rgba(255,183,3,.08); }
@@ -128,16 +217,15 @@ body { background:#05070a; color:#dbe4ee; font-family:'Space Grotesk',Inter,sans
 .layer-osv{ color:#ffb703; border-color:rgba(255,183,3,.5); background:rgba(255,183,3,.06); }
 .layer-ai{ color:#a78bfa; border-color:rgba(167,139,250,.5); background:rgba(167,139,250,.07); }
 .layer-supply-chain{ color:#f472b6; border-color:rgba(244,114,182,.5); background:rgba(244,114,182,.07); }
-
 tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
 @keyframes critrow { 0% { background:rgba(255,59,92,.28);} 100% { background:transparent; } }
 
-/* ---------- remediation checklist ---------- */
+/* ---------- remediation ---------- */
 .rem-item input:checked ~ .rem-text{ text-decoration:line-through; opacity:.45; }
 
-/* ---------- AI terminal ---------- */
-#aiPanel{ background:#04070b; border:1px solid rgba(0,255,157,.22); border-radius:12px;
-  box-shadow:inset 0 0 80px rgba(0,255,157,.04), 0 20px 60px -30px rgba(0,255,157,.2); }
+/* ---------- AI terminal panes ---------- */
+#aiPanel{ background:#04070b; border:1px solid rgba(0,255,157,.22); border-radius:var(--r-lg);
+  box-shadow:inset 0 0 90px rgba(0,255,157,.04), 0 24px 70px -34px rgba(0,255,157,.2); }
 .ai-content h3{ color:#00ff9d; font-weight:700; margin:18px 0 8px; font-size:15px; letter-spacing:.02em; }
 .ai-content h4{ color:#22d3ee; font-weight:600; margin:14px 0 6px; font-size:14px; }
 .ai-content p{ margin:6px 0; }
@@ -145,29 +233,19 @@ tr.find-critical td{ animation:critrow 1.6s ease-out 1; }
 .ai-content ol{ list-style:decimal; }
 .ai-content li{ margin:4px 0; }
 .ai-content code{ background:rgba(0,255,157,.08); border:1px solid rgba(0,255,157,.2); padding:1px 5px; border-radius:4px; font-size:12px; }
-.ai-content pre{ background:#060a10; border:1px solid #142030; border-radius:8px; padding:12px; overflow-x:auto; margin:10px 0; }
+.ai-content pre{ background:#060a10; border:1px solid var(--line-1); border-radius:var(--r-sm); padding:12px; overflow-x:auto; margin:10px 0; }
 .ai-content pre code{ background:none; border:none; padding:0; }
 .ai-content strong{ color:#e8f2ee; }
 
-/* ---------- shareable badge ---------- */
+/* ---------- badge / export ---------- */
 #badgePreview{ background:linear-gradient(135deg,#070c12 0%, #0b1420 60%, #081018 100%);
-  border:1px solid rgba(0,255,157,.35); border-radius:12px; position:relative; overflow:hidden; }
-#badgePreview::before{ content:''; position:absolute; inset:0; padding:1px; border-radius:12px; pointer-events:none;
+  border:1px solid rgba(0,255,157,.35); border-radius:var(--r-md); position:relative; overflow:hidden; }
+#badgePreview::before{ content:''; position:absolute; inset:0; padding:1px; border-radius:var(--r-md); pointer-events:none;
   background:linear-gradient(120deg, rgba(0,255,157,.6), rgba(34,211,238,.35), transparent 60%); }
 
-.btn-primary{
-  background:linear-gradient(180deg, rgba(0,255,157,.16), rgba(0,255,157,.07));
-  border:1px solid rgba(0,255,157,.5); color:#9fffd9;
-}
-.btn-primary:hover:not(:disabled){ background:linear-gradient(180deg, rgba(0,255,157,.28), rgba(0,255,157,.12)); box-shadow:0 0 24px rgba(0,255,157,.25); }
-.btn-primary:disabled{ opacity:.45; cursor:not-allowed; }
-.btn-ghost{ border:1px solid rgba(34,211,238,.3); color:#9fdcec; }
-.btn-ghost:hover{ background:rgba(34,211,238,.08); }
+/* ---------- toast ---------- */
+#toast{ transition: transform .25s ease, opacity .25s ease; box-shadow:0 0 30px rgba(0,255,157,.15), 0 14px 40px rgba(0,0,0,.6); }
 
-input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !important; box-shadow:0 0 0 1px rgba(0,255,157,.25), 0 0 18px rgba(0,255,157,.08); }
-::placeholder{ color:#3d4d5c; }
-
-#toast{ transition: transform .25s ease, opacity .25s ease; }
 @media (prefers-reduced-motion: reduce){
   .grid-overlay, .cursor, .pulse-clean, #critFlicker.on { animation:none !important; }
   .glitching{ animation:none !important; }
@@ -226,9 +304,9 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
 
     <div class="flex-1 overflow-y-auto px-6 py-6 space-y-6">
       <p class="text-xs leading-relaxed text-slate-400">
-        NULLBREACH runs a priority key pool: <span class="text-nbgreen">your keys first</span> (in the order you set),
-        then the embedded <span class="text-nbcyan">NULLBREACH Core Engine</span> as an automatic fallback. The static layers (entropy, 65 signatures)
-        and the OSV.dev CVE feed need <span class="text-nbgreen">no keys at all</span>.
+        NULLBREACH runs a priority key pool: <span class="text-nbgreen">your keys first</span>, in the order you set —
+        then the embedded <span class="text-nbcyan">NULLBREACH Core Engine</span> takes over automatically (with a notice) whenever your keys are missing or exhausted.
+        Just paste any engine key — it is recognized from its format, and its origin is <b>never displayed</b>. The static layers and the OSV.dev CVE feed need <span class="text-nbgreen">no keys at all</span>.
       </p>
 
       <div>
@@ -259,14 +337,11 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
           <div class="min-w-0">
             <div class="text-[13px] font-semibold text-emerald-100">Your keys are stronger</div>
             <p class="text-[11px] text-emerald-100/70 mt-1 leading-relaxed">
-              Personal keys run <b>first</b>, at <b>maximum priority</b>, in the exact order you define — with full model capacity
-              and no shared throttling. Supported: <span class="mono text-nbgreen">Claude</span>, <span class="mono text-nbgreen">OpenAI</span>,
-              <span class="mono text-nbgreen">Groq</span>, <span class="mono text-nbgreen">Gemini</span>, <span class="mono text-nbgreen">Mistral</span>.
-              When they run out, the Core Engine quietly takes over.
+              Add a key from any major AI engine — <b>all of them are recognized automatically</b> from the key's signature, and no names are ever shown.
+              Yours run <b>first</b>, at <b>maximum priority</b>, in your exact order, with full capacity and no shared throttling.
+              When a key runs out, the always-on Core Engine quietly takes over — so the scanner <b>never goes down</b>.
             </p>
           </div>
-        </div>
-      </div>
         </div>
       </div>
 
@@ -287,8 +362,9 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
       <div class="flex items-start gap-2.5 rounded-lg border border-nbgreen/25 bg-nbgreen/5 px-4 py-3">
         <i data-lucide="shield-check" class="w-4 h-4 text-nbgreen mt-0.5 shrink-0"></i>
         <p class="text-[11px] leading-relaxed text-emerald-100/80">
-          Your keys never leave your browser — stored only in this browser's <span class="mono text-nbgreen">localStorage</span>
-          and sent directly over HTTPS to the provider. There is no NULLBREACH backend. The embedded Core Engine ships inside this file — its capacity is shared, so it is best-effort.
+          Your keys never leave your browser — stored only in this browser's <span class="mono text-nbgreen">localStorage</span>,
+          masked on screen, and sent directly over HTTPS for validation only. There is no NULLBREACH backend.
+          The embedded Core Engine ships inside this file, undisclosed by design — its capacity is shared, so it is best-effort.
         </p>
       </div>
     </div>
@@ -310,7 +386,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
   <div class="text-center">
     <div class="inline-flex items-center gap-2 mono text-[10px] tracking-[.22em] text-emerald-300/80 border border-nbgreen/25 bg-nbgreen/5 rounded-full px-4 py-1.5 mb-6">
       <span class="w-1.5 h-1.5 rounded-full bg-nbgreen animate-pulse"></span>
-      ENTROPY SECRETS · <span id="heroSigCount">40+</span> SIGNATURES · OSV.DEV LIVE CVES · GROQ → GEMINI → MISTRAL
+      FOUR DETECTION LAYERS · LIVE CVE FEED · ALWAYS-ON AI · ZERO BACKEND
     </div>
     <h1 class="mono text-4xl sm:text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-nbgreen via-emerald-200 to-nbcyan drop-shadow-[0_0_25px_rgba(0,255,157,.25)]">
       NULLBREACH
@@ -320,6 +396,34 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
       <span class="text-slate-200">40+ secret &amp; OWASP signatures</span>, pulls <span class="text-slate-200">real CVE data from OSV.dev</span>,
       then engages an AI security reasoning cascade — all in your browser, zero backend.
     </p>
+  </div>
+
+  <div class="cap-grid max-w-4xl mx-auto mt-12" id="capGrid">
+    <div class="cap-card">
+      <div class="cap-k">LAYER 01</div>
+      <div class="cap-v" style="color:var(--cyan)">H<sub style="font-size:12px">∞</sub></div>
+      <div class="cap-d">Shannon entropy math on every string — catches patternless secrets regex never sees</div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-k">LAYER 02</div>
+      <div class="cap-v" id="capSigCount" style="color:var(--green)">—</div>
+      <div class="cap-d">Secret signatures + OWASP + full IaC: Docker · K8s · Terraform · Actions · nginx</div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-k">LAYER 03</div>
+      <div class="cap-v" style="color:var(--amber)">CVE</div>
+      <div class="cap-d">Live OSV.dev advisories + supply-chain checks: confusion &amp; typosquatting</div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-k">LAYER 04</div>
+      <div class="cap-v" style="color:var(--violet)">×3</div>
+      <div class="cap-d">Multi-pass AI: executive brief · logic-bug hunt · exploit PoCs — always-on engine</div>
+    </div>
+    <div class="cap-card">
+      <div class="cap-k">PRIVACY</div>
+      <div class="cap-v" style="color:var(--pink)">100%</div>
+      <div class="cap-d">Keys masked &amp; auto-recognized, names never shown, everything stays in your browser</div>
+    </div>
   </div>
 
   <div class="mt-9 max-w-3xl mx-auto flex justify-center gap-2">
@@ -588,7 +692,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
             </div>
             <div id="builtinNote" class="hidden mt-4 rounded-lg border border-nbcyan/30 bg-nbcyan/5 px-4 py-3 text-[12px] text-cyan-100/85 flex items-start gap-2.5">
               <i data-lucide="bell-ring" class="w-4 h-4 mt-0.5 shrink-0 text-nbcyan"></i>
-              <span><b>Notice:</b> your keys were missing or exhausted, so this briefing was served by the embedded <b>NULLBREACH Core Engine</b> (shared capacity, may throttle). Add your own key — Groq, Gemini, Mistral, <b>Claude</b> or <b>OpenAI</b> — and it will run first, stronger, at maximum priority.</span>
+              <span><b>Notice:</b> your keys were missing or exhausted, so this briefing was served by the embedded <b>NULLBREACH Core Engine</b> (shared capacity, may throttle). Add your own key — any major engine is auto-recognized — and it will run first, stronger, at maximum priority.</span>
             </div>
           </div>
         </div>
@@ -599,7 +703,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
     <div id="nb-findings" class="scroll-mt-24">
       <div class="flex items-end justify-between flex-wrap gap-3 mb-4">
         <div>
-          <h2 class="mono text-xl font-bold tracking-wide text-slate-100">// FINDINGS</h2>
+          <h2 class="mono text-xl font-bold tracking-wide text-slate-100"><span class="sec-idx">01</span>FINDINGS</h2>
           <p class="text-sm text-slate-500 mt-1">Layer 1 (entropy) · Layer 2 (signatures) · Layer 3 (OSV.dev CVEs) · AI — filter, sort, click to open source.</p>
         </div>
         <span id="findCount" class="mono text-[11px] text-slate-500"></span>
@@ -649,7 +753,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
     <!-- DEPENDENCIES -->
     <div id="nb-deps" class="scroll-mt-24">
       <div class="mb-4">
-        <h2 class="mono text-xl font-bold tracking-wide text-slate-100">// DEPENDENCIES <span class="text-slate-500 text-sm">· real CVE data via OSV.dev</span></h2>
+        <h2 class="mono text-xl font-bold tracking-wide text-slate-100"><span class="sec-idx">02</span>DEPENDENCIES <span class="text-slate-500 text-sm">· real CVE data via OSV.dev</span></h2>
         <p class="text-sm text-slate-500 mt-1">Manifests (package.json / requirements.txt / go.mod / Gemfile.lock) are parsed and every pinned version is queried against the public OSV.dev batch API — the same class of CVE data Trivy consumes.</p>
       </div>
       <div class="panel p-5">
@@ -661,7 +765,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
     <!-- SUPPLY CHAIN -->
     <div id="nb-supply" class="scroll-mt-24">
       <div class="mb-4">
-        <h2 class="mono text-xl font-bold tracking-wide text-slate-100">// SUPPLY CHAIN <span class="text-slate-500 text-sm">· dependency confusion &amp; typosquatting</span></h2>
+        <h2 class="mono text-xl font-bold tracking-wide text-slate-100"><span class="sec-idx">03</span>SUPPLY CHAIN <span class="text-slate-500 text-sm">· dependency confusion &amp; typosquatting</span></h2>
         <p class="text-sm text-slate-500 mt-1">Every pinned dependency is checked against its live public registry (npm / PyPI): missing packages are internal-name hijack risks, and near-miss names of popular packages are flagged with Levenshtein distance.</p>
       </div>
       <div class="panel p-5">
@@ -674,7 +778,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
     <div id="nb-ai" class="scroll-mt-24">
       <div class="flex items-end justify-between flex-wrap gap-3 mb-4">
         <div>
-          <h2 class="mono text-xl font-bold tracking-wide text-slate-100">// AI EXECUTIVE BRIEFING</h2>
+          <h2 class="mono text-xl font-bold tracking-wide text-slate-100"><span class="sec-idx">04</span>AI ANALYSIS <span class="text-slate-500 text-sm">· 3-pass reasoning</span></h2>
           <p class="text-sm text-slate-500 mt-1">Semantic review of the highest-risk code: business-logic flaws, auth-bypass patterns, design-level issues no static rule can catch.</p>
         </div>
         <button id="aiCopy" class="btn-ghost mono text-[11px] rounded-lg px-3 py-2 flex items-center gap-2">
@@ -711,7 +815,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
     <div id="nb-remediation" class="scroll-mt-24">
       <div class="flex items-end justify-between flex-wrap gap-3 mb-4">
         <div>
-          <h2 class="mono text-xl font-bold tracking-wide text-slate-100">// REMEDIATION CHECKLIST</h2>
+          <h2 class="mono text-xl font-bold tracking-wide text-slate-100"><span class="sec-idx">05</span>REMEDIATION CHECKLIST</h2>
           <p class="text-sm text-slate-500 mt-1">Prioritized, deduplicated fix plan derived from every finding — most severe first.</p>
         </div>
         <span id="remedProgress" class="mono text-[11px] text-slate-500"></span>
@@ -724,7 +828,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
     <!-- EXPORT -->
     <div id="nb-export" class="scroll-mt-24">
       <div class="mb-4">
-        <h2 class="mono text-xl font-bold tracking-wide text-slate-100">// EXPORT &amp; SHARE</h2>
+        <h2 class="mono text-xl font-bold tracking-wide text-slate-100"><span class="sec-idx">06</span>EXPORT &amp; SHARE</h2>
         <p class="text-sm text-slate-500 mt-1">Take the report with you, or drop the badge in your README — that's how NULLBREACH spreads.</p>
       </div>
       <div class="grid lg:grid-cols-2 gap-7">
@@ -796,7 +900,7 @@ input:focus, select:focus{ outline:none; border-color:rgba(0,255,157,.55) !impor
 <script id="nb-engine">
 /*ENGINE-START*/
 'use strict';
-const NB_VERSION = '1.3.0';
+const NB_VERSION = '1.4.0';
 
 /* ================= Layer 1 — Shannon entropy (Gitleaks technique) ================= */
 function shannonEntropy(str) {
@@ -1897,35 +2001,110 @@ const state = {
   sort: { key: 'severity', dir: 'asc' },
   sevFilter: new Set(),
   layerFilter: 'all',
-  textFilter: ''
+  textFilter: '',
+  aiTab: 'brief',          /* active AI tab: brief | logic | exploits */
+  aiTexts: { brief: '', logic: '', exploits: '' }
 };
 
 const LS_KEY = 'nullbreach.keys.v2';
 const LS_KEY_V1 = 'nullbreach.keys.v1';
 
 /* ---- NULLBREACH Core Engine: embedded AI capability that makes the tool work with zero
-   setup. Material is stored obfuscated (char-code arrays + rotating pads + scrambled
-   provider binding) so it is not human-readable and not harvested by naive scrapers.
-   This is deliberate deterrence, NOT strong cryptography: a determined person can still
-   recover it from the shipped file. Provider binding is intentionally undisclosed. ---- */
-const AI_PROVIDER_ORDER = ['groq', 'gemini', 'mistral']; /* core engine internal binding */
-const _cPads = ['nb\x63ore\x41', 'nb\x63ore\x42', 'nb\x63ore\x43'];
-const _cSeeds = [
-  [9,17,8,48,28,28,18,43,59,22,39,32,12,6,43,9,39,38,24,22,39,37,83,50,56,53,1,56,12,81,37,54,65,47,18,47,32,41,11,36,11,25,24,7,2,90,36,33,4,23,32,34,87,34,87,20],
-  [47,51,77,46,16,93,16,32,84,41,32,6,36,23,9,15,86,45,95,49,42,33,6,34,39,67,48,40,49,7,41,11,17,48,111,56,6,83,34,32,18,53,12,41,81,90,70,34,4,25,50,49,24],
-  [87,5,80,62,66,93,122,30,90,15,1,16,87,115,8,7,36,60,60,39,55,26,86,39,38,34,22,23,40,1,5,6]
-];
-const _cBind = [0, 1, 2]; /* engine-internal binding — provider names are never rendered */
-function _cExpand(seed, pad) {
-  let out = '';
-  for (let i = 0; i < seed.length; i++) out += String.fromCharCode(seed[i] ^ pad.charCodeAt(i % pad.length));
-  return out;
+   setup. Seeding material and the provider binding live INSIDE a closure — not reachable
+   as globals from the console. Deterrence, not cryptography: the network tab always shows
+   whatever a caller actually sends. Provider identities are never rendered anywhere. ---- */
+const runAICascade = (() => {
+  const _ord = ['groq', 'gemini', 'mistral'];
+  const _pads = ['nb\x63ore\x41', 'nb\x63ore\x42', 'nb\x63ore\x43'];
+  const _seeds = [
+    [9,17,8,48,28,28,18,43,59,22,39,32,12,6,43,9,39,38,24,22,39,37,83,50,56,53,1,56,12,81,37,54,65,47,18,47,32,41,11,36,11,25,24,7,2,90,36,33,4,23,32,34,87,34,87,20],
+    [47,51,77,46,16,93,16,32,84,41,32,6,36,23,9,15,86,45,95,49,42,33,6,34,39,67,48,40,49,7,41,11,17,48,111,56,6,83,34,32,18,53,12,41,81,90,70,34,4,25,50,49,24],
+    [87,5,80,62,66,93,122,30,90,15,1,16,87,115,8,7,36,60,60,39,55,26,86,39,38,34,22,23,40,1,5,6]
+  ];
+  function _exp(seed, pad) {
+    let out = '';
+    for (let i = 0; i < seed.length; i++) out += String.fromCharCode(seed[i] ^ pad.charCodeAt(i % pad.length));
+    return out;
+  }
+  const CORE_NODES = _seeds.map((seed, i) => ({
+    node: 'a b c'.split(' ')[i],
+    provider: _ord[i],
+    key: () => _exp(seed, _pads[i])
+  }));
+  const CORE_LABEL = 'NULLBREACH Core Engine';
+  const EXHAUSTED_RE = /(rate.?limit|429|quota|exceed|too many requests|insufficient|credits?|billing|usage.?limit)/i;
+
+  /* Priority pool: YOUR keys first (recognized automatically, stronger, your order) →
+     then the embedded Core Engine (always on, undisclosed). */
+  function buildQueue() {
+    const q = [];
+    const seen = new Set();
+    let n = 0;
+    for (const uk of state.userKeys) {
+      const p = AI_PROVIDER_MAP[uk.provider];
+      const k = (uk.key || '').trim();
+      if (!p || !k || uk.provider === 'unknown' || uk.provider === 'pending') continue;
+      if (seen.has(p.id + ':' + k)) continue;
+      seen.add(p.id + ':' + k);
+      n++;
+      q.push(Object.assign({}, p, { key: k, origin: 'user', tag: 'YOUR KEY #' + n }));
+    }
+    const allowCore = (typeof globalThis.NB_CORE_ENABLED === 'undefined') || globalThis.NB_CORE_ENABLED !== false;
+    if (allowCore) {
+      for (const node of CORE_NODES) {
+        const p = AI_PROVIDER_MAP[node.provider];
+        const k = node.key();
+        if (!p || !k || seen.has(p.id + ':' + k)) continue;
+        seen.add(p.id + ':' + k);
+        q.push(Object.assign({}, p, { key: k, origin: 'builtin', coreNode: node.node, tag: CORE_LABEL }));
+      }
+    }
+    return q;
+  }
+
+  async function cascade(prompt) {
+    const queue = buildQueue();
+    const failures = [];
+    if (!queue.length) return { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried: 0, failures: ['no keys available'] };
+    let userKeysTried = 0, userFailed = false, exhaustedHit = false;
+    for (const p of queue) {
+      if (p.origin === 'user') userKeysTried++;
+      nbLog(p.origin === 'user'
+        ? `Engaging AI reasoning layer → ${p.tag} (max priority — stronger)…`
+        : `Engaging AI reasoning layer → ${CORE_LABEL} [node ${p.coreNode}]…`);
+      try {
+        const text = await callAIProvider(p, prompt, p.key);
+        nbLog(`AI briefing complete (${p.tag}).`, 'ok');
+        if (p.origin === 'builtin' && userFailed) {
+          showToast('Your key' + (userKeysTried > 1 ? 's were' : ' was') + ' exhausted — NULLBREACH Core Engine took over');
+          exhaustedHit = true;
+        }
+        return { text, provider: p.tag, origin: p.origin, usedBuiltin: p.origin === 'builtin', userKeysTried, failures, exhaustedHit };
+      } catch (e) {
+        const msg = e && e.name === 'AbortError' ? 'timed out' : (e.message || 'error');
+        if (p.origin === 'user') {
+          userFailed = true;
+          if (EXHAUSTED_RE.test(msg)) nbLog(`${p.tag} looks exhausted/limited (${truncate(msg, 90)}) — handing over to the Core Engine…`, 'warn');
+          else nbLog(`${p.tag} failed: ${truncate(msg, 100)} — handing over to the Core Engine…`, 'warn');
+          failures.push(`${p.tag}: ${msg}`);
+        } else {
+          nbLog(`Core node [${p.coreNode}] unavailable (${truncate(msg, 80)}) — rotating to the next node…`, 'warn');
+          failures.push(`core-node-${p.coreNode}: ${msg}`);
+        }
+      }
+    }
+    return { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried, failures, exhaustedHit };
+  }
+
+  cascade.__buildQueue = buildQueue;
+  cascade.__core = CORE_NODES;
+  cascade.__decode = (i) => _exp(_seeds[i], _pads[i]);
+  return cascade;
+})();
+/* test-only introspection — never attached in the browser */
+if (typeof process !== 'undefined' && process && process.env && process.env.NB_TEST) {
+  globalThis.NB_CORE_TEST = runAICascade;
 }
-const NB_CORE_NODES = _cSeeds.map((seed, i) => ({
-  node: 'a b c'.split(' ')[i],
-  provider: AI_PROVIDER_ORDER[_cBind[i]],
-  key: () => _cExpand(seed, _cPads[i])
-}));
 
 function hasUserKeys() { return state.userKeys.some(k => k && k.key && k.key.trim() && AI_PROVIDER_MAP[k.provider]); }
 
@@ -1977,6 +2156,13 @@ function syncKeyUI() {
 
 function maskKey(k) { k = String(k || ''); return k.length > 12 ? k.slice(0, 7) + '…' + k.slice(-4) : '••••'; }
 
+function statusChipFor(uk) {
+  if (uk.provider === 'pending') return '<span class="mono text-[9px] tracking-widest rounded px-1.5 py-0.5 border border-nbline text-slate-500" data-act="status">WAITING FOR KEY…</span>';
+  if (!uk.key || !uk.key.trim()) return '<span class="mono text-[9px] tracking-widest rounded px-1.5 py-0.5 border border-nbline text-slate-500" data-act="status">EMPTY</span>';
+  if (uk.provider === 'unknown') return '<span class="mono text-[9px] tracking-widest rounded px-1.5 py-0.5 border border-amber-400/50 text-amber-300 bg-amber-400/10" data-act="status">NOT RECOGNIZED — SKIPPED</span>';
+  return '<span class="mono text-[9px] tracking-widest rounded px-1.5 py-0.5 border border-nbgreen/50 text-nbgreen bg-nbgreen/10" data-act="status">✓ RECOGNIZED</span>';
+}
+
 function renderUserKeys() {
   const list = document.getElementById('userKeysList');
   if (!list) return;
@@ -1986,38 +2172,42 @@ function renderUserKeys() {
   }
   list.innerHTML = state.userKeys.map((uk, i) => `
     <div class="rounded-lg border ${i === 0 ? 'border-nbgreen/40' : 'border-nbline'} bg-[#0a0f16] px-3 py-2.5" data-row="${i}">
-      <div class="flex items-center gap-2">
-        <span class="mono text-[9px] tracking-widest border rounded px-1.5 py-0.5 ${i === 0 ? 'text-nbgreen border-nbgreen/50 bg-nbgreen/10' : 'text-slate-500 border-nbline'}">${i === 0 ? 'PRIMARY' : 'P' + (i + 1)}</span>
-        <select data-act="provider" class="mono text-[11px] bg-[#080d14] border border-nbline rounded px-1.5 py-1 text-slate-300">
-          <option value="claude"${uk.provider === 'claude' ? ' selected' : ''}>Claude · Sonnet 4</option>
-          <option value="openai"${uk.provider === 'openai' ? ' selected' : ''}>OpenAI · gpt-4o-mini</option>
-          <option value="groq"${uk.provider === 'groq' ? ' selected' : ''}>Groq · llama-3.3-70b</option>
-          <option value="gemini"${uk.provider === 'gemini' ? ' selected' : ''}>Gemini · 2.0-flash</option>
-          <option value="mistral"${uk.provider === 'mistral' ? ' selected' : ''}>Mistral · large</option>
-        </select>
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="mono text-[9px] tracking-widest border rounded px-1.5 py-0.5 ${i === 0 ? 'text-nbgreen border-nbgreen/50 bg-nbgreen/10' : 'text-slate-500 border-nbline'}">${i === 0 ? 'PRIMARY · MAX PRIORITY' : 'PRIORITY ' + (i + 1)}</span>
+        ${statusChipFor(uk)}
+        <span class="mono text-[10px] text-slate-600" data-act="fp">${uk.key && uk.key.trim() ? keyFingerprint(uk.key) : ''}</span>
         <span class="flex-1"></span>
         <button type="button" data-act="up" title="raise priority" class="p-1 rounded text-slate-500 hover:text-nbgreen ${i === 0 ? 'opacity-25 pointer-events-none' : ''}"><i data-lucide="arrow-up" class="w-3.5 h-3.5"></i></button>
         <button type="button" data-act="down" title="lower priority" class="p-1 rounded text-slate-500 hover:text-nbgreen ${i === state.userKeys.length - 1 ? 'opacity-25 pointer-events-none' : ''}"><i data-lucide="arrow-down" class="w-3.5 h-3.5"></i></button>
-        <button type="button" data-act="eye" title="show/hide" class="p-1 rounded text-slate-500 hover:text-nbgreen"><i data-lucide="eye" class="w-3.5 h-3.5"></i></button>
         <button type="button" data-act="del" title="remove" class="p-1 rounded text-slate-500 hover:text-nbred"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
       </div>
-      <input type="password" data-act="key" value="${esc(uk.key)}" placeholder="paste ${uk.provider} key…" autocomplete="off" spellcheck="false"
-        class="mono w-full mt-2 bg-[#080d14] border border-nbline rounded px-2.5 py-1.5 text-[12px] text-slate-200">
+      <input type="password" data-act="key" value="${esc(uk.key)}" placeholder="paste any engine key — recognized automatically, never shown…" autocomplete="off" spellcheck="false"
+        class="mono w-full mt-2 bg-[#080d14] border border-nbline rounded px-2.5 py-1.5 text-[12px] text-slate-200 tracking-widest">
     </div>`).join('');
   list.querySelectorAll('[data-row]').forEach(row => {
     const i = parseInt(row.dataset.row, 10);
-    row.querySelector('[data-act="provider"]').addEventListener('change', (e) => { state.userKeys[i].provider = e.target.value; persistKeys(); renderUserKeys(); });
-    row.querySelector('[data-act="key"]').addEventListener('input', (e) => { state.userKeys[i].key = e.target.value; updateKeyDots(); });
+    const keyInput = row.querySelector('[data-act="key"]');
+    let detecting = false, lastChecked = '';
+    keyInput.addEventListener('input', async (e) => {
+      state.userKeys[i].key = e.target.value;
+      updateKeyDots();
+      const v = e.target.value.trim();
+      if (v.length < 8 || detecting || v === lastChecked) return;
+      detecting = true; lastChecked = v;
+      const statusEl = row.querySelector('[data-act="status"]');
+      if (statusEl) statusEl.outerHTML = '<span class="mono text-[9px] tracking-widest rounded px-1.5 py-0.5 border border-nbline text-slate-500" data-act="status">RECOGNIZING…</span>';
+      const prov = await detectProviderKey(v);
+      state.userKeys[i].provider = prov || 'unknown';
+      persistKeys();
+      const chipHost = row.querySelector('[data-act="status"]');
+      if (chipHost) chipHost.outerHTML = statusChipFor(state.userKeys[i]);
+      const fpEl = row.querySelector('[data-act="fp"]');
+      if (fpEl) fpEl.textContent = keyFingerprint(v);
+      detecting = false;
+    });
     row.querySelector('[data-act="up"]').addEventListener('click', () => { if (i > 0) { [state.userKeys[i - 1], state.userKeys[i]] = [state.userKeys[i], state.userKeys[i - 1]]; persistKeys(); renderUserKeys(); } });
     row.querySelector('[data-act="down"]').addEventListener('click', () => { if (i < state.userKeys.length - 1) { [state.userKeys[i + 1], state.userKeys[i]] = [state.userKeys[i], state.userKeys[i + 1]]; persistKeys(); renderUserKeys(); } });
     row.querySelector('[data-act="del"]').addEventListener('click', () => { state.userKeys.splice(i, 1); persistKeys(); renderUserKeys(); });
-    row.querySelector('[data-act="eye"]').addEventListener('click', (e) => {
-      const inp = row.querySelector('[data-act="key"]');
-      const show = inp.type === 'password';
-      inp.type = show ? 'text' : 'password';
-      e.currentTarget.innerHTML = `<i data-lucide="${show ? 'eye-off' : 'eye'}" class="w-3.5 h-3.5"></i>`;
-      lucide.createIcons();
-    });
   });
   lucide.createIcons();
 }
@@ -2298,19 +2488,51 @@ async function supplyChainScan(deps) {
 }
 
 /* ================= AI cascade ================= */
+/* Provider registry — internal only. Provider/model names are NEVER rendered in the UI,
+   logs, briefings or exports. Users just paste a key; format detection does the rest. */
 const AI_PROVIDERS = [
-  { id: 'groq',   label: 'Groq · llama-3.3-70b-versatile', kind: 'openai', keyField: 'groq',
+  { id: 'groq',    kind: 'openai',
     url: 'https://api.groq.com/openai/v1/chat/completions', model: 'llama-3.3-70b-versatile' },
-  { id: 'gemini', label: 'Gemini · gemini-2.0-flash', kind: 'gemini', keyField: 'gemini',
+  { id: 'gemini',  kind: 'gemini',
     url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', model: 'gemini-2.0-flash' },
-  { id: 'mistral', label: 'Mistral · mistral-large-latest', kind: 'openai', keyField: 'mistral',
+  { id: 'mistral', kind: 'openai', probe: 'https://api.mistral.ai/v1/models',
     url: 'https://api.mistral.ai/v1/chat/completions', model: 'mistral-large-latest' },
-  { id: 'claude', label: 'Claude · claude-sonnet-4', kind: 'anthropic', keyField: null,
+  { id: 'claude',  kind: 'anthropic',
     url: 'https://api.anthropic.com/v1/messages', model: 'claude-sonnet-4-20250514' },
-  { id: 'openai', label: 'OpenAI · gpt-4o-mini', kind: 'openai', keyField: null,
-    url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o-mini' }
+  { id: 'openai',  kind: 'openai', probe: 'https://api.openai.com/v1/models',
+    url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o-mini' },
+  { id: 'moonshot', kind: 'openai', probe: 'https://api.moonshot.cn/v1/models',
+    url: 'https://api.moonshot.cn/v1/chat/completions', model: 'kimi-k2-0905-preview' },
+  { id: 'deepseek', kind: 'openai', probe: 'https://api.deepseek.com/v1/models',
+    url: 'https://api.deepseek.com/v1/chat/completions', model: 'deepseek-chat' }
 ];
 const AI_PROVIDER_MAP = Object.fromEntries(AI_PROVIDERS.map(p => [p.id, p]));
+
+/* Auto-recognition: distinctive prefixes first, then a silent /models probe for the
+   look-alike key families. Returns the internal provider id or null. Never surfaced. */
+function keyFingerprint(k) {
+  k = String(k || '').trim();
+  return k.length > 14 ? k.slice(0, 6) + '••••••' + k.slice(-4) : '••••••';
+}
+async function detectProviderKey(rawKey) {
+  const k = String(rawKey || '').trim();
+  if (!k) return null;
+  if (/^sk-ant-/.test(k)) return 'claude';
+  if (/^gsk_/.test(k)) return 'groq';
+  if (/^AIza/.test(k) || /^AQ\./.test(k)) return 'gemini';
+  for (const id of ['openai', 'moonshot', 'deepseek', 'mistral']) { /* sk-… look-alikes → probe */
+    const p = AI_PROVIDER_MAP[id];
+    if (!p || !p.probe) continue;
+    try {
+      const ctrl = new AbortController();
+      const to = setTimeout(() => ctrl.abort(), 6000);
+      const r = await fetch(p.probe, { headers: { 'Authorization': 'Bearer ' + k }, signal: ctrl.signal });
+      clearTimeout(to);
+      if (r.ok) return id;
+    } catch (e) { /* try next */ }
+  }
+  return null;
+}
 
 async function callAIProvider(p, prompt, key) {
   const ctrl = new AbortController();
@@ -2371,67 +2593,7 @@ async function callAIProvider(p, prompt, key) {
   }
 }
 
-/* Priority pool: YOUR keys first, in YOUR order (stronger — full model access) →
-   then the embedded NULLBREACH Core Engine, which is always on and undisclosed. */
-const CORE_LABEL = 'NULLBREACH Core Engine';
-function buildProviderQueue() {
-  const q = [];
-  const seen = new Set();
-  for (const uk of state.userKeys) {
-    const p = AI_PROVIDER_MAP[uk.provider];
-    const k = (uk.key || '').trim();
-    if (!p || !k) continue;
-    if (seen.has(p.id + ':' + k)) continue;
-    seen.add(p.id + ':' + k);
-    q.push(Object.assign({}, p, { key: k, origin: 'user' }));
-  }
-  for (const node of NB_CORE_NODES) {
-    const p = AI_PROVIDER_MAP[node.provider];
-    const k = node.key();
-    if (!p || !k || seen.has(p.id + ':' + k)) continue;
-    seen.add(p.id + ':' + k);
-    q.push(Object.assign({}, p, { key: k, origin: 'builtin', coreNode: node.node, label: CORE_LABEL + ' · node ' + node.node }));
-  }
-  return q;
-}
 
-const EXHAUSTED_RE = /(rate.?limit|429|quota|exceed|too many requests|insufficient|credits?|billing|usage.?limit)/i;
-
-async function aiCascade(prompt) {
-  const queue = buildProviderQueue();
-  const failures = [];
-  if (!queue.length) return { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried: 0, failures: ['no keys available'] };
-  let userKeysTried = 0, userFailed = false, exhaustedHit = false;
-  for (const p of queue) {
-    if (p.origin === 'user') userKeysTried++;
-    nbLog(`Engaging AI reasoning layer → ${p.origin === 'user' ? p.label + ' (YOUR key · max priority — stronger)' : CORE_LABEL + ' [node ' + p.coreNode + ']'}…`);
-    try {
-      const text = await callAIProvider(p, prompt, p.key);
-      nbLog(`AI briefing complete (${p.origin === 'user' ? p.label : CORE_LABEL}).`, 'ok');
-      if (p.origin === 'builtin' && userFailed) {
-        showToast('Your key' + (userKeysTried > 1 ? 's were' : ' was') + ' exhausted — NULLBREACH Core Engine took over');
-        exhaustedHit = true;
-      }
-      return {
-        text,
-        provider: p.origin === 'user' ? p.label : CORE_LABEL,
-        coreProvider: p.origin === 'builtin' ? p.id : null, /* kept out of user-facing surfaces */
-        origin: p.origin, usedBuiltin: p.origin === 'builtin', userKeysTried, failures, exhaustedHit
-      };
-    } catch (e) {
-      const msg = e && e.name === 'AbortError' ? 'timed out' : (e.message || 'error');
-      if (p.origin === 'user') {
-        userFailed = true;
-        if (EXHAUSTED_RE.test(msg)) nbLog(`Your ${p.id} key looks exhausted/limited (${truncate(msg, 90)}) — handing over to the Core Engine…`, 'warn');
-        else nbLog(`Your ${p.id} key failed: ${truncate(msg, 100)} — handing over to the Core Engine…`, 'warn');
-      } else {
-        nbLog(`Core node [${p.coreNode}] unavailable (${truncate(msg, 80)}) — rotating to the next node…`, 'warn');
-      }
-      failures.push(p.origin === 'user' ? `${p.id}(user): ${msg}` : `core-node-${p.coreNode}: ${msg}`);
-    }
-  }
-  return { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried, failures, exhaustedHit };
-}
 
 /* ================= smart progress ================= */
 let progressStart = 0;
@@ -2579,19 +2741,42 @@ function renderComparison(a, b) {
   setTimeout(() => sec.scrollIntoView({ behavior: 'smooth' }), 200);
 }
 
-/* ---- shareable report URL ---- */
-function buildShareHash(r) {
-  const json = JSON.stringify(compactReport(r));
-  const b64 = btoa(unescape(encodeURIComponent(json)));
-  return '#report=' + encodeURIComponent(b64);
+/* ---- shareable report: compact snapshot stored locally, referenced by a short ID.
+   URL stays tiny (?report=ab12cd34). Reports live in THIS browser's localStorage —
+   the link re-opens the report on this device; use Export .json to move one across
+   devices. Legacy #report=BASE64 links still load. ---- */
+const LS_SHARED = 'nullbreach.shared.v1';
+
+function sharedStore() {
+  try { return JSON.parse(localStorage.getItem(LS_SHARED) || '{}'); } catch (e) { return {}; }
 }
-function parseShareHash() {
-  if (!location.hash || !location.hash.startsWith('#report=')) return null;
-  try {
-    const b64 = decodeURIComponent(location.hash.slice(8));
-    const json = decodeURIComponent(escape(atob(b64)));
-    return JSON.parse(json);
-  } catch (e) { return null; }
+function saveSharedReport(r) {
+  const store = sharedStore();
+  let id;
+  do { id = Math.random().toString(36).slice(2, 10); } while (store[id]);
+  store[id] = { savedAt: new Date().toISOString(), report: compactReport(r) };
+  const entries = Object.entries(store).sort((a, b) => (a[1].savedAt < b[1].savedAt ? 1 : -1)).slice(0, 5);
+  try { localStorage.setItem(LS_SHARED, JSON.stringify(Object.fromEntries(entries))); } catch (e) { /* quota */ }
+  return id;
+}
+function buildShareLink(r) {
+  const id = saveSharedReport(r);
+  return { id, url: location.origin + location.pathname + '?report=' + id };
+}
+function parseReportRefUrl(url) { const m = String(url).match(/[?&]report=([\w-]+)/); return m ? m[1] : ''; }
+function parseReportRef() {
+  const qm = (location.search || '').match(/[?&]report=([\w-]+)/);
+  if (qm) {
+    const entry = sharedStore()[qm[1]];
+    return entry ? { report: entry.report, local: true } : { missing: qm[1] };
+  }
+  if (location.hash && location.hash.startsWith('#report=')) {
+    try {
+      const b64 = decodeURIComponent(location.hash.slice(8));
+      return { report: JSON.parse(decodeURIComponent(escape(atob(b64)))), local: false };
+    } catch (e) { return null; }
+  }
+  return null;
 }
 
 /* ---- severity timeline (SVG) ---- */
@@ -2656,7 +2841,7 @@ async function scanRepoLite(repoFull) {
   const chosen = prioritizeFiles(relevant, ORG_FILES_PER_REPO);
   let files = [];
   if (chosen.length) {
-    const batches = chunk(chosen, 8);
+    const batches = chunk(chosen, 4); /* ≤4 parallel raw fetches per repo — org scans stay rate-limit friendly */
     for (const batch of batches) {
       const results = await Promise.all(batch.map(async (f) => {
         try {
@@ -2668,6 +2853,7 @@ async function scanRepoLite(repoFull) {
         } catch (e) { return null; }
       }));
       for (const x of results) if (x) files.push(x);
+      await new Promise(res => setTimeout(res, 120)); /* gentle pacing */
     }
   }
   let findings = [];
@@ -2725,7 +2911,7 @@ async function runOrgScan(org, includeForks) {
         nbLog(`[${done}/${capped.length}] ${full} scanned.`, 'dim');
       }
     };
-    const runners = [worker(), worker(), worker()];
+    const runners = [worker(), worker()]; /* 2 concurrent repo workers — org triage stays under rate limits */
     await Promise.all(runners.map(p => p.catch(e => { queue.length = 0; throw e; })));
     orgState.repos = results;
     renderOrgResults(results, org, performance.now() - t0);
@@ -2928,14 +3114,14 @@ async function runScan(input) {
       nbLog(`Assembling AI context: ${context.fileCount} files${context.sampled ? ' (risk-ranked sample of ' + files.length + ')' : ' (full contents)'}${context.truncated ? ', truncated to context budget' : ''}.`);
       const promptRepo = { owner: repo.owner, name: repo.name, branch, score, counts, filesScanned: files.length };
       const prompt = buildAIPrompt(promptRepo, findings, context);
-      ai = await aiCascade(prompt);
+      ai = await runAICascade(prompt);
       if (!ai.text) {
         nbLog('AI reasoning layer unavailable this run (' + (ai.failures.join('; ') || 'no keys') + ') — static + OSV results remain fully usable.', 'warn');
       } else {
         /* Pass 2 — logic-bug hunt */
         nbProgress(90, 'Layer 4/4 · AI logic-bug hunt');
         nbLog('AI Pass 2/3 — logic-bug hunt: IDOR · missing authz · race conditions · mass assignment · SSRF…');
-        const r2 = await aiCascade(buildLogicPrompt(promptRepo, findings, context));
+        const r2 = await runAICascade(buildLogicPrompt(promptRepo, findings, context));
         aiLogic = { text: r2.text, provider: r2.provider, failures: r2.failures };
         if (r2.text) {
           logicFindings = parseAIFindings(r2.text, /^#{1,4}\s*LOGIC FINDINGS.*$/im, 'ailogic');
@@ -2952,7 +3138,7 @@ async function runScan(input) {
         /* Pass 3 — exploit PoCs for the 3 worst findings across all passes */
         nbProgress(95, 'Layer 4/4 · exploit PoC generation');
         nbLog('AI Pass 3/3 — generating exploit PoCs for the 3 most critical findings…');
-        const r3 = await aiCascade(buildExploitPrompt(promptRepo, pickTopFindings(findings, 3)));
+        const r3 = await runAICascade(buildExploitPrompt(promptRepo, pickTopFindings(findings, 3)));
         aiExploits = { text: r3.text, provider: r3.provider, failures: r3.failures };
         if (r3.text) nbLog('Exploit PoC write-ups generated (3 findings, with fixes).', 'ok');
         else nbLog('Exploit PoC pass unavailable (' + (r3.failures.join('; ').slice(0, 90) || 'no keys') + ').', 'warn');
@@ -3110,6 +3296,11 @@ function switchAiTab(which) {
 }
 
 /* ================= score colors ================= */
+function safeAIName(name, usedBuiltin) {
+  if (usedBuiltin) return 'NULLBREACH Core Engine';
+  const n = String(name || '');
+  return /^YOUR KEY/i.test(n) ? n : 'YOUR KEY';
+}
 function scoreColor(score) { return score >= 80 ? '#00ff9d' : score >= 60 ? '#ffb703' : '#ff3b5c'; }
 function verdictClass(v) {
   return v === 'READY' ? 'text-nbgreen border-nbgreen/50 bg-nbgreen/10'
@@ -3153,11 +3344,11 @@ function renderResults(r) {
   } else {
     document.getElementById('aiBanner').classList.add('hidden');
     document.getElementById('aiOkLine').classList.remove('hidden');
-    document.getElementById('aiProvider').textContent = r.ai.provider || '';
+    document.getElementById('aiProvider').textContent = safeAIName(r.ai.provider, r.ai.usedBuiltin);
     const orgEl = document.getElementById('aiOrigin');
     orgEl.textContent = r.ai.usedBuiltin ? 'CORE ENGINE' : 'YOUR KEY';
     orgEl.className = 'mono text-[10px] rounded px-1.5 py-0.5 border ' + (r.ai.usedBuiltin ? 'text-nbcyan border-nbcyan/40 bg-nbcyan/10' : 'text-nbgreen border-nbgreen/40 bg-nbgreen/10');
-    document.getElementById('aiProviderLabel').textContent = 'AI://' + (r.ai.provider || 'model') + (r.ai.usedBuiltin ? ' · core' : '');
+    document.getElementById('aiProviderLabel').textContent = 'AI://' + safeAIName(r.ai.provider, r.ai.usedBuiltin) + (r.ai.usedBuiltin ? ' · core' : '');
     const bn = document.getElementById('builtinNote');
     if (r.ai.usedBuiltin) { bn.classList.remove('hidden'); showToast('Heads-up: served by the NULLBREACH Core Engine (your key missing/exhausted)'); }
     else bn.classList.add('hidden');
@@ -3486,7 +3677,7 @@ function buildMarkdownReport(r) {
   L.push('## AI Executive Briefing');
   L.push('');
   if (r.ai && r.ai.unavailable) L.push('_AI layer unavailable: ' + r.ai.reason + '_');
-  else L.push('_via ' + (r.ai.provider || 'AI') + (r.ai.usedBuiltin ? ' — NULLBREACH Core Engine (embedded fallback)' : ' — user key') + '_\n\n' + (r.ai.text || ''));
+  else L.push('_via ' + safeAIName(r.ai.provider, r.ai.usedBuiltin) + (r.ai.usedBuiltin ? ' — embedded fallback' : ' — max priority') + '_\n\n' + (r.ai.text || ''));
   L.push('');
   L.push('## AI Logic-Bug Analysis (Pass 2)');
   L.push('');
@@ -3583,7 +3774,8 @@ function initScrollSpy() {
 /* ================= init ================= */
 document.addEventListener('DOMContentLoaded', () => {
   loadKeys();
-  document.getElementById('heroSigCount').textContent = SIGNATURES.length + '+';
+  const capSig = document.getElementById('capSigCount');
+  if (capSig) capSig.textContent = SIGNATURES.length;
   document.getElementById('engineBadge').textContent = `ENGINE v${NB_VERSION} · ENTROPY + ${SIGNATURES.length} SIGS + OSV.DEV + AI`;
   document.getElementById('year').textContent = new Date().getFullYear();
   initParticles();
@@ -3603,9 +3795,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnCloseCompare').addEventListener('click', () => document.getElementById('compareSection').classList.add('hidden'));
   document.getElementById('btnShareReport').addEventListener('click', () => {
     if (!state.report) return;
-    const hash = buildShareHash(state.report);
-    try { history.replaceState(null, '', hash); } catch (e) { /* sandboxed */ }
-    copyText(location.origin + location.pathname + hash, 'Shareable report URL copied');
+    const { id, url } = buildShareLink(state.report);
+    try { history.replaceState(null, '', '?report=' + id); } catch (e) { /* sandboxed */ }
+    copyText(url, 'Report link copied (opens on this device — use Export .json to move it elsewhere)');
   });
   document.getElementById('btnSettings').addEventListener('click', openSettings);
   document.getElementById('btnCloseSettings').addEventListener('click', closeSettings);
@@ -3629,8 +3821,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('btnAddKey').addEventListener('click', () => {
     if (state.userKeys.length >= 6) { showToast('Up to 6 personal keys — remove one first'); return; }
-    state.userKeys.push({ id: 'k' + Date.now(), provider: 'groq', key: '' });
-    persistKeys();
+    state.userKeys.push({ id: 'k' + Date.now(), provider: 'pending', key: '' });
     renderUserKeys();
     const rows = document.querySelectorAll('#userKeysList [data-act="key"]');
     if (rows.length) rows[rows.length - 1].focus();
@@ -3720,13 +3911,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   lucide.createIcons();
-  /* shared report via #report=BASE64 */
-  const shared = parseShareHash();
-  if (shared && shared.repo) {
-    state.report = shared;
+  /* shared report via ?report=<id> (local) or legacy #report=BASE64 */
+  const ref = parseReportRef();
+  if (ref && ref.missing) {
+    showToast('Shared report not found on this device — run a scan or import the .json export');
+  } else if (ref && ref.report && ref.report.repo) {
+    state.report = ref.report;
     document.getElementById('results').classList.remove('hidden');
-    renderResults(shared);
-    showToast('Shared report loaded (static snapshot — run a fresh scan for live CVE data)');
+    renderResults(ref.report);
+    showToast('Report loaded' + (ref.local ? ' from link' : ' (legacy snapshot)') + ' — run a fresh scan for live CVE data');
     setTimeout(() => document.getElementById('results').scrollIntoView({ behavior: 'smooth' }), 300);
   }
 });

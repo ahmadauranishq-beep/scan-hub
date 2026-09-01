@@ -39,8 +39,8 @@ let engineSrc =
 
 /* CI guard: keep the embedded Core Engine off unless explicitly allowed (shared quota) */
 engineSrc = engineSrc.replace(
-  'for (const node of NB_CORE_NODES) {',
-  'for (const node of (globalThis.NB_CORE_ENABLED ? NB_CORE_NODES : [])) {'
+  'const allowCore = (typeof globalThis.NB_CORE_ENABLED === \'undefined\') || globalThis.NB_CORE_ENABLED !== false;',
+  'const allowCore = globalThis.NB_CORE_ENABLED === true;'
 );
 
 /* minimal browser stubs — every engine function guards its DOM access */
@@ -61,8 +61,8 @@ g.lucide = { createIcons() {} };
 const engine = new Function(engineSrc + `
   return { SIGNATURES, scanEntropyInFile, scanFileStatic, parseManifests, queryOSV,
            computeScore, verdictFor, buildAIContext, buildAIPrompt, parseAIFindings,
-           buildProviderQueue, callAIProvider, aiCascade, state, isRelevantFile,
-           isLowTrustPath, prioritizeFiles, sevOrder, NB_VERSION };
+           runAICascade, state, isRelevantFile, isLowTrustPath, prioritizeFiles,
+           sevOrder, NB_VERSION };
 `)();
 
 /* ---------- CLI args ---------- */
@@ -172,7 +172,7 @@ if (engine.state.userKeys.length || process.env.NULLBREACH_ALLOW_CORE === '1') {
     findings, context
   );
   try {
-    ai = await engine.aiCascade(prompt);
+    ai = await engine.runAICascade(prompt);
     log(`AI layer: ${ai.text ? 'complete via ' + ai.provider : 'unavailable (' + ai.failures.join('; ').slice(0, 120) + ')'}`);
     if (ai.text) {
       const af = engine.parseAIFindings(ai.text);
