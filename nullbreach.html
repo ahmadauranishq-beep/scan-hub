@@ -6,41 +6,308 @@
 <title>Auranis — Is it safe to ship?</title>
 <meta name="description" content="Paste any repository link — GitHub, GitLab, Bitbucket — or drop your files. Auranis reads the code, checks every package against the live CVE database, and gives you a plain-language verdict. Free, in your browser, nothing to install.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%2316181d'/%3E%3Ccircle cx='32' cy='32' r='15' fill='none' stroke='%23f7f5f1' stroke-width='4'/%3E%3Cline x1='43' y1='43' x2='54' y2='54' stroke='%23ff4b26' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        /* same token names the app already uses — remapped to the blackout palette */
-        nbbg: '#09090b',
-        nbgreen: '#3ecf8e',
-        nbcyan: '#7db4ff',
-        nbamber: '#f5a524',
-        nbred: '#ff5c5c',
-        nbpanel: '#101013',
-        nbline: '#232329',
-        /* legacy scale classes used by dynamic strings — remapped for blackout */
-        slate: { 50:'#d9d5cd', 100:'#f4f1ea', 200:'#d9d5cd', 300:'#b8b4ac', 400:'#8f8b81', 500:'#6f6b64', 600:'#5a5751', 700:'#413e3a', 800:'#2b2926', 900:'#1a1917' },
-        emerald: { 100:'#b8f5cf', 200:'#6ee7a8', 300:'#3ecf8e', 400:'#2fb377', 500:'#3ecf8e' },
-        red: { 200:'#ff8098', 300:'#ff8098' },
-        cyan: { 100:'#a8ccff', 300:'#7db4ff' },
-        amber: { 300:'#ffd08a', 400:'#f5a524' }
-      },
-      fontFamily: {
-        body: ['Inter', 'ui-sans-serif', 'sans-serif'],
-        display: ['"Space Grotesk"', 'Inter', 'ui-sans-serif', 'sans-serif'],
-        mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace']
-      }
-    }
-  }
-};
-</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<!-- External libraries: pinned versions, CORS-hardened. An integrity="sha384-…" attribute was attempted but this build environment has no outbound access to these CDNs, so hashes could not be computed here honestly — do not ship fake hashes. If you fork this file, compute and add SRI hashes from a networked machine. Tailwind is NOT used at runtime: its utility classes were pre-compiled into the inline stylesheet below, so this file no longer depends on the Tailwind CDN. -->
+<script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+/* compiled utilities — generated from the classes actually used (replaces the Tailwind CDN) */
+.-rotate-90{transform:rotate(-90deg)}
+.-translate-y-1\/2{transform:translateY(-50%)}
+.absolute{position:absolute}
+.align-top{vertical-align:top}
+.backdrop-blur-sm{backdrop-filter:blur(4px)}
+.bg-black\/70{background:rgba(0,0,0,70)}
+.bg-nbamber{background:#f5a524}
+.bg-nbamber\/10{background:rgba(245,165,36,10.0)}
+.bg-nbcyan{background:#7db4ff}
+.bg-nbcyan\/10{background:rgba(125,180,255,10.0)}
+.bg-nbgreen\/10{background:rgba(62,207,142,10.0)}
+.bg-nbgreen\/5{background:rgba(62,207,142,5.0)}
+.bg-nbred{background:#ff5c5c}
+.bg-nbred\/10{background:rgba(255,92,92,10.0)}
+.block{display:block}
+.border{border:1px solid var(--hair-2)}
+.border-b{border-bottom:1px solid var(--hair-2)}
+.border-l{border-left:1px solid var(--hair-2)}
+.border-nbamber\/50{border-color:rgba(245,165,36,50.0)}
+.border-nbcyan\/50{border-color:rgba(125,180,255,50.0)}
+.border-nbgreen\/30{border-color:rgba(62,207,142,30.0)}
+.border-nbgreen\/50{border-color:rgba(62,207,142,50.0)}
+.border-nbline{border-color:#232329}
+.border-nbred\/40{border-color:rgba(255,92,92,40.0)}
+.border-nbred\/50{border-color:rgba(255,92,92,50.0)}
+.border-t{border-top:1px solid var(--hair-2)}
+.bottom-6{bottom:24px}
+.break-all{word-break:break-all}
+.cursor-help{cursor:help}
+.cursor-pointer{cursor:pointer}
+.divide-\[\#eee9df\]{> :not([hidden]) ~ :not([hidden]){border-top-color:rgb(238,233,223)}}
+.divide-y{> :not([hidden]) ~ :not([hidden]){border-top:1px solid var(--hair)}}
+.duration-300{transition-duration:.3s}
+.fixed{position:fixed}
+.flex{display:flex}
+.flex-1{flex:1 1 0%}
+.flex-col{flex-direction:column}
+.flex-wrap{flex-wrap:wrap}
+.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}
+.font-body{font-family:var(--font-body)}
+.font-bold{font-weight:700}
+.font-display{font-family:var(--font-display)}
+.font-extrabold{font-weight:800}
+.font-medium{font-weight:500}
+.font-semibold{font-weight:600}
+.gap-1{gap:4px}
+.gap-1\.5{gap:6px}
+.gap-2{gap:8px}
+.gap-2\.5{gap:10px}
+.gap-3{gap:12px}
+.gap-4{gap:16px}
+.gap-5{gap:20px}
+.gap-7{gap:28px}
+.grid{display:grid}
+.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.h-1\.5{height:6px}
+.h-14{height:56px}
+.h-16{height:64px}
+.h-2{height:8px}
+.h-2\.5{height:10px}
+.h-3\.5{height:14px}
+.h-4{height:16px}
+.h-5{height:20px}
+.h-6{height:24px}
+.h-7{height:28px}
+.h-9{height:36px}
+.h-full{height:100%}
+.hidden{display:none}
+.hover\:bg-black\/5:hover{background:rgba(0,0,0,5)}
+.hover\:bg-black\/\[0\.03\]:hover{background:rgba(0,0,0,0.03)}
+.hover\:bg-white\/5:hover{background:rgba(255,255,255,5)}
+.hover\:border-nbgreen\/30:hover{border-color:rgba(62,207,142,30.0)}
+.hover\:text-nbcyan:hover{color:#7db4ff}
+.hover\:underline:hover{text-decoration:underline}
+.inset-0{inset:0}
+.inset-x-0{left:0;right:0}
+.items-center{align-items:center}
+.items-end{align-items:flex-end}
+.items-start{align-items:flex-start}
+.items-stretch{align-items:stretch}
+.justify-between{justify-content:space-between}
+.justify-center{justify-content:center}
+.leading-\[1\.75\]{line-height:1.75}
+.leading-\[1\.8\]{line-height:1.8}
+.leading-relaxed{line-height:1.625}
+.left-3{left:12px}
+@media(min-width:1024px){.lg\:grid-cols-\[340px_1fr\]{grid-template-columns:340px 1fr}
+.max-h-\[560px\]{max-height:560px}
+.max-h-\[80vh\]{max-height:80vh}
+.max-w-\[220px\]{max-width:220px}
+.max-w-\[420px\]{max-width:420px}
+.mb-1\.5{margin-bottom:6px}
+.mb-3{margin-bottom:12px}
+.mb-4{margin-bottom:16px}
+.mb-5{margin-bottom:20px}
+.min-h-screen{min-height:100vh}
+.min-w-0{min-width:0}
+.min-w-\[180px\]{min-width:180px}
+.ml-1{margin-left:4px}
+.mt-0\.5{margin-top:2px}
+.mt-1{margin-top:4px}
+.mt-1\.5{margin-top:6px}
+.mt-10{margin-top:40px}
+.mt-12{margin-top:48px}
+.mt-2{margin-top:8px}
+.mt-20{margin-top:80px}
+.mt-3{margin-top:12px}
+.mt-4{margin-top:16px}
+.mt-6{margin-top:24px}
+.mt-7{margin-top:28px}
+.mt-9{margin-top:36px}
+.mx-auto{margin-left:auto;margin-right:auto}
+.opacity-0{opacity:0}
+.opacity-60{opacity:.6}
+.opacity-70{opacity:.7}
+.overflow-hidden{overflow:hidden}
+.overflow-y-auto{overflow-y:auto}
+.p-1\.5{padding:6px}
+.p-2{padding:8px}
+.p-3{padding:12px}
+.p-4{padding:16px}
+.p-5{padding:20px}
+.p-6{padding:24px}
+.p-7{padding:28px}
+.pb-12{padding-bottom:48px}
+.pb-2{padding-bottom:8px}
+.pb-4{padding-bottom:16px}
+.pl-9{padding-left:36px}
+.pr-3{padding-right:12px}
+.pt-14{padding-top:56px}
+.pt-3{padding-top:12px}
+.pt-3\.5{padding-top:14px}
+.pt-4{padding-top:16px}
+.pt-5{padding-top:20px}
+.pt-6{padding-top:24px}
+.px-1\.5{padding-left:6px;padding-right:6px}
+.px-2{padding-left:8px;padding-right:8px}
+.px-2\.5{padding-left:10px;padding-right:10px}
+.px-3{padding-left:12px;padding-right:12px}
+.px-3\.5{padding-left:14px;padding-right:14px}
+.px-4{padding-left:16px;padding-right:16px}
+.px-5{padding-left:20px;padding-right:20px}
+.px-6{padding-left:24px;padding-right:24px}
+.px-8{padding-left:32px;padding-right:32px}
+.py-0\.5{padding-top:2px;padding-bottom:2px}
+.py-1{padding-top:4px;padding-bottom:4px}
+.py-1\.5{padding-top:6px;padding-bottom:6px}
+.py-2{padding-top:8px;padding-bottom:8px}
+.py-2\.5{padding-top:10px;padding-bottom:10px}
+.py-3{padding-top:12px;padding-bottom:12px}
+.py-3\.5{padding-top:14px;padding-bottom:14px}
+.py-4{padding-top:16px;padding-bottom:16px}
+.py-6{padding-top:24px;padding-bottom:24px}
+.py-8{padding-top:32px;padding-bottom:32px}
+.py-9{padding-top:36px;padding-bottom:36px}
+.relative{position:relative}
+.right-0{right:0}
+.right-4{right:16px}
+.right-6{right:24px}
+.rounded{border-radius:4px}
+.rounded-2xl{border-radius:16px}
+.rounded-full{border-radius:9999px}
+.rounded-lg{border-radius:8px}
+.rounded-md{border-radius:6px}
+.scroll-mt-24{scroll-margin-top:96px}
+.select-none{user-select:none}
+.shadow-2xl{box-shadow:0 25px 50px -12px rgba(0,0,0,.6)}
+.shrink-0{flex-shrink:0}
+@media(min-width:640px){.sm\:flex-row{flex-direction:row}
+@media(min-width:640px){.sm\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(min-width:640px){.sm\:inline{display:inline}
+.space-y-14{> :not([hidden]) ~ :not([hidden]){margin-top:56px}}
+.space-y-2{> :not([hidden]) ~ :not([hidden]){margin-top:8px}}
+.space-y-2\.5{> :not([hidden]) ~ :not([hidden]){margin-top:10px}}
+.space-y-3{> :not([hidden]) ~ :not([hidden]){margin-top:12px}}
+.space-y-6{> :not([hidden]) ~ :not([hidden]){margin-top:24px}}
+.space-y-7{> :not([hidden]) ~ :not([hidden]){margin-top:28px}}
+.text-2xl{font-size:24px;line-height:32px}
+.text-6xl{font-size:60px;line-height:1}
+.text-\[\#ff8a8a\]{font-size:#ff8a8a}
+.text-\[\#ff9d5c\]{font-size:#ff9d5c}
+.text-\[10px\]{font-size:10px}
+.text-\[11\.5px\]{font-size:11.5px}
+.text-\[11px\]{font-size:11px}
+.text-\[12\.5px\]{font-size:12.5px}
+.text-\[12px\]{font-size:12px}
+.text-\[13\.5px\]{font-size:13.5px}
+.text-\[13px\]{font-size:13px}
+.text-\[14px\]{font-size:14px}
+.text-\[15px\]{font-size:15px}
+.text-\[22px\]{font-size:22px}
+.text-amber-200{color:#ffd08a}
+.text-center{text-align:center}
+.text-emerald-800{color:#6ee7a8}
+.text-left{text-align:left}
+.text-lg{font-size:18px;line-height:28px}
+.text-nbamber{color:#f5a524}
+.text-nbcyan{color:#7db4ff}
+.text-nbcyan\/90{color:rgba(125,180,255,90.0)}
+.text-nbgreen{color:#3ecf8e}
+.text-nbred{color:#ff5c5c}
+.text-slate-200{color:#d9d5cd}
+.text-slate-300{color:#b8b4ac}
+.text-slate-400{color:#8f8b81}
+.text-slate-500{color:#6f6b64}
+.text-slate-600{color:#5a5751}
+.text-xl{font-size:20px;line-height:28px}
+.text-xs{font-size:12px;line-height:16px}
+.top-0{top:0}
+.top-1\/2{top:50%}
+.top-4{top:16px}
+.tracking-\[\.14em\]{letter-spacing:.14em}
+.tracking-\[\.15em\]{letter-spacing:.15em}
+.tracking-wider{letter-spacing:.05em}
+.tracking-widest{letter-spacing:.1em}
+.transition{transition:all .15s}
+.transition-transform{transition:transform .15s}
+.translate-x-full{transform:translateX(100%)}
+.translate-y-24{transform:translateY(6rem)}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.underline{text-decoration:underline}
+.uppercase{text-transform:uppercase}
+.w-2{width:8px}
+.w-2\.5{width:10px}
+.w-3\.5{width:14px}
+.w-4{width:16px}
+.w-5{width:20px}
+.w-6{width:24px}
+.w-7{width:28px}
+.w-full{width:100%}
+.whitespace-nowrap{white-space:nowrap}
+.whitespace-pre-wrap{white-space:pre-wrap}
+.z-10{z-index:10}
+.z-40{z-index:40}
+.z-\[70\]{z-index:70}
+.z-\[90\]{z-index:90}
+.bg-\[\#0e7a4a\]\/70{background:rgba(14,122,74,70.0)}
+.bg-\[\#b9820a\]\/70{background:rgba(185,130,10,70.0)}
+.bg-\[\#d92d20\]\/70{background:rgba(217,45,32,70.0)}
+.bg-\[\#fdfbf6\]{background:rgb(253,251,246)}
+.bg-\[\#ff9d5c\]{background:rgb(255,157,92)}
+.bg-\[\#ff9d5c\]\/10{background:rgba(255,157,92,10.0)}
+.bg-transparent{background:transparent}
+.border-\[\#ff5c5c55\]{border-color:rgba(255,92,92,0.333)}
+.border-\[\#ff9d5c\]\/35{border-color:rgba(255,157,92,35.0)}
+.border-\[\#ff9d5c\]\/50{border-color:rgba(255,157,92,50.0)}
+.bg-\[rgba\(255\,92\,92\,\.06\)\]{background:rgba(255,92,92,.06)}
+.bg-\[var\(--bad\)\]\/5{background:rgba(255,92,92,.05)}
+.bg-\[var\(--ink\)\]\/40{background:rgba(244,241,234,.4)}
+.bg-\[var\(--ok\)\]{background:var(--ok)}
+.bg-\[var\(--paper\)\]{background:var(--paper)}
+.bg-\[var\(--paper\)\]\/90{background:rgba(9,9,11,.9)}
+.bg-\[var\(--paper-2\)\]{background:var(--paper-2)}
+.bg-\[var\(--paper-3\)\]{background:var(--paper-3)}
+.border-\[var\(--bad\)\]\/40{border-color:rgba(255,92,92,.4)}
+.border-\[var\(--hair\)\]{border-color:var(--hair)}
+.border-\[var\(--hair-2\)\]{border-color:var(--hair-2)}
+.focus\:border-\[var\(--signal\)\]:focus{border-color:var(--signal)}
+.focus\:outline-none{outline:2px solid transparent;outline-offset:2px}
+.hover\:bg-black\/5:hover{background:rgba(0,0,0,.05)}
+.hover\:bg-black\/\[0\.03\]:hover{background:rgba(0,0,0,.03)}
+.hover\:bg-white\/5:hover{background:rgba(255,255,255,.05)}
+.hover\:border-nbgreen\/30:hover{border-color:rgba(62,207,142,.3)}
+.hover\:text-\[var\(--bad\)\]:hover{color:var(--bad)}
+.hover\:text-\[var\(--ink\)\]:hover{color:var(--ink)}
+.hover\:text-nbcyan:hover{color:#7db4ff}
+.hover\:underline:hover{text-decoration:underline}
+.text-\[\#ff8098\]{color:#ff8098}
+.text-\[var\(--bad\)\]{color:var(--bad)}
+.text-\[var\(--ink\)\]{color:var(--ink)}
+.text-\[var\(--ink-2\)\]{color:var(--ink-2)}
+.text-\[var\(--ink-3\)\]{color:var(--ink-3)}
+.text-\[var\(--ink-4\)\]{color:var(--ink-4)}
+.text-\[var\(--warn\)\]{color:var(--warn)}
+.w-\[min\(94vw\,560px\)\]{width:min(94vw,560px)}
+.border-\[\#ff9d5c\]\/35{border-color:rgba(255,157,92,.35)}
+.text-\[var\(--ink-4\)\]{color:var(--ink-4)}
+.text-\[var\(--signal\)\]{color:var(--signal)}
+.text-\[var\(--ok\)\]{color:var(--ok)}
+.text-\[var\(--warn\)\]{color:var(--warn)}
+.h-48{height:192px}
+.w-48{width:192px}
+.mt-5{margin-top:20px}
+.text-sm{font-size:14px;line-height:20px}
+.max-w-3xl{max-width:48rem}
+.max-w-5xl{max-width:64rem}
+.max-w-6xl{max-width:72rem}
+.max-w-md{max-width:28rem}
+.max-w-xl{max-width:36rem}
+.placeholder-\[var\(--ink-4\)\]::placeholder{color:var(--ink-4)}
+.shadow-\[0_40px_80px_-24px_rgba\(0\,0\,0\,\.9\)\]{box-shadow:0 40px 80px -24px rgba(0,0,0,.9)}
+.text-emerald-100\/90{color:rgba(184,245,207,.9)}
+</style>
 <style>/* ============================================================
    AURANIS design system v4 — "Blackout Editorial"
    Deep black, ivory type, one amber accent. Zero noise.
@@ -52,8 +319,10 @@ tailwind.config = {
   --font-display:'Space Grotesk', 'Inter', ui-sans-serif, sans-serif;
   --font-mono:'IBM Plex Mono', ui-monospace, monospace;
   --hair:#232329; --hair-2:#2e2e36;
+  --hairline:#232329;                          /* Palette A name */
   --signal:#f5a524;
   --ok:#3ecf8e; --warn:#f5a524; --bad:#ff5c5c; --info:#7db4ff;
+  --critical:#ff5c5c; --high:#ff9d5c; --medium:#ecc26a; --low:#7db4ff;   /* Palette A */
   --r:14px;
   --sh: 0 1px 0 rgba(244,241,234,.03) inset, 0 24px 48px -24px rgba(0,0,0,.7);
 }
@@ -180,7 +449,7 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 
 /* ---------- chips ---------- */
 .sev-chip{ color:var(--ink-2); }
-.sev-critical{ color:#ff8a8a; } .sev-high{ color:#ffb28a; } .sev-medium{ color:#ecc26a; } .sev-low{ color:#93bdf0; }
+.sev-critical{ color:var(--critical); } .sev-high{ color:var(--high); } .sev-medium{ color:var(--medium); } .sev-low{ color:var(--low); }
 .sev-chip.sev-critical{ border-color:rgba(255,92,92,.28); background:rgba(255,92,92,.06); }
 .sev-chip.sev-high{ border-color:rgba(255,178,138,.25); background:rgba(255,178,138,.05); }
 .sev-chip.sev-medium{ border-color:rgba(245,165,36,.28); background:rgba(245,165,36,.05); }
@@ -285,6 +554,20 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
   transition:border-color .15s;
 }
 .hist-row:hover{ border-color:var(--hair-2); }
+.faq{ border:1px solid var(--hair); border-radius:10px; background:var(--paper-2); }
+.faq summary{ cursor:pointer; padding:13px 16px; font-size:14px; font-weight:600; color:var(--ink); list-style:none; }
+.faq summary::-webkit-details-marker{ display:none; }
+.faq summary::after{ content:'+'; float:right; color:var(--ink-4); font-family:var(--font-mono); }
+.faq[open] summary::after{ content:'–'; }
+.faq p{ padding:0 16px 14px; font-size:13.5px; line-height:1.7; color:var(--ink-3); }
+#resultsNav{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:40;
+  display:flex; gap:2px; padding:5px; border:1px solid var(--hair-2); border-radius:999px;
+  background:rgba(16,16,19,.92); backdrop-filter:blur(8px); box-shadow:0 18px 40px -16px rgba(0,0,0,.8); }
+#resultsNav a{ font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--ink-3); padding:7px 13px; border-radius:999px; }
+#resultsNav a:hover{ color:var(--ink); background:var(--paper-3); }
+@media (max-width:640px){ #resultsNav{ display:none; } }
+
 @media (prefers-reduced-motion: reduce){
   .cursor,.pulse-clean,#critFlicker.on,.stamp-in,.glitching,.chat-dot{ animation:none !important; }
 }
@@ -313,14 +596,24 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
   </div>
 </div>
 
+<nav id="resultsNav" class="hidden" aria-label="Report sections">
+  <a href="#nb-summary">Score</a>
+  <a href="#nb-findings">Findings</a>
+  <a href="#nb-deps">Packages</a>
+  <a href="#nb-ai">AI read</a>
+  <a href="#nb-remediation">Fix list</a>
+  <a href="#nb-export">Export</a>
+</nav>
+
 <div id="critFlicker"></div>
 
 <!-- ================= MASTHEAD ================= -->
 <header class="relative z-40 bg-[var(--paper)]/90 backdrop-blur-sm">
   <div class="rule-2x"></div>
   <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-    <a href="#" class="flex items-baseline gap-2.5 group">
-      <span class="masthead-title text-[26px] text-[var(--ink)]">Auranis</span>
+    <a href="#" class="flex items-center gap-2.5 group">
+      <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="11" fill="none" stroke="#f5a524" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="56 13" stroke-dashoffset="-14" transform="rotate(-20 16 16)"/></svg>
+      <span class="masthead-title text-[22px] text-[var(--ink)]">Auranis</span>
       <span class="kicker-caps hidden sm:inline">security desk</span>
     </a>
     <div class="relative flex items-center gap-1">
@@ -341,6 +634,12 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
     </div>
 
     <div class="flex-1 overflow-y-auto px-6 py-6 space-y-7">
+      <p class="text-[13.5px] leading-relaxed text-[var(--ink-3)]">
+        Auranis works out of the box for the code-level scan — leaked secrets, risky patterns, live
+        vulnerability checks, supply-chain flags. Add your own AI key below to unlock the plain-language
+        summary and deeper reasoning pass. Everything here stays in this browser.
+      </p>
+
       <div>
         <div id="provGrid" class="grid grid-cols-4 gap-2"></div>
         <div class="mt-3 flex gap-2">
@@ -349,6 +648,15 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
           <button id="btnAddKey" type="button" class="btn-ink rounded-md px-4 py-2.5 text-[13px] font-semibold shrink-0">Add</button>
         </div>
         <div id="prefKeyList" class="mt-3 space-y-2"></div>
+        <p class="mt-3 text-[12px] text-[var(--ink-4)]">
+          Stored only in your browser. Sent only to the provider you choose — Auranis has no server to send it to.
+        </p>
+      </div>
+
+      <div class="pt-4 border-t border-[var(--hair)]">
+        <label for="prefGithub" class="text-[13.5px] font-semibold text-[var(--ink)]">GitHub token <span class="kicker-caps ml-1">optional</span></label>
+        <input id="prefGithub" type="password" autocomplete="off" spellcheck="false" placeholder="for a higher scan limit"
+          class="mono w-full mt-2 px-3 py-2.5 text-[13px] border border-[var(--hair-2)] bg-transparent rounded-md tracking-wider">
       </div>
 
       <div class="pt-4 border-t border-[var(--hair)]">
@@ -384,46 +692,40 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 <!-- ================= HERO / SCAN ================= -->
 <main class="relative z-10">
 <section class="max-w-5xl mx-auto px-6 pt-14 pb-12">
+  <p class="kicker-caps mb-5">Free · No account · Nothing leaves your browser</p>
   <h1 class="hero-headline">Is it safe<br>to <em>ship</em> it?</h1>
   <p class="hero-sub mt-6">
-    Point it at your project — it reads the code and tells you straight whether the tech holds up,
-    what's broken, and what to fix first.
+    Auranis reads your code like a careful security engineer. It finds passwords accidentally left behind,
+    dangerous patterns, and packages with known security holes — then tells you, in plain words, what's
+    wrong and what to fix first.
   </p>
-
-  <div class="mt-9 grid sm:grid-cols-3 gap-5">
-    <div class="how-step">
-      <span class="how-num">1</span>
-      <p class="text-[14px] leading-relaxed text-[var(--ink-3)]">Give it a repository link — or drop your files in the box. No account, nothing to install.</p>
-    </div>
-    <div class="how-step">
-      <span class="how-num">2</span>
-      <p class="text-[14px] leading-relaxed text-[var(--ink-3)]">It reads every line of code and checks every package against the live security databases.</p>
-    </div>
-    <div class="how-step">
-      <span class="how-num">3</span>
-      <p class="text-[14px] leading-relaxed text-[var(--ink-3)]">You get a score out of 100, a clear list of problems, and a fix list ordered by urgency.</p>
-    </div>
-  </div>
 
   <form id="scanForm" class="mt-10">
     <div class="flex flex-col sm:flex-row gap-4 items-end">
       <div class="flex-1 w-full">
         <label for="repoInput" class="kicker-caps">Repository link</label>
         <input id="repoInput" type="text" spellcheck="false" autocomplete="off"
-          placeholder="any repo link — GitHub, GitLab, Bitbucket…"
+          placeholder="https://github.com/owner/repository"
           class="audit-input w-full mt-2">
       </div>
-      <button id="btnScan" type="submit" class="btn-ink rounded-md px-8 py-3.5 text-sm font-semibold whitespace-nowrap">Scan</button>
+      <button id="btnScan" type="submit" class="btn-ink rounded-md px-8 py-3.5 text-sm font-semibold whitespace-nowrap">Scan it</button>
     </div>
   </form>
 
-  <div class="hero-divider mt-9 kicker-caps">or drop your files</div>
+  <div class="hero-divider mt-9 kicker-caps">or</div>
 
   <div id="dropZone" class="drop-zone mt-4 px-6 py-9 text-center cursor-pointer select-none" role="button" tabindex="0" aria-label="Upload files to scan">
     <i data-lucide="upload-cloud" class="w-7 h-7 mx-auto text-[var(--ink-3)]"></i>
-    <p class="mt-3 text-[15px] text-[var(--ink-2)]"><span class="font-semibold text-[var(--ink)] underline decoration-[var(--hair-2)] underline-offset-4">Choose files</span> or drag &amp; drop them here</p>
-    <p class="mt-1.5 text-[13px] text-[var(--ink-3)]">Any files: a whole project as .zip, or any code / config / text files. Everything is read on your device — nothing is uploaded.</p>
+    <p class="mt-3 text-[15px] text-[var(--ink-2)]">Choose files or drag &amp; drop them here</p>
+    <p class="mt-1.5 text-[13px] text-[var(--ink-3)]">Any files: a whole project as .zip, or individual code/config files. Everything is read on your device — nothing is uploaded.</p>
     <input id="fileInput" type="file" class="hidden" multiple>
+  </div>
+
+  <!-- FAQ -->
+  <div class="mt-12 max-w-3xl space-y-2.5">
+    <details class="faq"><summary>What does Auranis actually check?</summary><p>Four things: leaked secrets, risky code patterns, your dependencies against a live vulnerability database, and — if you've added a key — an AI pass that explains findings in plain language and looks for logic-level issues.</p></details>
+    <details class="faq"><summary>Is my code sent anywhere?</summary><p>No. Scanning happens in your browser. Only package names are checked against public databases, and only if you've added an AI key is a short excerpt of your code sent to the provider you picked. Dropped files never leave your device.</p></details>
+    <details class="faq"><summary>Why do I need my own API key for the AI part?</summary><p>Auranis has no server and no shared budget to cover AI calls for everyone — that's what keeps it free with no account. The core scan needs no key at all; the AI summary is optional and entirely yours.</p></details>
   </div>
 
   <div id="scanError" class="hidden mt-7 rounded-md border border-[var(--bad)]/40 bg-[var(--bad)]/5 px-5 py-4 text-[14px] text-[var(--bad)]">
@@ -555,7 +857,7 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
             </div>
             <div id="aiOkLine" class="hidden mt-5 flex items-center gap-2 text-[13px] text-[var(--ink-3)]">
               <i data-lucide="pen-line" class="w-4 h-4"></i>
-              <span>Read over by <span class="font-semibold text-[var(--ink)]">Auranis's built-in AI</span> — three passes: summary, logic hunt, exploit proofs.</span>
+              <span>Summarized by <span class="font-semibold text-[var(--ink)]">your AI key</span> — plain-language summary, logic hunt, exploit proofs.</span>
             </div>
           </div>
         </div>
@@ -622,6 +924,7 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
       <div class="panel p-5 space-y-6">
         <div>
           <div class="kicker-caps mb-3">Known vulnerabilities</div>
+          <div id="depsFailNote" class="hidden mb-3 rounded-lg border border-[#ff5c5c55] bg-[rgba(255,92,92,.06)] px-4 py-3 text-[13px] text-[#ff8a8a]">The live CVE database could not be reached from this network — dependency vulnerabilities are NOT covered by this run. Everything else is complete. Re-run the scan later.</div>
           <div id="depsSummary" class="mono text-[12px] text-[var(--ink-3)] mb-3"></div>
           <div id="depsList" class="space-y-3"></div>
         </div>
@@ -715,20 +1018,25 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 <!-- ================= FOOTER ================= -->
 <footer class="relative z-10 mt-20">
   <div class="rule-2x"></div>
-  <div class="max-w-5xl mx-auto px-6 py-8 flex items-center justify-between flex-wrap gap-2">
-    <span class="masthead-title text-[16px] text-[var(--ink)]">Auranis</span>
-    <span class="kicker-caps">v1.9</span>
+  <div class="max-w-5xl mx-auto px-6 py-8">
+    <p class="text-[12.5px] leading-relaxed text-[var(--ink-4)] max-w-3xl">
+      Auranis combines randomness-based secret detection, a 40+ signature library, live vulnerability data,
+      and optional AI reasoning. It's a strong first-pass check, not a certified security audit. Verify
+      critical findings before acting.
+    </p>
+    <div class="mt-4 flex items-center justify-between flex-wrap gap-2">
+      <span class="masthead-title text-[15px] text-[var(--ink)]">Auranis</span>
+      <span class="kicker-caps">© Auranis · built for people who'd rather know now than find out later</span>
+    </div>
   </div>
 </footer>
 
 <div id="toast" class="fixed bottom-6 right-6 z-[90] translate-y-24 opacity-0"></div>
 
-<div id="toast" class="fixed bottom-6 right-6 z-[90] translate-y-24 opacity-0 mono text-[12px] rounded-lg border border-nbgreen/40 bg-[var(--ink)] text-nbgreen px-5 py-3 shadow-2xl"></div>
-
 <script id="nb-engine">
 /*ENGINE-START*/
 'use strict';
-const NB_VERSION = '1.9.0';
+const NB_VERSION = '2.0.0';
 
 /* ================= Layer 1 — Shannon entropy (Gitleaks technique) ================= */
 function shannonEntropy(str) {
@@ -1641,9 +1949,9 @@ function computeScore(findings) {
 }
 
 function verdictFor(score, counts) {
-  if (counts.critical > 0 || score < 40) return 'BLOCKED';
-  if (score < 85) return 'NEEDS FIXES';
-  return 'READY';
+  if (counts.critical > 0 || score < 50) return 'BLOCKED';   /* 0–49 (or any critical) */
+  if (score < 85) return 'NEEDS FIXES';                      /* 50–84 */
+  return 'READY TO SHIP';                                    /* 85–100 */
 }
 
 /* ================= AI context assembly ================= */
@@ -1703,7 +2011,7 @@ function buildAIPrompt(repo, findings, context) {
   return `You are a senior application security engineer with OWASP and CVE expertise.
 Given these confirmed static findings (including real CVE/GHSA data from OSV.dev)
 and this code context, produce an English report with:
-1. Executive summary + deployment verdict: READY / NEEDS FIXES / BLOCKED
+1. Executive summary + deployment verdict: READY TO SHIP (85–100) / NEEDS FIXES (50–84) / BLOCKED (0–49 or any critical finding)
 2. Critical & high findings explained with real-world exploit impact
 3. Any additional logic-level or design-level vulnerabilities you can identify
    from the code itself that the static layers wouldn't catch
@@ -1842,16 +2150,21 @@ function loadKeys() {
     const raw = localStorage.getItem(LS_PREFS);
     if (raw) {
       const o = JSON.parse(raw);
+      if (typeof o.githubToken === 'string') state.githubToken = o.githubToken;
       if (Array.isArray(o.aiKeys)) state.userKeys = o.aiKeys
         .filter(k => k && typeof k.key === 'string' && k.key)
         .map((k, i) => ({ id: k.id || 'k' + i, provider: PROVIDER_LABEL[k.provider] ? k.provider : (detectProviderKeySync(k.key) || 'openai'), key: k.key }));
     }
   } catch (e) { /* private mode / corrupt storage */ }
+  const gh = document.getElementById('prefGithub');
+  if (gh) gh.value = state.githubToken;
   renderPrefKeys();
 }
 
 function persistKeys() {
-  try { localStorage.setItem(LS_PREFS, JSON.stringify({ aiKeys: state.userKeys })); } catch (e) { /* ignore */ }
+  const gh = document.getElementById('prefGithub');
+  if (gh) state.githubToken = gh.value.trim();
+  try { localStorage.setItem(LS_PREFS, JSON.stringify({ githubToken: state.githubToken, aiKeys: state.userKeys })); } catch (e) { /* ignore */ }
 }
 
 const PROVIDER_LABEL = { groq: 'Groq', gemini: 'Gemini', mistral: 'Mistral', claude: 'Claude', openai: 'OpenAI', moonshot: 'Kimi', deepseek: 'DeepSeek' };
@@ -1917,106 +2230,38 @@ function renderPrefKeys() {
    setup. Seeding material and the provider binding live INSIDE a closure — not reachable
    as globals from the console. Deterrence, not cryptography: the network tab always shows
    whatever a caller actually sends. Provider identities are never rendered anywhere. ---- */
-const runAICascade = (() => {
-  const _ord = ['groq', 'gemini', 'mistral'];
-  const _pads = ['nb\x63ore\x41', 'nb\x63ore\x42', 'nb\x63ore\x43'];
-  const _seeds = [
-    [9,17,8,48,28,28,18,43,59,22,39,32,12,6,43,9,39,38,24,22,39,37,83,50,56,53,1,56,12,81,37,54,65,47,18,47,32,41,11,36,11,25,24,7,2,90,36,33,4,23,32,34,87,34,87,20],
-    [47,51,77,46,16,93,16,32,84,41,32,6,36,23,9,15,86,45,95,49,42,33,6,34,39,67,48,40,49,7,41,11,17,48,111,56,6,83,34,32,18,53,12,41,81,90,70,34,4,25,50,49,24],
-    [87,5,80,62,66,93,122,30,90,15,1,16,87,115,8,7,36,60,60,39,55,26,86,39,38,34,22,23,40,1,5,6]
-  ];
-  function _exp(seed, pad) {
-    let out = '';
-    for (let i = 0; i < seed.length; i++) out += String.fromCharCode(seed[i] ^ pad.charCodeAt(i % pad.length));
-    return out;
-  }
-  const CORE_NODES = _seeds.map((seed, i) => ({
-    node: 'a b c'.split(' ')[i],
-    provider: _ord[i],
-    key: () => _exp(seed, _pads[i])
-  }));
-  const CORE_LABEL = 'AURANIS Core Engine';
-  const EXHAUSTED_RE = /(rate.?limit|429|quota|exceed|too many requests|insufficient|credits?|billing|usage.?limit)/i;
-  /* never surface raw engine/model internals in the UI */
-  const CLEAN = (m) => {
-    const s = String(m || 'error');
-    if (/does not exist|decommission|retired|invalid model|unsupported|not found|400/.test(s)) return 'its model is no longer available — rotated';
-    if (/rate|429|quota|exceed|insufficient|credits?|billing/i.test(s)) return 'capacity limit reached';
-    if (/timeout|abort/i.test(s)) return 'timed out';
-    return truncate(s.replace(/`[^`]*`/g, 'the model').replace(/model[\s:]+[\w.\/-]+/gi, 'its model'), 90);
-  };
-
-  /* Priority pool: YOUR keys first (recognized automatically, stronger, your order) →
-     then the embedded Core Engine (always on, undisclosed). */
-  function buildQueue() {
-    const q = [];
-    const seen = new Set();
-    let n = 0;
-    for (const uk of state.userKeys) {
-      const p = AI_PROVIDER_MAP[uk.provider];
-      const k = (uk.key || '').trim();
-      if (!p || !k || uk.provider === 'unknown' || uk.provider === 'pending') continue;
-      if (seen.has(p.id + ':' + k)) continue;
-      seen.add(p.id + ':' + k);
-      n++;
-      q.push(Object.assign({}, p, { key: k, origin: 'user', tag: 'YOUR KEY #' + n }));
-    }
-    const allowCore = (typeof globalThis.NB_CORE_ENABLED === 'undefined') || globalThis.NB_CORE_ENABLED !== false;
-    if (allowCore) {
-      for (const node of CORE_NODES) {
-        const p = AI_PROVIDER_MAP[node.provider];
-        const k = node.key();
-        if (!p || !k || seen.has(p.id + ':' + k)) continue;
-        seen.add(p.id + ':' + k);
-        q.push(Object.assign({}, p, { key: k, origin: 'builtin', coreNode: node.node, tag: CORE_LABEL }));
-      }
-    }
-    return q;
-  }
-
-  async function cascade(prompt) {
-    const queue = buildQueue();
-    const failures = [];
-    if (!queue.length) return { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried: 0, failures: ['no keys available'] };
-    let userKeysTried = 0, userFailed = false, exhaustedHit = false;
-    for (const p of queue) {
-      if (p.origin === 'user') userKeysTried++;
-      nbLog(p.origin === 'user'
-        ? `Engaging AI reasoning layer → ${p.tag} (max priority — stronger)…`
-        : `Engaging AI reasoning layer → ${CORE_LABEL} [node ${p.coreNode}]…`);
-      try {
-        const text = await callAIProvider(p, prompt, p.key);
-        nbLog(`AI briefing complete (${p.tag}).`, 'ok');
-        if (p.origin === 'builtin' && userFailed) {
-          showToast('Your key' + (userKeysTried > 1 ? 's were' : ' was') + ' exhausted — AURANIS Core Engine took over');
-          exhaustedHit = true;
-        }
-        return { text, provider: p.tag, origin: p.origin, usedBuiltin: p.origin === 'builtin', userKeysTried, failures, exhaustedHit };
-      } catch (e) {
-        const msg = e && e.name === 'AbortError' ? 'timed out' : (e.message || 'error');
-        if (p.origin === 'user') {
-          userFailed = true;
-          if (EXHAUSTED_RE.test(msg)) nbLog(`${p.tag} looks exhausted/limited — handing over to the Core Engine…`, 'warn');
-          else nbLog(`${p.tag} failed (${CLEAN(msg)}) — handing over to the Core Engine…`, 'warn');
-          failures.push(`${p.tag}: ${CLEAN(msg)}`);
-        } else {
-          nbLog('A core node was unavailable — rotating to the next engine…', 'warn');
-          failures.push(CLEAN(msg));
-        }
-      }
-    }
-    return { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried, failures, exhaustedHit };
-  }
-
-  cascade.__buildQueue = buildQueue;
-  cascade.__core = CORE_NODES;
-  cascade.__decode = (i) => _exp(_seeds[i], _pads[i]);
-  return cascade;
-})();
-/* test-only introspection — never attached in the browser */
-if (typeof process !== 'undefined' && process && process.env && process.env.NB_TEST) {
-  globalThis.NB_CORE_TEST = runAICascade;
+/* BYOK cascade — your keys, your order, nothing embedded */
+function cleanEngineMsg(m) {
+  const s = String(m || 'error');
+  if (/does not exist|decommission|retired|invalid model|unsupported|not found|400/.test(s)) return 'its model is no longer available — rotated';
+  if (/rate|429|quota|exceed|insufficient|credits?|billing/i.test(s)) return 'capacity limit reached';
+  if (/timeout|abort/i.test(s)) return 'timed out';
+  return truncate(s.replace(/`[^`]*`/g, 'the model').replace(/model[\s:]+[\w.\/-]+/gi, 'its model'), 90);
 }
+
+const runAICascade = async (prompt) => {
+  const queue = state.userKeys.map((uk, i) => {
+    const p = AI_PROVIDER_MAP[uk.provider];
+    const k = (uk.key || '').trim();
+    return p && k ? Object.assign({}, p, { key: k, origin: 'user', tag: 'YOUR KEY #' + (i + 1) }) : null;
+  }).filter(Boolean);
+  const failures = [];
+  let userKeysTried = 0;
+  for (const p of queue) {
+    userKeysTried++;
+    nbLog(`Engaging your AI key → ${p.tag}…`);
+    try {
+      const text = await callAIProvider(p, prompt, p.key);
+      nbLog(`AI pass complete (${p.tag}).`, 'ok');
+      return { text, provider: p.tag, origin: 'user', usedBuiltin: false, userKeysTried, failures, exhaustedHit: false };
+    } catch (e) {
+      const raw = e && e.name === 'AbortError' ? 'timed out' : ((e && e.message) || 'error');
+      nbLog(`${p.tag} failed — ${cleanEngineMsg(raw)}. ${queue.length > userKeysTried ? 'Trying your next key…' : ''}`, 'warn');
+      failures.push(`${p.tag}: ${cleanEngineMsg(raw)}`);
+    }
+  }
+  return { text: null, provider: null, origin: null, usedBuiltin: false, userKeysTried, failures, exhaustedHit: false };
+};
 /* ================= helpers ================= */
 function esc(s) {
   return String(s == null ? '' : s)
@@ -2048,13 +2293,6 @@ function nbLog(msg, cls) {
 /* ================= GitHub ================= */
 /* Auranis ships with its own repository access. It is sealed in a closure —
    not a global, not displayed, not configurable. Deterrence, not cryptography. */
-const ghToken = (() => {
-  const _pad = 'nb-gh-7';
-  const _seed = [9,10,93,56,39,31,82,36,7,67,38,50,98,5,6,6,88,22,9,31,103,95,49,28,18,43,26,116,86,17,65,52,25,21,6,44,44,108,84,80];
-  const builtIn = () => _seed.map((c, i) => String.fromCharCode(c ^ _pad.charCodeAt(i % _pad.length))).join('');
-  return () => builtIn();
-})();
-
 async function fetchT(url, opts, ms) {
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), ms || 15000);
@@ -2063,12 +2301,13 @@ async function fetchT(url, opts, ms) {
 }
 
 async function ghFetch(path) {
-  const headers = { 'Accept': 'application/vnd.github+json', 'User-Agent': 'nullbreach-scanner', 'Authorization': 'Bearer ' + ghToken() };
+  const headers = { 'Accept': 'application/vnd.github+json', 'User-Agent': 'auranis-scanner' };
+  if (state.githubToken) headers['Authorization'] = 'Bearer ' + state.githubToken;
   const r = await fetchT('https://api.github.com' + path, { headers });
   if (r.status === 404) throw new NBError('Repository not found on GitHub (404). Check the link — private repositories are not reachable.');
   if (r.status === 403) {
     const rem = r.headers.get('x-ratelimit-remaining');
-    if (rem === '0') throw new NBError('The shared scan allowance ran out for this hour — please try again a bit later.');
+    if (rem === '0') throw new NBError('The public scan allowance for this network is used up for now. Try again shortly, or add a token in Settings for a higher limit.');
     throw new NBError('GitHub refused the request (403).');
   }
   if (r.status === 301) throw new NBError('That repository moved (301). Try its new location.');
@@ -2076,10 +2315,16 @@ async function ghFetch(path) {
   return r.json();
 }
 
+function headersForGithub() {
+  const h = { 'Accept': 'application/vnd.github.raw', 'User-Agent': 'auranis-scanner' };
+  if (state.githubToken) h['Authorization'] = 'Bearer ' + state.githubToken;
+  return h;
+}
+
 async function nbJson(url, hostLabel) {
   const r = await fetchT(url, { headers: { 'Accept': 'application/json' } });
   if (r.status === 404) throw new NBError('Repository not found on ' + hostLabel + ' (404). Check the link — private repositories are not reachable.');
-  if (r.status === 403 || r.status === 429) throw new NBError(hostLabel + ' is rate-limiting the shared scan allowance right now — please try again a bit later.');
+  if (r.status === 403 || r.status === 429) throw new NBError('The public scan allowance for this network is used up for now. Try again shortly, or add a token in Settings for a higher limit.');
   if (!r.ok) throw new NBError(hostLabel + ' API error HTTP ' + r.status + '.');
   return r.json();
 }
@@ -2101,7 +2346,7 @@ const NB_HOSTS = {
     async readFile(r, branch, path) {
       const p = path.split('/').map(encodeURIComponent).join('/');
       const resp = await fetchT('https://api.github.com/repos/' + r.owner + '/' + r.name + '/contents/' + p + '?ref=' + encodeURIComponent(branch),
-        { headers: { 'Accept': 'application/vnd.github.raw', 'Authorization': 'Bearer ' + ghToken(), 'User-Agent': 'nullbreach-scanner' } });
+        { headers: headersForGithub() });
       return resp.ok ? await resp.text() : null;
     },
   },
@@ -2162,7 +2407,7 @@ const NB_HOSTS = {
 
 function parseRepoLink(input) {
   let s = (input || '').trim();
-  if (!s) throw new NBError('Paste a repository link — GitHub, GitLab or Bitbucket — or drop your files below.');
+  if (!s) throw new NBError("That doesn't look like a repository Auranis can reach. Public GitHub, GitLab, or Bitbucket links only.");
   s = s.replace(/^git@([^:]+):/i, (m0, h) => 'https://' + h + '/').replace(/\.git$/i, '').replace(/\/+$/, '');
   const gh = s.match(/github\.com\/([^\/\s?#]+)\/([^\/\s?#]+)/i);
   if (gh) return { host: 'github', owner: gh[1], name: gh[2].replace(/\.git$/i, ''), branch: branchFromPath(s, '/tree/') };
@@ -2178,7 +2423,7 @@ function parseRepoLink(input) {
   if (bb) return { host: 'bitbucket', owner: bb[1], name: bb[2].replace(/\.git$/i, ''), branch: branchFromPath(s, '/src/') };
   const m = s.match(/^([\w.-]+)\/([\w.-]+)$/);
   if (m) return { host: 'github', owner: m[1], name: m[2].replace(/\.git$/i, ''), branch: null };
-  throw new NBError('That does not look like a repository link. Use a full URL (GitHub, GitLab or Bitbucket) or <span class="mono">owner/repo</span>.');
+  throw new NBError("That doesn't look like a repository Auranis can reach. Public GitHub, GitLab, or Bitbucket links only.");
 }
 function branchFromPath(s, mark) {
   const i = s.toLowerCase().indexOf(mark);
@@ -2252,38 +2497,72 @@ function prioritizeFiles(files, maxCount) {
 }
 
 
-/* ================= OSV.dev ================= */
+/* ================= OSV.dev (+ deps.dev fallback) ================= */
+const DEPS_DEV_ECO = { npm: 'NPM', pypi: 'PYPI', go: 'GO', rubygems: 'GEM' };
+async function queryDepsDevFallback(deps, onProgress) {
+  const findings = []; let queried = 0;
+  for (const d of deps) {
+    const sys = DEPS_DEV_ECO[d.ecosystem];
+    if (!sys) continue;
+    try {
+      const r = await fetchT('https://api.deps.dev/v3alpha/systems/' + sys + '/packages/' + encodeURIComponent(d.name) + '/versions/' + encodeURIComponent(d.version), { headers: {} }, 10000);
+      queried++;
+      if (r.ok) {
+        const j = await r.json();
+        for (const a of (j.advisoryKeys || []).slice(0, 4)) {
+          findings.push({ id: 'dd-' + (d.name + d.version + a.id).replace(/\W/g, ''), sig: 'depsdev', layer: 'osv', severity: 'high', name: d.name + '@' + d.version + ' — advisory ' + a.id, desc: 'A published advisory (' + a.id + ') affects this pinned version, reported via the deps.dev mirror of the open-source vulnerability database.', file: (d.manifest || 'manifest'), line: 0, cveId: a.id, url: 'https://deps.dev/' + sys.toLowerCase() + '/' + encodeURIComponent(d.name) + '/' + encodeURIComponent(d.version) });
+        }
+      }
+    } catch (e) { /* mirror unreachable too */ }
+    if (onProgress && queried % 5 === 0) onProgress(queried, deps.length);
+  }
+  return { findings, queried };
+}
+
 async function queryOSV(deps, onProgress) {
   if (!deps.length) return { findings: [], queried: 0 };
   const capped = deps.slice(0, OSV_MAX_DEPS);
-  if (deps.length > OSV_MAX_DEPS) nbLog(`OSV.dev: capping at ${OSV_MAX_DEPS} of ${deps.length} dependencies (engine limit).`, 'warn');
+  if (deps.length > OSV_MAX_DEPS) nbLog(`capping at ${OSV_MAX_DEPS} of ${deps.length} dependencies (engine limit).`, 'warn');
   const allResults = [];
   const batches = chunk(capped, OSV_BATCH_SIZE);
-  for (let bi = 0; bi < batches.length; bi++) {
-    const ctrl = new AbortController();
-    const to = setTimeout(() => ctrl.abort(), 60000);
-    let resp;
-    try {
-      resp = await fetch('https://api.osv.dev/v1/querybatch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildOSVBatch(batches[bi])),
-        signal: ctrl.signal
-      });
-    } catch (e) {
+  try {
+    for (let bi = 0; bi < batches.length; bi++) {
+      const ctrl = new AbortController();
+      const to = setTimeout(() => ctrl.abort(), 60000);
+      let resp;
+      try {
+        resp = await fetch('https://api.osv.dev/v1/querybatch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(buildOSVBatch(batches[bi])),
+          signal: ctrl.signal
+        });
+      } catch (e) {
+        clearTimeout(to);
+        throw new NBError('OSV.dev unreachable: ' + (e && e.name === 'AbortError' ? 'timed out' : 'network/CORS error'));
+      }
       clearTimeout(to);
-      throw new NBError('OSV.dev unreachable: ' + (e && e.name === 'AbortError' ? 'timed out' : 'network/CORS error'));
+      if (!resp.ok) throw new NBError('OSV.dev API error HTTP ' + resp.status);
+      const data = await resp.json();
+      const results = (data && Array.isArray(data.results)) ? data.results : [];
+      allResults.push(...results);
+      if (batches.length > 1) nbLog(`vulnerability batch ${bi + 1}/${batches.length} done…`, 'dim');
+      if (onProgress) onProgress(bi + 1, batches.length);
+      if (bi < batches.length - 1) await new Promise(r => setTimeout(r, 150));
     }
-    clearTimeout(to);
-    if (!resp.ok) throw new NBError('OSV.dev API error HTTP ' + resp.status);
-    const data = await resp.json();
-    const results = (data && Array.isArray(data.results)) ? data.results : [];
-    allResults.push(...results);
-    if (batches.length > 1) nbLog(`OSV.dev batch ${bi + 1}/${batches.length} done (${allResults.length} package results so far)…`, 'dim');
-    if (onProgress) onProgress(bi + 1, batches.length);
-    if (bi < batches.length - 1) await new Promise(r => setTimeout(r, 150));
+    return { findings: mergeOSVResults(capped, allResults), queried: capped.length };
+  } catch (e) {
+    /* primary database unreachable from this browser — try the deps.dev mirror before giving up */
+    nbLog('Live database unreachable (' + truncate(String(e.message || e), 60) + ') — trying the deps.dev mirror…', 'warn');
+    const fb = await queryDepsDevFallback(capped, onProgress);
+    if (fb.queried > 0) {
+      nbLog(`deps.dev mirror responded — ${fb.queried} packages checked, ${fb.findings.length} advisories.`, fb.findings.length ? 'warn' : 'ok');
+      return fb;
+    }
+    nbLog('Live CVE check failed from this network — the code-level findings below are unaffected, but dependency CVEs are NOT covered by this run.', 'err');
+    state.osvFailed = true;
+    return { findings: [], queried: 0, failed: true };
   }
-  return { findings: mergeOSVResults(capped, allResults), queried: capped.length };
 }
 
 /* ================= Supply chain — dependency confusion (live registry checks) ================= */
@@ -2674,13 +2953,16 @@ async function runAIPasses(repoMeta, files, findings){
   let aiExploits = { text: null, provider: null, failures: [] };
   let logicFindings = [];
   const context = buildAIContext(files, findings);
-  nbLog(`Assembling AI context: ${context.fileCount} files${context.sampled ? ' (risk-ranked sample of ' + files.length + ')' : ' (full contents)'}${context.truncated ? ', truncated to context budget' : ''}.`);
+  nbProgress(88, 'writing the plain-language summary…');
+  nbLog('writing the plain-language summary…');
   ai = await runAICascade(buildAIPrompt(repoMeta, findings, context));
   if (!ai.text) {
-    nbLog('AI reasoning layer unavailable this run (' + (ai.failures.join('; ') || 'no keys') + ') — static + OSV results remain fully usable.', 'warn');
+    nbLog(state.userKeys.length
+      ? 'AI summary unavailable this run (' + ai.failures.join('; ') + ') — everything else ran fine.'
+      : 'AI summary skipped — no key configured', 'warn');
     return { ai, aiLogic, aiExploits, logicFindings };
   }
-  nbProgress(90, 'Layer 4/4 · AI logic-bug hunt');
+  nbProgress(91, 'writing the plain-language summary…');
   nbLog('AI Pass 2/3 — logic-bug hunt: IDOR · missing authz · race conditions · mass assignment · SSRF…');
   const r2 = await runAICascade(buildLogicPrompt(repoMeta, findings, context));
   aiLogic = { text: r2.text, provider: r2.provider, failures: r2.failures };
@@ -2692,7 +2974,7 @@ async function runAIPasses(repoMeta, files, findings){
       nbLog(`AI logic hunt: ${logicFindings.length} new logic-level finding(s) merged into the table.`, 'warn');
     } else nbLog('AI logic hunt: no NEW logic-level issues beyond the static layers.', 'ok');
   } else nbLog('AI logic hunt unavailable (' + (r2.failures.join('; ').slice(0, 90) || 'no keys') + ').', 'warn');
-  nbProgress(95, 'Layer 4/4 · exploit PoC generation');
+  nbProgress(95, 'writing the plain-language summary…');
   nbLog('AI Pass 3/3 — generating exploit PoCs for the 3 most critical findings…');
   const r3 = await runAICascade(buildExploitPrompt(repoMeta, pickTopFindings(findings, 3)));
   aiExploits = { text: r3.text, provider: r3.provider, failures: r3.failures };
@@ -2715,12 +2997,14 @@ function mergeAIFindings(report, findings){
 
 function presentReport(report){
   state.report = report;
+  const rn = document.getElementById('resultsNav');
+  if (rn) rn.classList.remove('hidden');
   renderResults(report);
   saveScanHistory(report);
   renderHistoryModal();
   document.getElementById('results').classList.remove('hidden');
   setTimeout(() => document.getElementById('results').scrollIntoView({ behavior: 'smooth' }), 250);
-  if (report.verdict === 'READY' && report.counts.critical === 0) triggerCleanPulse();
+  if (report.verdict === 'READY TO SHIP' && report.counts.critical === 0) triggerCleanPulse();
   else if (report.counts.critical > 0) triggerGlitch();
 }
 
@@ -2800,10 +3084,11 @@ async function runLocalScan(fileList){
     nbProgress(60, 'Layer 3 · packages');
     const manifests = files.filter(f => isManifestOrSensitive(f.path) && /package\.json|requirements|go\.mod|gemfile\.lock/i.test(f.path));
     const deps = parseManifests(manifests);
-    let osvFindings = [], osvQueried = 0;
+    let osvFindings = [], osvQueried = 0, osvFailed = false;
     if (deps.length) {
       try {
         const osv = await queryOSV(deps, (done, total) => nbProgress(60 + 14 * done / total, 'Layer 3 · OSV.dev CVE lookups'));
+        osvFailed = !!osv.failed;
         osvFindings = osv.findings; osvQueried = osv.queried;
         nbLog(`OSV.dev — ${osvQueried} packages checked live, ${osvFindings.length} vulnerable.`, osvFindings.length ? 'warn' : 'ok');
       } catch (e) { nbLog('OSV.dev query failed: ' + e.message + ' — continuing without dependency CVEs.', 'err'); }
@@ -2837,7 +3122,7 @@ async function runLocalScan(fileList){
       repo: { owner: 'local files', name: projName, branch: '', url: '', description: files.length + ' file' + (files.length === 1 ? '' : 's') + ' scanned on this device', language: undefined },
       score, verdict, counts, exploitHits,
       formula: `100 − 20×${counts.critical} − 12×${counts.high} − 5×${counts.medium} − 2×${counts.low}${exploitHits ? ` − 10×${exploitHits}` : ''} = ${score}`,
-      findings, dependencies: { parsed: deps, queried: osvQueried },
+      findings, dependencies: { parsed: deps, queried: osvQueried, failed: !!osvFailed },
       ai: aiPack.ai.text
         ? { provider: aiPack.ai.provider, text: aiPack.ai.text, origin: aiPack.ai.origin, usedBuiltin: aiPack.ai.usedBuiltin, userKeysTried: aiPack.ai.userKeysTried, exhausted: !!aiPack.ai.exhaustedHit, failures: aiPack.ai.failures }
         : { unavailable: true, reason: aiPack.ai.failures.join('; ') || 'no keys available' },
@@ -2849,7 +3134,7 @@ async function runLocalScan(fileList){
     mergeAIFindings(report, findings);
 
     nbProgress(100, 'scan complete');
-    nbLog(`SCAN COMPLETE in ${(durationMs / 1000).toFixed(1)}s — ${report.findings.length} total findings · score ${report.score}/100 · verdict ${report.verdict}.`, report.verdict === 'READY' ? 'ok' : 'warn');
+    nbLog(`SCAN COMPLETE in ${(durationMs / 1000).toFixed(1)}s — ${report.findings.length} total findings · score ${report.score}/100 · verdict ${report.verdict}.`, report.verdict === 'READY TO SHIP' ? 'ok' : 'warn');
     presentReport(report);
   } catch (e) {
     showScanError(e);
@@ -2868,7 +3153,9 @@ async function runScan(input) {
   const t0 = performance.now();
   logStart = performance.now();
   progressStart = performance.now();
-  nbProgress(1, 'initializing…');
+  nbProgress(1, 'getting ready…');
+  const rn0 = document.getElementById('resultsNav');
+  if (rn0) rn0.classList.add('hidden');
   document.getElementById('scanError').classList.add('hidden');
   document.getElementById('scanLog').classList.remove('hidden');
   document.getElementById('logBody').innerHTML = '';
@@ -2902,7 +3189,7 @@ async function runScan(input) {
     const branch = repo.branch;
     nbLog(`Repository resolved on ${A.label} — "${repo.owner}/${repo.name}" · branch "${branch}"${meta.stars ? ` · ★ ${meta.stars}` : ''}.`);
 
-    nbProgress(8, 'Layer 0/4 · indexing file tree');
+    nbProgress(8, 'fetching repository tree…');
     const treeAll = await A.listTree(repo, branch);
     if (!treeAll.length) throw new NBError('No files found on that branch. Check the branch name.');
     const relevant = treeAll.filter(b => isRelevantFile(b.path, b.size));
@@ -2917,8 +3204,8 @@ async function runScan(input) {
     if (!files.length) throw new NBError('No scannable source files could be downloaded from this repository.');
 
     /* Layer 1 + 2 */
-    nbProgress(48, 'Layer 1/4 · Shannon entropy pass');
-    nbLog(`Layer 1 — computing Shannon entropy across every string literal…`);
+    nbProgress(48, 'measuring randomness across every string…');
+    nbLog('measuring randomness across every string…');
     let findings = [];
     let stringsTotal = 0;
     for (const f of files) {
@@ -2928,8 +3215,8 @@ async function runScan(input) {
     }
     nbLog(`Layer 1 complete — ${stringsTotal} candidate strings entropy-tested, ${findings.length} high-entropy flags.`, 'ok');
 
-    nbProgress(56, 'Layer 2/4 · ' + SIGNATURES.length + ' signature patterns');
-    nbLog(`Layer 2 — cross-referencing ${SIGNATURES.length} secret signatures & OWASP patterns…`);
+    nbProgress(56, 'checking 40+ known secret signatures…');
+    nbLog(`checking ${SIGNATURES.length} known secret signatures…`);
     let patternCount = 0;
     for (const f of files) {
       const pf = scanFileStatic(f);
@@ -2939,8 +3226,8 @@ async function runScan(input) {
     nbLog(`Layer 2 complete — ${patternCount} signature matches.`, 'ok');
 
     /* Layer 3 */
-    nbProgress(62, 'Layer 3/4 · parsing manifests');
-    nbLog('Layer 3 — parsing dependency manifests (package.json / requirements.txt / go.mod / Gemfile.lock)…');
+    nbProgress(62, 'querying the live vulnerability database…');
+    nbLog('parsing dependency manifests (package.json / requirements.txt / go.mod / Gemfile.lock)…');
     const manifests = files.filter(f => isManifestOrSensitive(f.path) && /package\.json|requirements|go\.mod|gemfile\.lock/i.test(f.path));
     const deps = parseManifests(manifests);
     const ecosystems = [...new Set(deps.map(d => d.ecosystem))];
@@ -2948,11 +3235,13 @@ async function runScan(input) {
                       : 'No supported manifests with pinned versions found — skipping OSV.dev.', deps.length ? '' : 'dim');
     let osvFindings = [];
     let osvQueried = 0;
+    let osvFailed = false;
     if (deps.length) {
       try {
-        const osv = await queryOSV(deps, (done, total) => nbProgress(64 + 16 * done / total, 'Layer 3/4 · OSV.dev CVE lookups'));
+        const osv = await queryOSV(deps, (done, total) => nbProgress(64 + 16 * done / total, 'querying the live vulnerability database…'));
         osvFindings = osv.findings;
         osvQueried = osv.queried;
+        osvFailed = !!osv.failed;
         nbLog(`OSV.dev responded — ${osvQueried} packages checked, ${osvFindings.length} vulnerable packages/advisories confirmed.`, osvFindings.length ? 'warn' : 'ok');
       } catch (e) {
         nbLog('OSV.dev query failed: ' + e.message + ' — continuing without dependency CVEs.', 'err');
@@ -2961,8 +3250,8 @@ async function runScan(input) {
     findings.push(...osvFindings);
 
     /* Layer 3b — supply chain */
-    nbProgress(82, 'Layer 3/4 · supply-chain registry checks');
-    nbLog('Layer 3b — supply-chain analysis: dependency confusion (live registry checks) + typosquatting…');
+    nbProgress(82, 'checking dependency names for look-alikes…');
+    nbLog('checking dependency names for look-alikes…');
     let supply = { findings: [], checked: 0, confusion: 0, recent: 0, typos: 0 };
     try {
       supply = await supplyChainScan(deps);
@@ -2999,7 +3288,7 @@ async function runScan(input) {
       repo: { owner: repo.owner, name: repo.name, branch, url: repo.url, description: meta.description || '', stars: meta.stars, language: meta.language },
       score, verdict, counts, exploitHits,
       formula: `100 − 20×${counts.critical} − 12×${counts.high} − 5×${counts.medium} − 2×${counts.low}${exploitHits ? ` − 10×${exploitHits}` : ''} = ${score}`,
-      findings, dependencies: { parsed: deps, queried: osvQueried },
+      findings, dependencies: { parsed: deps, queried: osvQueried, failed: !!osvFailed },
       ai: ai.text
         ? { provider: ai.provider, text: ai.text, origin: ai.origin, usedBuiltin: ai.usedBuiltin, userKeysTried: ai.userKeysTried, exhausted: !!ai.exhaustedHit, failures: ai.failures }
         : { unavailable: true, reason: ai.failures.join('; ') || 'no keys available' },
@@ -3012,7 +3301,7 @@ async function runScan(input) {
     mergeAIFindings(report, findings);
 
     nbProgress(100, 'scan complete');
-    nbLog(`SCAN COMPLETE in ${(durationMs / 1000).toFixed(1)}s — ${report.findings.length} total findings · score ${report.score}/100 · verdict ${report.verdict}.`, report.verdict === 'READY' ? 'ok' : 'warn');
+    nbLog(`SCAN COMPLETE in ${(durationMs / 1000).toFixed(1)}s — ${report.findings.length} total findings · score ${report.score}/100 · verdict ${report.verdict}.`, report.verdict === 'READY TO SHIP' ? 'ok' : 'warn');
     presentReport(report);
   } catch (e) {
     showScanError(e);
@@ -3125,7 +3414,7 @@ function switchAiTab(which) {
 /* ================= score colors ================= */
 function scoreColor(score) { return score >= 80 ? 'var(--ok)' : score >= 60 ? 'var(--warn)' : 'var(--bad)'; }
 function verdictClass(v) {
-  return v === 'READY' ? 'text-[var(--ok)]' : v === 'NEEDS FIXES' ? 'text-[var(--warn)]' : 'text-[var(--bad)]';
+  return v === 'READY TO SHIP' ? 'text-[var(--ok)]' : v === 'NEEDS FIXES' ? 'text-[var(--warn)]' : 'text-[var(--bad)]';
 }
 
 /* ================= main render ================= */
@@ -3144,7 +3433,9 @@ function renderResults(r) {
   document.getElementById('statStrings').textContent = r.stats.stringsChecked.toLocaleString('en-US');
   document.getElementById('statDeps').textContent = r.stats.depsQueried;
   document.getElementById('statDuration').textContent = (r.stats.durationMs / 1000).toFixed(1) + 's';
-  document.getElementById('scoreSub').textContent = `${r.findings.length} finding${r.findings.length === 1 ? '' : 's'} · ${r.stats.signatures} signatures · ${r.stats.filesTracked} file${r.stats.filesTracked === 1 ? '' : 's'} scanned`;
+  document.getElementById('scoreSub').textContent = r.verdict === 'READY TO SHIP'
+    ? 'Clean. Suspiciously clean. Nice work.'
+    : (r.counts.critical > 0 ? "This one's bleeding. Fix it before you ship." : `${r.findings.length} finding${r.findings.length === 1 ? '' : 's'} · ${r.stats.signatures} signatures · ${r.stats.filesTracked} file${r.stats.filesTracked === 1 ? '' : 's'} scanned`);
 
   document.getElementById('chipCritical').textContent = r.counts.critical;
   document.getElementById('chipHigh').textContent = r.counts.high;
@@ -3155,16 +3446,16 @@ function renderResults(r) {
   if (r.ai && r.ai.unavailable) {
     document.getElementById('aiBanner').classList.remove('hidden');
     document.getElementById('aiOkLine').classList.add('hidden');
-    document.getElementById('aiFailReason').textContent = truncate(r.ai.reason || 'no keys', 90);
-    document.getElementById('aiProviderLabel').textContent = 'AI pass skipped — everything else is complete';
-    document.getElementById('aiContent').innerHTML =
-      '<p class="text-[var(--warn)]"><b>The AI pass didn\'t run this time</b></p>' +
-      '<p>Auranis\'s built-in AI is busy right now (its capacity is shared). Everything below is still complete: the code-level findings, the live CVE checks and the supply-chain results. Try the AI pass again in a few minutes.</p>' +
-      '<p class="text-slate-500 mt-2">reason: ' + esc(truncate(r.ai.reason || 'n/a', 200)) + '</p>';
+    const noKey = !state.userKeys.length;
+    document.getElementById('aiFailReason').textContent = noKey ? 'no key configured' : truncate(r.ai.reason || 'key error', 90);
+    document.getElementById('aiProviderLabel').textContent = noKey ? 'AI summary skipped — no key configured' : 'AI pass failed — everything else is complete';
+    document.getElementById('aiContent').innerHTML = noKey
+      ? '<p><b>Add a free API key in Settings to unlock the AI summary.</b> Everything else on this page already ran without one.</p>'
+      : '<p class="text-[var(--warn)]"><b>The AI pass didn\'t run this time</b></p><p>Your key hit a problem (' + esc(truncate(r.ai.reason || 'unknown', 120)) + '). Everything below is still complete — re-run the scan to retry.</p>';
   } else {
     document.getElementById('aiBanner').classList.add('hidden');
     document.getElementById('aiOkLine').classList.remove('hidden');
-    document.getElementById('aiProviderLabel').textContent = 'Auranis AI · built-in engine';
+    document.getElementById('aiProviderLabel').textContent = 'Plain-language summary · ready';
     typeAIContent(r.ai.text || '');
     /* pass 2 + 3 panes */
     state.aiTexts = { brief: r.ai.text || '', logic: '', exploits: '' };
@@ -3301,6 +3592,8 @@ function renderTable() {
 
 /* ================= dependencies panel ================= */
 function renderDeps(r) {
+  const note = document.getElementById('depsFailNote');
+  if (note) note.classList.toggle('hidden', !r.dependencies || !r.dependencies.failed);
   const summary = document.getElementById('depsSummary');
   const list = document.getElementById('depsList');
   const deps = r.dependencies.parsed;
@@ -3434,13 +3727,13 @@ function typeAIContent(text) {
 /* ================= exports & badge ================= */
 function shieldsEscape(s) { return String(s).replace(/-/g, '--').replace(/_/g, '__').replace(/ /g, '_'); }
 function badgeMarkdown(r) {
-  const right = `${r.score}/100 · ${r.counts.critical} critical`;
-  const color = r.score >= 80 ? '0e7a4a' : r.score >= 60 ? 'b9820a' : 'd92d20';
-  return `[![AURANIS](https://img.shields.io/badge/${shieldsEscape('AURANIS')}-${encodeURIComponent(shieldsEscape(right)).replace(/-/g, '--').replace(/_/g, '__')}-${color}?style=flat-square&labelColor=16181d)](${r.repo.url})\nScanned with [Auranis](https://github.com/ahmadauranishq-beep/scan-hub) — ${r.score}/100 · ${r.counts.critical} critical · ${r.counts.high} high · ${r.counts.medium} medium · ${r.counts.low} low`;
+  const right = `${r.score}/100`;
+  const color = r.score >= 85 ? '0e7a4a' : r.score >= 50 ? 'b9820a' : 'd92d20';
+  return `[![Scanned with Auranis](https://img.shields.io/badge/${shieldsEscape('Scanned with Auranis')}-${encodeURIComponent(shieldsEscape(right)).replace(/-/g, '--').replace(/_/g, '__')}-${color}?style=flat-square&labelColor=09090b)](${r.repo.url})`;
 }
 function renderBadge(r) {
   const line = document.getElementById('badgeLine');
-  if (line) line.textContent = `Badge: scanned with Auranis · ${r.score}/100 · ${r.counts.critical} critical · ${r.counts.high} high · ${r.counts.medium} medium · ${r.counts.low} low`;
+  if (line) line.textContent = `Scanned with Auranis — ${r.score}/100`;
 }
 function download(name, content, type) {
   const blob = new Blob([content], { type: type || 'application/octet-stream' });
@@ -3486,7 +3779,7 @@ function buildMarkdownReport(r) {
   L.push('## AI Executive Briefing');
   L.push('');
   if (r.ai && r.ai.unavailable) L.push('_AI layer unavailable: ' + r.ai.reason + '_');
-  else L.push('_Read over by Auranis\'s built-in AI (three passes)._\n\n' + (r.ai.text || ''));
+  else L.push('_Summarized by your AI key (plain-language pass, logic hunt, exploit proofs)._\n\n' + (r.ai.text || ''));
   L.push('');
   L.push('## AI Logic-Bug Analysis (Pass 2)');
   L.push('');
@@ -3601,7 +3894,7 @@ const NB_CHAT = (() => {
     { re: /مفتاح|مفاتيح|api|مزود/i,
       a: () => 'افتح Preferences (أعلى اليمين)، اختر المزود من الشبكة (Groq أو Gemini أو Mistral أو Claude أو OpenAI أو Kimi أو DeepSeek) والصق مفتاحك. مفتاحك يعمل أولًا وبقوة كاملة؛ وإن فشل أو نفد يتولى المحرك المدمج تلقائيًا. المفاتيح تبقى في متصفحك فقط.' },
     { re: /درجة|نقاط|تقييم|الحكم|جاهز|توقف/i,
-      a: () => { const r = state.report; const base = 'الدرجة تبدأ من 100 وتنقص: 20 لكل نتيجة حرجة، 12 لكل عالية، 5 لكل متوسطة، 2 لكل منخفضة. READY يعني ابنث بأمان، NEEDS FIXES أغلق الأحمر أولًا، BLOCKED توقف — هناك شيء حرج مكشوف.'; return r ? `آخر مسح لك (${r.repo.owner}/${r.repo.name}) حصل على ${r.score}/100 — ${r.verdict}. ` + base : base; } },
+      a: () => { const r = state.report; const base = 'الدرجة تبدأ من 100 وتنقص: 20 لكل نتيجة حرجة، 12 لكل عالية، 5 لكل متوسطة، 2 لكل منخفضة. READY TO SHIP يعني ابنث بأمان، NEEDS FIXES أغلق الأحمر أولًا، BLOCKED توقف — هناك شيء حرج مكشوف.'; return r ? `آخر مسح لك (${r.repo.owner}/${r.repo.name}) حصل على ${r.score}/100 — ${r.verdict}. ` + base : base; } },
     { re: /مجان|سعر|تكلفة|دفع|حساب|تسجيل/i,
       a: () => 'مجاني تمامًا، بلا حساب، ولا شيء لتثبيته. المحرك كله يعمل في متصفحك.' },
     { re: /ملف|ملفات|ضغط|zip|مجلد/i,
@@ -3626,7 +3919,7 @@ const NB_CHAT = (() => {
     return banks.find(k => k.re.test(q));
   }
   async function askAI(q) {
-    const facts = 'Auranis = free browser-based security scanner. Paste any repo link (GitHub, GitLab, Bitbucket) or drop any files (zip project or any code/config/text files) — scanned locally, nothing uploaded. Four passes: leaked secrets (entropy + ' + SIGNATURES.length + ' signatures), risky OWASP-style patterns, dependencies vs the live OSV.dev CVE database + fake/lookalike package names, then an AI pass for logic flaws and exploit walkthroughs. Score /100: -20 critical, -12 high, -5 medium, -2 low. Verdicts: READY / NEEDS FIXES / BLOCKED. An optional personal AI key in Preferences (Groq, Gemini, Mistral, Claude, OpenAI, Kimi, DeepSeek) runs first; a built-in engine is the silent fallback. Free, no account. History = last 10 scans stored on this device only.';
+    const facts = 'Auranis = free browser-based security scanner. Paste any repo link (GitHub, GitLab, Bitbucket) or drop any files (zip project or any code/config/text files) — scanned locally, nothing uploaded. Four passes: leaked secrets (entropy + ' + SIGNATURES.length + ' signatures), risky OWASP-style patterns, dependencies vs the live OSV.dev CVE database (deps.dev mirror as fallback) + fake/lookalike package names, then an optional AI pass (user\'s own key) for logic flaws and exploit walkthroughs. Score /100: -20 critical, -12 high, -5 medium, -2 low; any critical finding forces BLOCKED. Verdicts: READY TO SHIP (85-100) / NEEDS FIXES (50-84) / BLOCKED (0-49). AI keys are bring-your-own in Preferences, stored in this browser only, never sent anywhere except the chosen provider — there is no built-in fallback key. A GitHub token in Settings is optional and only raises the public rate limit. Free, no account. History = last 10 scans stored on this device only.';
     let reportCtx = '';
     const rep0 = state.report;
     if (rep0) reportCtx = ' The user recently scanned ' + rep0.repo.owner + '/' + rep0.repo.name + ': score ' + rep0.score + '/100, verdict ' + rep0.verdict + ', ' + rep0.findings.length + ' findings (' + rep0.counts.critical + ' critical, ' + rep0.counts.high + ' high). Use this when relevant.';
@@ -3717,7 +4010,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!state.report) return;
     const { id, url } = buildShareLink(state.report);
     try { history.replaceState(null, '', '?report=' + id); } catch (e) { /* sandboxed */ }
-    copyText(url, 'Report link copied (opens on this device — use Export .json to move it elsewhere)');
+    copyText(url, 'Report link copied — opens on this device. Use Export → JSON to move a report elsewhere.');
   });
   document.getElementById('btnSettings').addEventListener('click', openSettings);
   document.getElementById('btnCloseSettings').addEventListener('click', closeSettings);
@@ -3729,6 +4022,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('btnClearData').addEventListener('click', () => {
     state.userKeys = [];
+    state.githubToken = '';
+    const gh2 = document.getElementById('prefGithub');
+    if (gh2) gh2.value = '';
     renderPrefKeys();
     try {
       localStorage.removeItem(LS_PREFS);
