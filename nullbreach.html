@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nullbreach — Is it safe to ship?</title>
-<meta name="description" content="Paste any repository link — GitHub, GitLab, Bitbucket — or drop your files. Nullbreach reads the code, checks every package against the live CVE database, and gives you a plain-language verdict. Free, in your browser, nothing to install.">
+<title>Auranis — Is it safe to ship?</title>
+<meta name="description" content="Paste any repository link — GitHub, GitLab, Bitbucket — or drop your files. Auranis reads the code, checks every package against the live CVE database, and gives you a plain-language verdict. Free, in your browser, nothing to install.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%2316181d'/%3E%3Ccircle cx='32' cy='32' r='15' fill='none' stroke='%23f7f5f1' stroke-width='4'/%3E%3Cline x1='43' y1='43' x2='54' y2='54' stroke='%23ff4b26' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
@@ -42,7 +42,7 @@ tailwind.config = {
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>/* ============================================================
-   NULLBREACH design system v4 — "Blackout Editorial"
+   AURANIS design system v4 — "Blackout Editorial"
    Deep black, ivory type, one amber accent. Zero noise.
    ============================================================ */
 :root {
@@ -293,14 +293,14 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 <body class="font-body min-h-screen">
 
 <!-- ================= ASSISTANT CHAT ================= -->
-<button id="chatFab" aria-label="Ask about Nullbreach">
+<button id="chatFab" aria-label="Ask about Auranis">
   <i data-lucide="message-circle" class="w-6 h-6"></i>
 </button>
-<div id="chatPanel" role="dialog" aria-label="Nullbreach assistant">
+<div id="chatPanel" role="dialog" aria-label="Auranis assistant">
   <div class="flex items-center justify-between px-4 h-14 border-b border-[var(--hair)] shrink-0">
     <div class="flex items-center gap-2.5">
       <span class="w-2 h-2 rounded-full bg-[var(--ok)]"></span>
-      <span class="font-display font-bold text-[15px] text-[var(--ink)]">Ask Nullbreach</span>
+      <span class="font-display font-bold text-[15px] text-[var(--ink)]">Ask Auranis</span>
     </div>
     <button id="chatClose" class="p-1.5 rounded-md hover:bg-white/5 text-[var(--ink-3)]"><i data-lucide="x" class="w-5 h-5"></i></button>
   </div>
@@ -320,7 +320,7 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
   <div class="rule-2x"></div>
   <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
     <a href="#" class="flex items-baseline gap-2.5 group">
-      <span class="masthead-title text-[26px] text-[var(--ink)]">Nullbreach</span>
+      <span class="masthead-title text-[26px] text-[var(--ink)]">Auranis</span>
       <span class="kicker-caps hidden sm:inline">security desk</span>
     </a>
     <div class="relative flex items-center gap-1">
@@ -341,38 +341,18 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
     </div>
 
     <div class="flex-1 overflow-y-auto px-6 py-6 space-y-7">
-      <p class="text-[14px] leading-relaxed text-[var(--ink-3)]">
-        Nullbreach works out of the box — this page is optional. Everything here stays in this browser.
-      </p>
-
       <div>
-        <h3 class="font-display text-[17px] font-bold text-[var(--ink)]">AI engine</h3>
-        <p class="mt-1.5 text-[13px] leading-relaxed text-[var(--ink-3)]">
-          The scan already runs on a built-in engine. Add your own key to make the AI pass
-          <span class="text-[var(--ink)] font-medium">faster, stronger and unlimited</span> — yours runs first,
-          the built-in one stays quietly as backup.
-        </p>
-
-        <div class="kicker-caps mt-5 mb-2">Step 1 — pick a provider</div>
         <div id="provGrid" class="grid grid-cols-4 gap-2"></div>
-
-        <div class="kicker-caps mt-5 mb-2">Step 2 — paste the key</div>
-        <div class="flex gap-2">
-          <input id="prefKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="your key stays on this device"
+        <div class="mt-3 flex gap-2">
+          <input id="prefKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="paste your key"
             class="mono flex-1 w-full px-3 py-2.5 text-[13px] border border-[var(--hair-2)] bg-transparent rounded-md tracking-wider">
-          <button id="btnAddKey" type="button" class="btn-ink rounded-md px-4 py-2.5 text-[13px] font-semibold shrink-0">Add key</button>
+          <button id="btnAddKey" type="button" class="btn-ink rounded-md px-4 py-2.5 text-[13px] font-semibold shrink-0">Add</button>
         </div>
-
-        <div class="kicker-caps mt-5 mb-2">Your keys <span id="prefKeyCount"></span></div>
-        <div id="prefKeyList" class="space-y-2"></div>
-        <p class="mt-3 text-[12.5px] leading-relaxed text-[var(--ink-4)]">
-          The first key runs first, then the next, then the built-in engine. Keys are never shown again once saved.
-        </p>
+        <div id="prefKeyList" class="mt-3 space-y-2"></div>
       </div>
 
-      <div class="pt-5 border-t border-[var(--hair)]">
-        <button id="btnClearData" class="btn-quiet rounded-md px-4 py-2.5 text-[13px]">Clear saved data on this device</button>
-        <p class="mt-2 text-[12px] text-[var(--ink-4)]">Removes your keys, token, scan history and shared reports from this browser.</p>
+      <div class="pt-4 border-t border-[var(--hair)]">
+        <button id="btnClearData" class="btn-quiet rounded-md px-4 py-2.5 text-[13px]">Clear saved data</button>
       </div>
     </div>
 
@@ -404,12 +384,10 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 <!-- ================= HERO / SCAN ================= -->
 <main class="relative z-10">
 <section class="max-w-5xl mx-auto px-6 pt-14 pb-12">
-  <p class="kicker-caps mb-5">Free · No account · Nothing leaves your browser</p>
   <h1 class="hero-headline">Is it safe<br>to <em>ship</em> it?</h1>
   <p class="hero-sub mt-6">
-    Nullbreach reads your code like a careful security engineer. It finds passwords that were accidentally
-    left in the code, dangerous patterns, and packages with known security holes. Then it tells you,
-    in plain words, what is wrong and what to fix first.
+    Point it at your project — it reads the code and tells you straight whether the tech holds up,
+    what's broken, and what to fix first.
   </p>
 
   <div class="mt-9 grid sm:grid-cols-3 gap-5">
@@ -437,12 +415,6 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
       </div>
       <button id="btnScan" type="submit" class="btn-ink rounded-md px-8 py-3.5 text-sm font-semibold whitespace-nowrap">Scan</button>
     </div>
-    <p class="mt-3 text-[13px] text-[var(--ink-4)]">
-      Try:
-      <button type="button" class="example-repo underline decoration-[var(--hair-2)] hover:decoration-[var(--signal)] transition ml-1">OWASP/NodeGoat</button> ·
-      <button type="button" class="example-repo underline decoration-[var(--hair-2)] hover:decoration-[var(--signal)] transition">expressjs/express</button> ·
-      <button type="button" class="example-repo underline decoration-[var(--hair-2)] hover:decoration-[var(--signal)] transition">gitlab.com/gitlab-org/gitlab-test</button>
-    </p>
   </form>
 
   <div class="hero-divider mt-9 kicker-caps">or drop your files</div>
@@ -460,7 +432,7 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 
   <div id="scanLog" class="hidden mt-9 notes-shell">
     <div class="notes-head">
-      <span class="kicker-caps">Field notes</span>
+      <span class="kicker-caps">Log</span>
       <span id="logTimer" class="mono text-[11px] text-[var(--ink-4)]">00:00</span>
     </div>
     <div id="scanProgressWrap" class="px-4 pt-3.5">
@@ -583,7 +555,7 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
             </div>
             <div id="aiOkLine" class="hidden mt-5 flex items-center gap-2 text-[13px] text-[var(--ink-3)]">
               <i data-lucide="pen-line" class="w-4 h-4"></i>
-              <span>Read over by <span class="font-semibold text-[var(--ink)]">Nullbreach's built-in AI</span> — three passes: summary, logic hunt, exploit proofs.</span>
+              <span>Read over by <span class="font-semibold text-[var(--ink)]">Auranis's built-in AI</span> — three passes: summary, logic hunt, exploit proofs.</span>
             </div>
           </div>
         </div>
@@ -743,16 +715,9 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 <!-- ================= FOOTER ================= -->
 <footer class="relative z-10 mt-20">
   <div class="rule-2x"></div>
-  <div class="max-w-5xl mx-auto px-6 py-10">
-    <p class="serif text-lg italic text-[var(--ink)] max-w-2xl">“A strong first pass — not a substitute for a professional audit.”</p>
-    <p class="mt-3 text-[13px] leading-relaxed text-[var(--ink-3)] max-w-3xl">
-      Nullbreach looks for leaked secrets, risky code patterns, vulnerable dependencies and design flaws, then explains what it found in plain language.
-      It is a triage tool: always double-check anything critical before you act on it.
-    </p>
-    <div class="mt-6 pt-4 border-t border-[var(--hair)] flex items-center justify-between flex-wrap gap-2">
-      <span class="kicker-caps">Nullbreach · v1.5 · runs entirely in your browser</span>
-      <span class="kicker-caps">CVE data live from OSV.dev · <span id="year"></span></span>
-    </div>
+  <div class="max-w-5xl mx-auto px-6 py-8 flex items-center justify-between flex-wrap gap-2">
+    <span class="masthead-title text-[16px] text-[var(--ink)]">Auranis</span>
+    <span class="kicker-caps">v1.8</span>
   </div>
 </footer>
 
@@ -763,7 +728,7 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 <script id="nb-engine">
 /*ENGINE-START*/
 'use strict';
-const NB_VERSION = '1.7.0';
+const NB_VERSION = '1.8.0';
 
 /* ================= Layer 1 — Shannon entropy (Gitleaks technique) ================= */
 function shannonEntropy(str) {
@@ -1857,7 +1822,7 @@ function parseAIFindings(aiText, markerRe, idPrefix) {
 const state = {
   userKeys: [],            /* internal: the AI queue lives in a closure; this stays empty */
   githubToken: '',         /* internal: unused since v1.7 — host adapters work without a user token */
-  /* Nullbreach's AI engine and repository access are embedded & always-on: not visible, not configurable */
+  /* Auranis's AI engine and repository access are embedded & always-on: not visible, not configurable */
   scanning: false,
   report: null,
   filtered: [],
@@ -1948,7 +1913,7 @@ function renderPrefKeys() {
   }));
 }
 
-/* ---- NULLBREACH Core Engine: embedded AI capability that makes the tool work with zero
+/* ---- AURANIS Core Engine: embedded AI capability that makes the tool work with zero
    setup. Seeding material and the provider binding live INSIDE a closure — not reachable
    as globals from the console. Deterrence, not cryptography: the network tab always shows
    whatever a caller actually sends. Provider identities are never rendered anywhere. ---- */
@@ -1970,7 +1935,7 @@ const runAICascade = (() => {
     provider: _ord[i],
     key: () => _exp(seed, _pads[i])
   }));
-  const CORE_LABEL = 'NULLBREACH Core Engine';
+  const CORE_LABEL = 'AURANIS Core Engine';
   const EXHAUSTED_RE = /(rate.?limit|429|quota|exceed|too many requests|insufficient|credits?|billing|usage.?limit)/i;
 
   /* Priority pool: YOUR keys first (recognized automatically, stronger, your order) →
@@ -2015,7 +1980,7 @@ const runAICascade = (() => {
         const text = await callAIProvider(p, prompt, p.key);
         nbLog(`AI briefing complete (${p.tag}).`, 'ok');
         if (p.origin === 'builtin' && userFailed) {
-          showToast('Your key' + (userKeysTried > 1 ? 's were' : ' was') + ' exhausted — NULLBREACH Core Engine took over');
+          showToast('Your key' + (userKeysTried > 1 ? 's were' : ' was') + ' exhausted — AURANIS Core Engine took over');
           exhaustedHit = true;
         }
         return { text, provider: p.tag, origin: p.origin, usedBuiltin: p.origin === 'builtin', userKeysTried, failures, exhaustedHit };
@@ -2073,7 +2038,7 @@ function nbLog(msg, cls) {
 }
 
 /* ================= GitHub ================= */
-/* Nullbreach ships with its own repository access. It is sealed in a closure —
+/* Auranis ships with its own repository access. It is sealed in a closure —
    not a global, not displayed, not configurable. Deterrence, not cryptography. */
 const ghToken = (() => {
   const _pad = 'nb-gh-7';
@@ -2677,7 +2642,7 @@ function presentReport(report){
   state.report = report;
   renderResults(report);
   saveScanHistory(report);
-  renderHistoryDrop();
+  renderHistoryModal();
   document.getElementById('results').classList.remove('hidden');
   setTimeout(() => document.getElementById('results').scrollIntoView({ behavior: 'smooth' }), 250);
   if (report.verdict === 'READY' && report.counts.critical === 0) triggerCleanPulse();
@@ -2744,7 +2709,7 @@ async function runLocalScan(fileList){
   let report = null;
   try {
     persistKeys();
-    nbLog('Nullbreach engine v' + NB_VERSION + ' — local mode. These files are scanned on this device and never uploaded.');
+    nbLog('Auranis engine v' + NB_VERSION + ' — local mode. These files are scanned on this device and never uploaded.');
     const files = await filesFromDrop(fileList);
     const totalBytes = files.reduce((a, f) => a + f.content.length, 0);
     nbLog(`Ready — ${files.length} files, ${(totalBytes / 1024).toFixed(0)} KB.`, 'ok');
@@ -2792,7 +2757,7 @@ async function runLocalScan(fileList){
 
     const durationMs = performance.now() - t0;
     report = {
-      tool: 'NULLBREACH', version: NB_VERSION,
+      tool: 'AURANIS', version: NB_VERSION,
       generatedAt: new Date().toISOString(),
       repo: { owner: 'local files', name: projName, branch: '', url: '', description: files.length + ' files scanned from your device', language: undefined },
       score, verdict, counts, exploitHits,
@@ -2842,7 +2807,7 @@ async function runScan(input) {
   let report = null;
   try {
     persistKeys(); /* keep keys saved on every scan attempt */
-    nbLog('Nullbreach engine v' + NB_VERSION + ' initialized.');
+    nbLog('Auranis engine v' + NB_VERSION + ' initialized.');
     nbLog(`Loaded ${SIGNATURES.length} secret & OWASP signatures · entropy thresholds 4.5/4.8 · OSV.dev feed online.`);
 
     const ref = parseRepoLink(input);
@@ -2954,7 +2919,7 @@ async function runScan(input) {
 
     const durationMs = performance.now() - t0;
     report = {
-      tool: 'NULLBREACH', version: NB_VERSION,
+      tool: 'AURANIS', version: NB_VERSION,
       generatedAt: new Date().toISOString(),
       repo: { owner: repo.owner, name: repo.name, branch, url: repo.url, description: meta.description || '', stars: meta.stars, language: meta.language },
       score, verdict, counts, exploitHits,
@@ -3119,12 +3084,12 @@ function renderResults(r) {
     document.getElementById('aiProviderLabel').textContent = 'AI pass skipped — everything else is complete';
     document.getElementById('aiContent').innerHTML =
       '<p class="text-[var(--warn)]"><b>The AI pass didn\'t run this time</b></p>' +
-      '<p>Nullbreach\'s built-in AI is busy right now (its capacity is shared). Everything below is still complete: the code-level findings, the live CVE checks and the supply-chain results. Try the AI pass again in a few minutes.</p>' +
+      '<p>Auranis\'s built-in AI is busy right now (its capacity is shared). Everything below is still complete: the code-level findings, the live CVE checks and the supply-chain results. Try the AI pass again in a few minutes.</p>' +
       '<p class="text-slate-500 mt-2">reason: ' + esc(truncate(r.ai.reason || 'n/a', 200)) + '</p>';
   } else {
     document.getElementById('aiBanner').classList.add('hidden');
     document.getElementById('aiOkLine').classList.remove('hidden');
-    document.getElementById('aiProviderLabel').textContent = 'Nullbreach AI · built-in engine';
+    document.getElementById('aiProviderLabel').textContent = 'Auranis AI · built-in engine';
     typeAIContent(r.ai.text || '');
     /* pass 2 + 3 panes */
     state.aiTexts = { brief: r.ai.text || '', logic: '', exploits: '' };
@@ -3396,11 +3361,11 @@ function shieldsEscape(s) { return String(s).replace(/-/g, '--').replace(/_/g, '
 function badgeMarkdown(r) {
   const right = `${r.score}/100 · ${r.counts.critical} critical`;
   const color = r.score >= 80 ? '0e7a4a' : r.score >= 60 ? 'b9820a' : 'd92d20';
-  return `[![NULLBREACH](https://img.shields.io/badge/${shieldsEscape('NULLBREACH')}-${encodeURIComponent(shieldsEscape(right)).replace(/-/g, '--').replace(/_/g, '__')}-${color}?style=flat-square&labelColor=16181d)](${r.repo.url})\nScanned with [Nullbreach](https://github.com/ahmadauranishq-beep/scan-hub) — ${r.score}/100 · ${r.counts.critical} critical · ${r.counts.high} high · ${r.counts.medium} medium · ${r.counts.low} low`;
+  return `[![AURANIS](https://img.shields.io/badge/${shieldsEscape('AURANIS')}-${encodeURIComponent(shieldsEscape(right)).replace(/-/g, '--').replace(/_/g, '__')}-${color}?style=flat-square&labelColor=16181d)](${r.repo.url})\nScanned with [Auranis](https://github.com/ahmadauranishq-beep/scan-hub) — ${r.score}/100 · ${r.counts.critical} critical · ${r.counts.high} high · ${r.counts.medium} medium · ${r.counts.low} low`;
 }
 function renderBadge(r) {
   const line = document.getElementById('badgeLine');
-  if (line) line.textContent = `Badge: scanned with Nullbreach · ${r.score}/100 · ${r.counts.critical} critical · ${r.counts.high} high · ${r.counts.medium} medium · ${r.counts.low} low`;
+  if (line) line.textContent = `Badge: scanned with Auranis · ${r.score}/100 · ${r.counts.critical} critical · ${r.counts.high} high · ${r.counts.medium} medium · ${r.counts.low} low`;
 }
 function download(name, content, type) {
   const blob = new Blob([content], { type: type || 'application/octet-stream' });
@@ -3416,9 +3381,9 @@ function reportFileName(r, ext) {
 }
 function buildMarkdownReport(r) {
   const L = [];
-  L.push(`# NULLBREACH Security Report — ${r.repo.owner}/${r.repo.name} (${r.repo.branch})`);
+  L.push(`# AURANIS Security Report — ${r.repo.owner}/${r.repo.name} (${r.repo.branch})`);
   L.push('');
-  L.push(`**Tool:** NULLBREACH v${r.version} · **Generated:** ${r.generatedAt} · **Repo:** ${r.repo.url}`);
+  L.push(`**Tool:** AURANIS v${r.version} · **Generated:** ${r.generatedAt} · **Repo:** ${r.repo.url}`);
   L.push('');
   L.push(`## Security Score: ${r.score}/100 — verdict **${r.verdict}**`);
   L.push('');
@@ -3446,7 +3411,7 @@ function buildMarkdownReport(r) {
   L.push('## AI Executive Briefing');
   L.push('');
   if (r.ai && r.ai.unavailable) L.push('_AI layer unavailable: ' + r.ai.reason + '_');
-  else L.push('_Read over by Nullbreach\'s built-in AI (three passes)._\n\n' + (r.ai.text || ''));
+  else L.push('_Read over by Auranis\'s built-in AI (three passes)._\n\n' + (r.ai.text || ''));
   L.push('');
   L.push('## AI Logic-Bug Analysis (Pass 2)');
   L.push('');
@@ -3459,7 +3424,7 @@ function buildMarkdownReport(r) {
   else L.push('_Exploit pass unavailable: ' + ((r.aiExploits && r.aiExploits.reason) || 'n/a') + '_');
   L.push('');
   L.push('---');
-  L.push('NULLBREACH combines entropy-based secret detection, a 40+ signature pattern library, real CVE data from OSV.dev, and AI semantic analysis. It is a strong first-pass triage tool but not a certified replacement for a full professional security audit. Always verify critical findings before acting.');
+  L.push('AURANIS combines entropy-based secret detection, a 40+ signature pattern library, real CVE data from OSV.dev, and AI semantic analysis. It is a strong first-pass triage tool but not a certified replacement for a full professional security audit. Always verify critical findings before acting.');
   return L.join('\n');
 }
 
@@ -3505,9 +3470,9 @@ const NB_CHAT = (() => {
 
   const KB = [
     { re: /(what|which).*(check|scan|look for|does it do)|feature|how.*work/i,
-      a: () => 'Nullbreach runs four passes: leaked secrets (entropy + ' + SIGNATURES.length + ' signatures), risky code patterns (OWASP-style), your dependencies (every pinned package checked live against the OSV.dev CVE database, plus fake & lookalike package names), and an AI pass that hunts logic flaws and writes exploit walkthroughs for the worst findings. You get one score, a verdict, and a fix list.' },
+      a: () => 'Auranis runs four passes: leaked secrets (entropy + ' + SIGNATURES.length + ' signatures), risky code patterns (OWASP-style), your dependencies (every pinned package checked live against the OSV.dev CVE database, plus fake & lookalike package names), and an AI pass that hunts logic flaws and writes exploit walkthroughs for the worst findings. You get one score, a verdict, and a fix list.' },
     { re: /upload|upload(ed)?|stored|storage|privacy|private|leave|sent|server|track(ed)?|collect(ed)?|safe to paste|my code|data/i,
-      a: () => 'Your code never touches a Nullbreach server — there are none. Scanning happens inside your browser. Only package names go to the public CVE/registry databases, and the AI pass sends a risk-ranked excerpt to the AI engine. Drop files and they are read locally — nothing is uploaded.' },
+      a: () => 'Your code never touches a Auranis server — there are none. Scanning happens inside your browser. Only package names go to the public CVE/registry databases, and the AI pass sends a risk-ranked excerpt to the AI engine. Drop files and they are read locally — nothing is uploaded.' },
     { re: /(own|my|personal|bring).*(key|api)|add.*key|api key/i,
       a: () => 'Open Preferences (top right) and paste a key from Groq, Gemini, Mistral, Claude, OpenAI, Kimi or DeepSeek. Your key runs first at full strength; if it fails or runs out, the built-in engine quietly takes over. Keys live in this browser only and are never shown again once saved.' },
     { re: /score|verdict|ready|blocked|needs fix|rating/i,
@@ -3527,38 +3492,38 @@ const NB_CHAT = (() => {
     { re: /fix|remediat|what should i do|where do i start|urgent/i,
       a: () => { const r = state.report; return r && r.findings.length ? 'Open the fix list at the bottom of your report — ordered by urgency, one concrete action per finding. Start with anything critical.' : 'Every scan ends with a fix list: one concrete action per finding, most urgent first.'; } },
     { re: /who are you|what is nullbreach|about (this|the)|this site|website/i,
-      a: () => 'I am the Nullbreach desk assistant. Nullbreach is a free security triage tool: paste a GitHub link or drop files, get a plain-language verdict with a fix list — entirely in your browser.' },
+      a: () => 'I am the Auranis desk assistant. Auranis is a free security triage tool: paste a GitHub link or drop files, get a plain-language verdict with a fix list — entirely in your browser.' },
     { re: /^(hi|hey|hello|yo|salam|hola|good (morning|evening))\b/i,
       a: () => 'Hey. Ask me anything — what we check, where your code goes, how scores work, or how to add your own key.' },
     { re: /thank|thanks|great|nice|cool|awesome|perfect/i,
       a: () => 'Anytime. Ship safe.' },
   ];
   const CHIPS = ['What does it check?', 'Is my code uploaded?', 'How do I add my own key?', 'What does the score mean?'];
-  const FALLBACK = 'That one is outside my notes. I can tell you what Nullbreach checks, where your code goes, how the score works, or how to plug in your own key.';
+  const FALLBACK = 'That one is outside my notes. I can tell you what Auranis checks, where your code goes, how the score works, or how to plug in your own key.';
   const KB_AR = [
-    { re: /(what|which).*(check|scan|look for|does it do)|feature|how.*work/i,
-      a: () => 'يعمل Nullbreach بأربع جولات: الأسرار المسربة (الانتروبيا + ' + SIGNATURES.length + ' بصمة)، الأنماط الخطرة (بأسلوب OWASP)، الاعتماديات (كل حزمة تُفحص مباشرة في قاعدة ثغرات OSV.dev وأسماء الحزم المزيفة)، ثم جولة ذكاء اصطناعي تبحث عن ثغرات المنطق وتكتب استغلالات أسوأ النتائج. تحصل على درجة وحكم وقائمة إصلاح.' },
-    { re: /upload|stored|storage|privacy|private|leave|sent|server|track(ed)?|collect(ed)?|بيانات|خصوصية|يُرفع|يرفع|تخزين/i,
-      a: () => 'كودك لا يلمس أي خادم لـ Nullbreach — لا توجد خوادم أصلًا. الفحص يجري داخل متصفحك. أسماء الحزم فقط تذهب لقواعد بيانات الثغرات العامة، وملفاتك المسحوبة تُقرأ محليًا على جهازك.' },
-    { re: /(own|my|personal|bring).*(key|api)|add.*key|api key|مفتاح/i,
-      a: () => 'افتح Preferences (أعلى اليمين) والصق مفتاحك من Groq أو Gemini أو Mistral أو Claude أو OpenAI أو Kimi أو DeepSeek. مفتاحك يعمل أولًا وبقوة كاملة؛ وإن فشل أو نفد يتولى المحرك المدمج تلقائيًا. المفاتيح تبقى في متصفحك فقط ولا تُعرض مجددًا بعد الحفظ.' },
-    { re: /score|verdict|ready|blocked|needs fix|rating|درجة|تقييم/i,
+    { re: /ماذا\s*(تفحص|يفحص|تفعل)|ما\s*الذي\s*تفحصه|كيف\s*(يعمل|تشتغل)|الخصائص|مميزات|فحص/i,
+      a: () => 'يعمل Auranis بأربع جولات: الأسرار المسربة (الانتروبيا + ' + SIGNATURES.length + ' بصمة)، الأنماط الخطرة (بأسلوب OWASP)، الاعتماديات (كل حزمة تُفحص مباشرة في قاعدة ثغرات OSV.dev وأسماء الحزم المزيفة)، ثم جولة ذكاء اصطناعي تبحث عن ثغرات المنطق وتكتب استغلالات أسوأ النتائج. تحصل على درجة من 100 وحكم وقائمة إصلاح.' },
+    { re: /ارفع|رفع|يُرفع|يرفع|تخزين|يخزن|خصوصية|خاص|بياناتي|كودي|خوادم|سيرفر/i,
+      a: () => 'كودك لا يلمس أي خادم لنا — لا توجد خوادم أصلًا. الفحص يجري داخل متصفحك. أسماء الحزم فقط تذهب لقواعد بيانات الثغرات العامة، وملفاتك المسحوبة تُقرأ محليًا على جهازك ولا تغادر أبداً.' },
+    { re: /مفتاح|مفاتيح|api|مزود/i,
+      a: () => 'افتح Preferences (أعلى اليمين)، اختر المزود من الشبكة (Groq أو Gemini أو Mistral أو Claude أو OpenAI أو Kimi أو DeepSeek) والصق مفتاحك. مفتاحك يعمل أولًا وبقوة كاملة؛ وإن فشل أو نفد يتولى المحرك المدمج تلقائيًا. المفاتيح تبقى في متصفحك فقط.' },
+    { re: /درجة|نقاط|تقييم|الحكم|جاهز|توقف/i,
       a: () => { const r = state.report; const base = 'الدرجة تبدأ من 100 وتنقص: 20 لكل نتيجة حرجة، 12 لكل عالية، 5 لكل متوسطة، 2 لكل منخفضة. READY يعني ابنث بأمان، NEEDS FIXES أغلق الأحمر أولًا، BLOCKED توقف — هناك شيء حرج مكشوف.'; return r ? `آخر مسح لك (${r.repo.owner}/${r.repo.name}) حصل على ${r.score}/100 — ${r.verdict}. ` + base : base; } },
-    { re: /price|cost|free|pay|charge|account|sign ?up|مجاني|سعر|حساب/i,
+    { re: /مجان|سعر|تكلفة|دفع|حساب|تسجيل/i,
       a: () => 'مجاني تمامًا، بلا حساب، ولا شيء لتثبيته. المحرك كله يعمل في متصفحك.' },
-    { re: /zip|drop|file|folder|local|html|ملف|ملفات|ضغط/i,
-      a: () => 'اسحب أي ملفات — مشروع كامل بصيغة .zip أو أي ملفات كود أو إعدادات أو نصوص — إلى الصندوق تحت حقل الرابط. تُفك وتُفحص هنا في متصفحك حتى 800 ملف. لا شيء يغادر جهازك.' },
-    { re: /how long|much time|fast|seconds|duration|وقت|مدة/i,
-      a: () => 'المستودع النموذجي يستغرق 20–90 ثانية: جلب، ثم جولتا الانتروبيا والبصمات، ثم فحص الثغرات الحي، ثم قراءة الذكاء الاصطناعي. المستودعات الضخمة تُرتَّب حسب الخطورة وتُفحص أهم 500 ملف أولًا.' },
-    { re: /export|download|report file|share|badge|readme|تصدير|تحميل|مشاركة/i,
+    { re: /ملف|ملفات|ضغط|zip|مجلد/i,
+      a: () => 'اسحب أي ملفات — مشروع كامل بصيغة .zip أو أي ملفات كود أو إعدادات أو نصوص — إلى الصندوق تحت حقل الرابط. تُفك وتُفحص هنا في متصفحك. لا شيء يغادر جهازك.' },
+    { re: /وقت|مدة|بطيء|سريع|ثوان/i,
+      a: () => 'المستودع النموذجي يستغرق 20–90 ثانية: جلب، ثم جولتا الانتروبيا والبصمات، ثم فحص الثغرات الحي، ثم قراءة الذكاء الاصطناعي. المستودعات الضخمة تُفحص أهم 500 ملف فيها أولًا.' },
+    { re: /تصدير|تحميل|تقرير|مشاركة|شارة|json|markdown/i,
       a: () => 'في نهاية التقرير: نزّل كل شيء بصيغة .json أو .md، أو انسخ شارة README، أو انسخ رابط مشاركة يعيد فتح التقرير نفسه على هذا الجهاز.' },
-    { re: /fix|remediat|what should i do|where do i start|urgent|إصلاح|أبدأ/i,
+    { re: /إصلاح|اصلح|أبدأ|من أين|الأهم/i,
       a: () => { const r = state.report; return r && r.findings.length ? 'افتح قائمة الإصلاح أسفل تقريرك — مرتبة حسب الإلحاح، إجراء واحد واضح لكل نتيجة. ابدأ بأي شيء حرج.' : 'كل مسح ينتهي بقائمة إصلاح: إجراء واضح واحد لكل نتيجة، الأكثر إلحاحًا أولًا.'; } },
-    { re: /who are you|about (this|the)|this site|website|ما هذا|من أنت|الموقع/i,
-      a: () => 'أنا مساعد Nullbreach. Nullbreach أداة فحص أمني مجانية: الصق رابط مستودع من أي منصة (GitHub أو GitLab أو Bitbucket) أو أسقط ملفاتك، واحصل على حكم بلغة واضحة وقائمة إصلاح — كله داخل متصفحك.' },
-    { re: /^(hi|hey|hello|yo|salam|hola|مرحبا|السلام|اهلا|أهلا)/i,
+    { re: /ما\s*هذا|من\s*أنت|الموقع|المنصة/i,
+      a: () => 'أنا مساعد Auranis. Auranis أداة فحص أمني مجانية: الصق رابط مستودع من أي منصة (GitHub أو GitLab أو Bitbucket) أو أسقط ملفاتك، واحصل على حكم بلغة واضحة وقائمة إصلاح — كله داخل متصفحك.' },
+    { re: /^(مرحبا|السلام|اهلا|أهلا|هاي|هلا)/,
       a: () => 'أهلًا. اسألني أي شيء — ماذا نفحص، إلى أين يذهب كودك، كيف تعمل الدرجات، أو كيف تضيف مفتاحك الخاص.' },
-    { re: /thank|thanks|great|nice|شكرا|شكرًا|جميل/i,
+    { re: /شكرا|شكرًا|جميل|رائع/i,
       a: () => 'على الرحب والسعة. ابنث بأمان.' },
   ];
   const AR_RE = /[\u0600-\u06FF]/;
@@ -3568,8 +3533,11 @@ const NB_CHAT = (() => {
     return banks.find(k => k.re.test(q));
   }
   async function askAI(q) {
-    const facts = 'Nullbreach = free browser-based security scanner. Paste any repo link (GitHub, GitLab, Bitbucket) or drop any files (.zip project or any code/config/text files) — scanned locally, nothing uploaded. Four passes: leaked secrets (entropy + ' + SIGNATURES.length + ' signatures), risky OWASP-style patterns, dependencies vs the live OSV.dev CVE database + fake/lookalike package names, then an AI pass for logic flaws and exploit walkthroughs. Score /100: -20 critical, -12 high, -5 medium, -2 low. Verdicts: READY / NEEDS FIXES / BLOCKED. An optional personal AI key in Preferences (Groq, Gemini, Mistral, Claude, OpenAI, Kimi, DeepSeek) runs first; a built-in engine is the silent fallback. Free, no account. History = last 10 scans stored on this device only.';
-    const r = await runAICascade('You are the friendly on-site assistant for Nullbreach. Reply in the SAME language the user wrote in (any language). Max 80 words, warm, plain text, no markdown. FACTS: ' + facts + ' QUESTION: ' + q);
+    const facts = 'Auranis = free browser-based security scanner. Paste any repo link (GitHub, GitLab, Bitbucket) or drop any files (zip project or any code/config/text files) — scanned locally, nothing uploaded. Four passes: leaked secrets (entropy + ' + SIGNATURES.length + ' signatures), risky OWASP-style patterns, dependencies vs the live OSV.dev CVE database + fake/lookalike package names, then an AI pass for logic flaws and exploit walkthroughs. Score /100: -20 critical, -12 high, -5 medium, -2 low. Verdicts: READY / NEEDS FIXES / BLOCKED. An optional personal AI key in Preferences (Groq, Gemini, Mistral, Claude, OpenAI, Kimi, DeepSeek) runs first; a built-in engine is the silent fallback. Free, no account. History = last 10 scans stored on this device only.';
+    let reportCtx = '';
+    const rep0 = state.report;
+    if (rep0) reportCtx = ' The user recently scanned ' + rep0.repo.owner + '/' + rep0.repo.name + ': score ' + rep0.score + '/100, verdict ' + rep0.verdict + ', ' + rep0.findings.length + ' findings (' + rep0.counts.critical + ' critical, ' + rep0.counts.high + ' high). Use this when relevant.';
+    const r = await runAICascade('You are the on-site assistant for Auranis, a security scanner. Be genuinely helpful — answer ANY question the user asks, technical or general, always steering back to what Auranis can do for them. Reply in the SAME language the user wrote in (any language). Max 90 words, warm, plain text, no markdown.' + reportCtx + ' FACTS: ' + facts + ' QUESTION: ' + q);
     return r.text;
   }
 
@@ -3591,22 +3559,16 @@ const NB_CHAT = (() => {
     msgs().scrollTop = msgs().scrollHeight;
   }
   async function answer(q) {
-    const hit = pickKB(q);
-    if (hit) {
-      typing();
-      setTimeout(() => {
-        const t = document.getElementById('chatTyping');
-        if (t) t.remove();
-        add(hit.a(), 'bot');
-      }, 550 + Math.min(900, q.length * 12));
-      return;
-    }
     typing();
     let out = '';
-    try { out = await askAI(q); } catch (e) { /* fall through */ }
+    try { out = await askAI(q); } catch (e) { /* offline -> KB */ }
     const t = document.getElementById('chatTyping');
     if (t) t.remove();
-    add(out || FALLBACK, 'bot');
+    if (!out) {
+      const hit = pickKB(q);
+      out = hit ? hit.a() : FALLBACK;
+    }
+    add(out, 'bot');
   }
   function send() {
     const inp = document.getElementById('chatInput');
@@ -3619,7 +3581,7 @@ const NB_CHAT = (() => {
   function greet() {
     if (opened) return;
     opened = true;
-    add('Hi — I am the Nullbreach assistant. Ask me anything about this site, or pick one:', 'bot');
+    add('Ask me anything about Auranis.', 'bot');
     const box = document.getElementById('chatChips');
     box.innerHTML = '';
     CHIPS.forEach(c => {
@@ -3648,7 +3610,6 @@ const NB_CHAT = (() => {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadKeys();
-  document.getElementById('year').textContent = new Date().getFullYear();
   try { initScrollSpy(); } catch (e) { /* scroll-spy is cosmetic — never block init */ }
 
   document.getElementById('btnHistory').addEventListener('click', () => toggleHistory());
@@ -3725,12 +3686,6 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Key saved — it runs before the built-in engine');
   });
   renderProvGrid();
-  document.querySelectorAll('.example-repo').forEach(b => {
-    b.addEventListener('click', () => {
-      document.getElementById('repoInput').value = b.textContent.trim();
-      runScan(b.textContent.trim());
-    });
-  });
 
   NB_CHAT.init();
 
