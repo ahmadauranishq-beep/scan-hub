@@ -717,7 +717,7 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
   <div class="rule-2x"></div>
   <div class="max-w-5xl mx-auto px-6 py-8 flex items-center justify-between flex-wrap gap-2">
     <span class="masthead-title text-[16px] text-[var(--ink)]">Auranis</span>
-    <span class="kicker-caps">v1.8</span>
+    <span class="kicker-caps">v1.9</span>
   </div>
 </footer>
 
@@ -728,7 +728,7 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 <script id="nb-engine">
 /*ENGINE-START*/
 'use strict';
-const NB_VERSION = '1.8.0';
+const NB_VERSION = '1.9.0';
 
 /* ================= Layer 1 — Shannon entropy (Gitleaks technique) ================= */
 function shannonEntropy(str) {
@@ -1937,6 +1937,14 @@ const runAICascade = (() => {
   }));
   const CORE_LABEL = 'AURANIS Core Engine';
   const EXHAUSTED_RE = /(rate.?limit|429|quota|exceed|too many requests|insufficient|credits?|billing|usage.?limit)/i;
+  /* never surface raw engine/model internals in the UI */
+  const CLEAN = (m) => {
+    const s = String(m || 'error');
+    if (/does not exist|decommission|retired|invalid model|unsupported|not found|400/.test(s)) return 'its model is no longer available — rotated';
+    if (/rate|429|quota|exceed|insufficient|credits?|billing/i.test(s)) return 'capacity limit reached';
+    if (/timeout|abort/i.test(s)) return 'timed out';
+    return truncate(s.replace(/`[^`]*`/g, 'the model').replace(/model[\s:]+[\w.\/-]+/gi, 'its model'), 90);
+  };
 
   /* Priority pool: YOUR keys first (recognized automatically, stronger, your order) →
      then the embedded Core Engine (always on, undisclosed). */
@@ -1988,12 +1996,12 @@ const runAICascade = (() => {
         const msg = e && e.name === 'AbortError' ? 'timed out' : (e.message || 'error');
         if (p.origin === 'user') {
           userFailed = true;
-          if (EXHAUSTED_RE.test(msg)) nbLog(`${p.tag} looks exhausted/limited (${truncate(msg, 90)}) — handing over to the Core Engine…`, 'warn');
-          else nbLog(`${p.tag} failed: ${truncate(msg, 100)} — handing over to the Core Engine…`, 'warn');
-          failures.push(`${p.tag}: ${msg}`);
+          if (EXHAUSTED_RE.test(msg)) nbLog(`${p.tag} looks exhausted/limited — handing over to the Core Engine…`, 'warn');
+          else nbLog(`${p.tag} failed (${CLEAN(msg)}) — handing over to the Core Engine…`, 'warn');
+          failures.push(`${p.tag}: ${CLEAN(msg)}`);
         } else {
-          nbLog(`Core node [${p.coreNode}] unavailable (${truncate(msg, 80)}) — rotating to the next node…`, 'warn');
-          failures.push(`core-node-${p.coreNode}: ${msg}`);
+          nbLog('A core node was unavailable — rotating to the next engine…', 'warn');
+          failures.push(CLEAN(msg));
         }
       }
     }
@@ -2392,7 +2400,74 @@ const AI_PROVIDERS = [
 ];
 const AI_PROVIDER_MAP = Object.fromEntries(AI_PROVIDERS.map(p => [p.id, p]));
 
+/* live model discovery — the built-in engine never breaks when a model is retired */
+const MODEL_CACHE = new Map();
+const MODEL_BLOCK = /embed|whisper|tts|guard|speech|ocr|moderation|imagen|veo|aqa|distil|playai|rerank|sdxl|safe-/i;
+const MODEL_PREF = {
+  groq: ['gpt-oss-120b', 'llama-4-maverick', 'llama-4-scout', 'kimi-k2', 'qwen3-32b', 'llama-3.3-70b', 'llama-3.1-8b-instant'],
+  mistral: ['mistral-large-latest', 'mistral-medium-latest', 'mistral-small-latest', 'open-mistral-nemo', 'magistral'],
+  gemini: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-flash-latest', 'gemini-pro-latest'],
+  openai: ['gpt-4.1-mini', 'gpt-4o-mini', 'gpt-4o', 'gpt-4.1'],
+  claude: ['claude-sonnet-4', 'claude-3-7-sonnet', 'claude-3-5-sonnet', 'claude-haiku'],
+  deepseek: ['deepseek-chat', 'deepseek-reasoner'],
+  moonshot: ['kimi-k2', 'moonshot-v1-8k', 'moonshot-v1-32k']
+};
+const MODELS_URL = {
+  groq: 'https://api.groq.com/openai/v1/models',
+  mistral: 'https://api.mistral.ai/v1/models',
+  openai: 'https://api.openai.com/v1/models',
+  deepseek: 'https://api.deepseek.com/v1/models',
+  moonshot: 'https://api.moonshot.cn/v1/models',
+  gemini: 'https://generativelanguage.googleapis.com/v1beta/models',
+  claude: 'https://api.anthropic.com/v1/models'
+};
+async function modelCandidates(p, key) {
+  const cacheKey = p.id + '|' + key.slice(0, 6) + key.slice(-4);
+  if (MODEL_CACHE.has(cacheKey)) return MODEL_CACHE.get(cacheKey);
+  const base = [p.model];
+  const listUrl = MODELS_URL[p.id];
+  if (!listUrl) return base;
+  try {
+    let ids = [];
+    if (p.kind === 'gemini') {
+      const r = await fetchT(listUrl + '?key=' + encodeURIComponent(key) + '&pageSize=200', { headers: {} }, 12000);
+      if (r.ok) {
+        const j = await r.json();
+        ids = (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes('generateContent')).map(m => String(m.name || '').replace(/^models\//, ''));
+      }
+    } else if (p.kind === 'anthropic') {
+      const r = await fetchT(listUrl, { headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' } }, 12000);
+      if (r.ok) { const j = await r.json(); ids = (j.data || []).map(m => m.id).filter(Boolean); }
+    } else {
+      const r = await fetchT(listUrl, { headers: { 'Authorization': 'Bearer ' + key } }, 12000);
+      if (r.ok) { const j = await r.json(); ids = (j.data || []).map(m => m.id).filter(Boolean); }
+    }
+    const pref = MODEL_PREF[p.id] || [];
+    ids = ids.filter(id => !MODEL_BLOCK.test(id));
+    const picked = [];
+    for (const kw of pref) { const hit = ids.find(id => id.indexOf(kw) > -1 && picked.indexOf(id) < 0); if (hit) picked.push(hit); }
+    const out = picked.length ? picked.slice(0, 3).concat(base.filter(m => picked.indexOf(m) < 0)) : base;
+    MODEL_CACHE.set(cacheKey, out);
+    return out;
+  } catch (e) { return base; }
+}
+
 async function callAIProvider(p, prompt, key) {
+  const cands = await modelCandidates(p, key);
+  let lastErr = null;
+  for (const model of cands.slice(0, 4)) {
+    try { return await callAIModel(p, prompt, key, model); }
+    catch (e) {
+      lastErr = e;
+      if (e && e.name === 'AbortError') throw e;
+      if (!/404|400|does not exist|not exist|decommission|retired|unsupported|invalid model|not found/i.test(String(e && e.message))) throw e;
+      /* model missing → try the next discovered candidate */
+    }
+  }
+  throw lastErr;
+}
+
+async function callAIModel(p, prompt, key, model) {
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 150000);
   try {
@@ -2405,13 +2480,13 @@ async function callAIProvider(p, prompt, key) {
       };
     } else if (p.kind === 'anthropic') {
       body = {
-        model: p.model,
+        model: model,
         max_tokens: 4096,
         messages: [{ role: 'user', content: prompt }]
       };
     } else {
       body = {
-        model: p.model,
+        model: model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,
         max_tokens: 4096
@@ -2759,7 +2834,7 @@ async function runLocalScan(fileList){
     report = {
       tool: 'AURANIS', version: NB_VERSION,
       generatedAt: new Date().toISOString(),
-      repo: { owner: 'local files', name: projName, branch: '', url: '', description: files.length + ' files scanned from your device', language: undefined },
+      repo: { owner: 'local files', name: projName, branch: '', url: '', description: files.length + ' file' + (files.length === 1 ? '' : 's') + ' scanned on this device', language: undefined },
       score, verdict, counts, exploitHits,
       formula: `100 − 20×${counts.critical} − 12×${counts.high} − 5×${counts.medium} − 2×${counts.low}${exploitHits ? ` − 10×${exploitHits}` : ''} = ${score}`,
       findings, dependencies: { parsed: deps, queried: osvQueried },
@@ -3056,7 +3131,7 @@ function verdictClass(v) {
 /* ================= main render ================= */
 function renderResults(r) {
   /* summary */
-  document.getElementById('repoMeta').textContent = `${r.repo.owner}/${r.repo.name} @ ${r.repo.branch}`;
+  document.getElementById('repoMeta').textContent = r.repo.branch ? `${r.repo.owner}/${r.repo.name} @ ${r.repo.branch}` : `${r.repo.owner}/${r.repo.name}`;
   document.getElementById('repoDesc').textContent = r.repo.description || '';
   document.getElementById('repoLink').href = r.repo.url;
   document.getElementById('navRepo').textContent = `${r.repo.owner}/${r.repo.name}`;
@@ -3069,7 +3144,7 @@ function renderResults(r) {
   document.getElementById('statStrings').textContent = r.stats.stringsChecked.toLocaleString('en-US');
   document.getElementById('statDeps').textContent = r.stats.depsQueried;
   document.getElementById('statDuration').textContent = (r.stats.durationMs / 1000).toFixed(1) + 's';
-  document.getElementById('scoreSub').textContent = `${r.findings.length} findings · ${r.stats.signatures} signatures · ${r.stats.filesTracked} files tracked`;
+  document.getElementById('scoreSub').textContent = `${r.findings.length} finding${r.findings.length === 1 ? '' : 's'} · ${r.stats.signatures} signatures · ${r.stats.filesTracked} file${r.stats.filesTracked === 1 ? '' : 's'} scanned`;
 
   document.getElementById('chipCritical').textContent = r.counts.critical;
   document.getElementById('chipHigh').textContent = r.counts.high;
@@ -3499,7 +3574,25 @@ const NB_CHAT = (() => {
       a: () => 'Anytime. Ship safe.' },
   ];
   const CHIPS = ['What does it check?', 'Is my code uploaded?', 'How do I add my own key?', 'What does the score mean?'];
-  const FALLBACK = 'That one is outside my notes. I can tell you what Auranis checks, where your code goes, how the score works, or how to plug in your own key.';
+  function statusBrief(q) {
+    const r = state.report;
+    const ar = /[\u0600-\u06FF]/.test(q || '');
+    if (!r) return ar
+      ? 'لا يوجد مسح محفوظ بعد. أسقط ملفاتك أو الصق رابطًا، وبعد المسح اسألني "ماذا أصلح أولًا؟" وسأقيّم النتائج معك سطرًا بسطر.'
+      : 'Nothing scanned yet on this device. Drop your files or paste a link — after the scan, ask me "what should I fix first?" and I will walk you through the results.';
+    const f = (r.findings || []);
+    const worst = f.find(x => x.severity === 'critical') || f.find(x => x.severity === 'high') || f[0];
+    if (ar) {
+      let s = `حالة آخر مسح (${r.repo.owner}/${r.repo.name}): الدرجة ${r.score}/100 — الحكم ${r.verdict}. النتائج: ${r.counts.critical} حرجة، ${r.counts.high} عالية، ${r.counts.medium} متوسطة، ${r.counts.low} منخفضة.`;
+      if (worst) s += ` الأهم الآن: "${worst.name}" في ${worst.file}${worst.line ? ' سطر ' + worst.line : ''} — ابدأ هناك.`;
+      s += f.length ? ' أسفل الصفحة قائمة إصلاح مرتبة بالإلحاح.' : ' لا شيء يحتاج إصلاحًا الآن.';
+      return s;
+    }
+    let s = `Latest scan (${r.repo.owner}/${r.repo.name}): score ${r.score}/100 — ${r.verdict}. Findings: ${r.counts.critical} critical, ${r.counts.high} high, ${r.counts.medium} medium, ${r.counts.low} low.`;
+    if (worst) s += ` Top priority: "${worst.name}" in ${worst.file}${worst.line ? ' line ' + worst.line : ''} — start there.`;
+    s += f.length ? ' The fix list at the bottom is ordered by urgency.' : ' Nothing needs fixing right now.';
+    return s;
+  }
   const KB_AR = [
     { re: /ماذا\s*(تفحص|يفحص|تفعل)|ما\s*الذي\s*تفحصه|كيف\s*(يعمل|تشتغل)|الخصائص|مميزات|فحص/i,
       a: () => 'يعمل Auranis بأربع جولات: الأسرار المسربة (الانتروبيا + ' + SIGNATURES.length + ' بصمة)، الأنماط الخطرة (بأسلوب OWASP)، الاعتماديات (كل حزمة تُفحص مباشرة في قاعدة ثغرات OSV.dev وأسماء الحزم المزيفة)، ثم جولة ذكاء اصطناعي تبحث عن ثغرات المنطق وتكتب استغلالات أسوأ النتائج. تحصل على درجة من 100 وحكم وقائمة إصلاح.' },
@@ -3566,7 +3659,7 @@ const NB_CHAT = (() => {
     if (t) t.remove();
     if (!out) {
       const hit = pickKB(q);
-      out = hit ? hit.a() : FALLBACK;
+      out = hit ? hit.a() : statusBrief(q);
     }
     add(out, 'bot');
   }
