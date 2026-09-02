@@ -3947,7 +3947,9 @@ const NB_CHAT = (() => {
     const t = document.getElementById('chatTyping');
     if (t) t.remove();
     if (!out) {
-      const hit = pickKB(q);
+      /* a question about the current situation deserves an assessment, not a canned line */
+      const statusQ = state.report && /(fix|first|priority|safe|ship|verdict|score|status|worst|أصلح|أول|آمن|الحكم|الدرجة)/i.test(q);
+      const hit = statusQ ? null : pickKB(q);
       out = hit ? hit.a() : statusBrief(q);
     }
     add(out, 'bot');
