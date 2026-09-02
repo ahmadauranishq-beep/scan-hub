@@ -2129,7 +2129,7 @@ function parseAIFindings(aiText, markerRe, idPrefix) {
 /* ================= state ================= */
 const state = {
   userKeys: [],            /* internal: the AI queue lives in a closure; this stays empty */
-  githubToken: '',         /* internal: unused since v1.7 — host adapters work without a user token */
+  githubToken: '',         /* optional user token from Settings — raises the GitHub rate limit */
   /* Auranis's AI engine and repository access are embedded & always-on: not visible, not configurable */
   scanning: false,
   report: null,
@@ -2217,7 +2217,7 @@ function renderPrefKeys() {
       <span class="text-[13.5px] font-semibold text-[var(--ink)] flex-1">${esc(PROVIDER_LABEL[k.provider] || 'API key')}${i === 0 ? ' <span class=\"kicker-caps ml-1\">runs first</span>' : ''}</span>
       <span class="mono text-[11.5px] text-[var(--ink-3)]">${esc(maskKey(k.key))}</span>
       <button type="button" data-remove-key="${i}" class="text-[var(--ink-4)] hover:text-[var(--bad)] transition" aria-label="Remove key"><i data-lucide="x" class="w-4 h-4"></i></button>
-    </div>`).join('') : '<p class="text-[13px] text-[var(--ink-4)]">None yet — the built-in engine handles everything on its own.</p>';
+    </div>`).join('') : '<p class="text-[13px] text-[var(--ink-4)]">None yet. The scan runs completely without keys — a key only unlocks the AI summary.</p>';
   list.querySelectorAll('[data-remove-key]').forEach(b => b.addEventListener('click', () => {
     state.userKeys.splice(Number(b.dataset.removeKey), 1);
     persistKeys();
@@ -2226,10 +2226,6 @@ function renderPrefKeys() {
   }));
 }
 
-/* ---- AURANIS Core Engine: embedded AI capability that makes the tool work with zero
-   setup. Seeding material and the provider binding live INSIDE a closure — not reachable
-   as globals from the console. Deterrence, not cryptography: the network tab always shows
-   whatever a caller actually sends. Provider identities are never rendered anywhere. ---- */
 /* BYOK cascade — your keys, your order, nothing embedded */
 function cleanEngineMsg(m) {
   const s = String(m || 'error');
@@ -3842,7 +3838,7 @@ const NB_CHAT = (() => {
     { re: /upload|upload(ed)?|stored|storage|privacy|private|leave|sent|server|track(ed)?|collect(ed)?|safe to paste|my code|data/i,
       a: () => 'Your code never touches a Auranis server — there are none. Scanning happens inside your browser. Only package names go to the public CVE/registry databases, and the AI pass sends a risk-ranked excerpt to the AI engine. Drop files and they are read locally — nothing is uploaded.' },
     { re: /(own|my|personal|bring).*(key|api)|add.*key|api key/i,
-      a: () => 'Open Preferences (top right) and paste a key from Groq, Gemini, Mistral, Claude, OpenAI, Kimi or DeepSeek. Your key runs first at full strength; if it fails or runs out, the built-in engine quietly takes over. Keys live in this browser only and are never shown again once saved.' },
+      a: () => 'Open Preferences (top right) and paste a key from Groq, Gemini, Mistral, Claude, OpenAI, Kimi or DeepSeek. Your key is the only AI used — if it fails, the summary skips and everything else still runs. Keys live in this browser only, are never shown again once saved, and go nowhere except the provider you picked.' },
     { re: /score|verdict|ready|blocked|needs fix|rating/i,
       a: () => { const r = state.report; const base = 'The score starts at 100 and drops: 20 per critical finding, 12 per high, 5 per medium, 2 per low. READY means ship it, NEEDS FIXES means close the reds first, BLOCKED means stop — something critical is exposed.'; return r ? `Your last scan (${r.repo.owner}/${r.repo.name}) scored ${r.score}/100 — ${r.verdict}. ` + base : base; } },
     { re: /price|cost|free|pay|charge|account|sign ?up|login|register/i,
@@ -4072,7 +4068,7 @@ document.addEventListener('DOMContentLoaded', () => {
     persistKeys();
     renderPrefKeys();
     lucide.createIcons();
-    showToast('Key saved — it runs before the built-in engine');
+    showToast('Key saved — used only for your AI summary, stored in this browser');
   });
   renderProvGrid();
 
