@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nullbreach — Is it safe to ship?</title>
-<meta name="description" content="Paste a GitHub repository. Nullbreach reads the code, checks every dependency against the live CVE database, and gives you a plain-language verdict — free, in your browser, nothing to install.">
+<meta name="description" content="Paste any repository link — GitHub, GitLab, Bitbucket — or drop your files. Nullbreach reads the code, checks every package against the live CVE database, and gives you a plain-language verdict. Free, in your browser, nothing to install.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%2316181d'/%3E%3Ccircle cx='32' cy='32' r='15' fill='none' stroke='%23f7f5f1' stroke-width='4'/%3E%3Cline x1='43' y1='43' x2='54' y2='54' stroke='%23ff4b26' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
@@ -29,7 +29,7 @@ tailwind.config = {
       },
       fontFamily: {
         body: ['Inter', 'ui-sans-serif', 'sans-serif'],
-        display: ['Fraunces', 'Georgia', 'serif'],
+        display: ['"Space Grotesk"', 'Inter', 'ui-sans-serif', 'sans-serif'],
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace']
       }
     }
@@ -38,7 +38,7 @@ tailwind.config = {
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>/* ============================================================
@@ -47,7 +47,10 @@ tailwind.config = {
    ============================================================ */
 :root {
   --paper:#09090b; --paper-2:#101013; --paper-3:#16161a;
-  --ink:#f4f1ea; --ink-2:#c6c2b8; --ink-3:#8f8b81; --ink-4:#5c594f;
+  --ink:#f4f1ea; --ink-2:#d8d4ca; --ink-3:#a39f94; --ink-4:#6d695f;
+  --font-body:'Inter', ui-sans-serif, sans-serif;
+  --font-display:'Space Grotesk', 'Inter', ui-sans-serif, sans-serif;
+  --font-mono:'IBM Plex Mono', ui-monospace, monospace;
   --hair:#232329; --hair-2:#2e2e36;
   --signal:#f5a524;
   --ok:#3ecf8e; --warn:#f5a524; --bad:#ff5c5c; --info:#7db4ff;
@@ -61,6 +64,7 @@ body {
   background-repeat:no-repeat;
   color:var(--ink-2);
   font-family:var(--font-body);
+  font-size:15.5px;
   overflow-x:hidden;
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
@@ -74,7 +78,7 @@ body {
 
 /* ---------- masthead ---------- */
 .rule-2x { border-top:1px solid var(--hair-2); }
-.masthead-title { font-family:var(--font-display); font-weight:900; letter-spacing:-.01em; }
+.masthead-title { font-family:var(--font-display); font-weight:700; letter-spacing:-.01em; }
 .kicker-caps { font-family:var(--font-mono); font-size:10px; letter-spacing:.24em; color:var(--ink-4); text-transform:uppercase; }
 .sec-idx{
   font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:.08em;
@@ -84,12 +88,12 @@ body {
 
 /* ---------- type ---------- */
 .hero-headline{
-  font-family:var(--font-display); font-weight:900; letter-spacing:-.02em;
-  font-size:clamp(46px,7.2vw,84px); line-height:1.02; color:var(--ink);
+  font-family:var(--font-display); font-weight:700; letter-spacing:-.025em;
+  font-size:clamp(44px,6.8vw,80px); line-height:1.04; color:var(--ink);
 }
-.hero-headline em{ font-style:italic; color:var(--signal); }
-.hero-sub{ font-size:clamp(15px,1.6vw,17.5px); line-height:1.75; color:var(--ink-3); max-width:640px; }
-.score-figure{ font-family:var(--font-display); font-weight:900; letter-spacing:-.03em; }
+.hero-headline em{ font-style:normal; color:var(--signal); }
+.hero-sub{ font-size:clamp(16px,1.7vw,18.5px); line-height:1.7; color:var(--ink-2); max-width:660px; }
+.score-figure{ font-family:var(--font-display); font-weight:700; letter-spacing:-.02em; }
 
 /* ---------- panels ---------- */
 .panel{
@@ -190,7 +194,7 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 .ledger-row{ border-bottom:1px solid var(--hair); }
 
 /* ---------- AI content ---------- */
-.ai-content h3, .ai-content h4{ font-family:var(--font-display); color:var(--ink); margin:18px 0 8px; font-weight:700; }
+.ai-content h3, .ai-content h4{ font-family:var(--font-display); color:var(--ink); margin:18px 0 8px; font-weight:600; }
 .ai-content h3{ font-size:16px; } .ai-content h4{ font-size:14px; }
 .ai-content p{ margin:8px 0; }
 .ai-content ul, .ai-content ol{ margin:8px 0 8px 20px; }
@@ -218,7 +222,6 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
   padding:14px; font-size:12px; line-height:1.7; color:var(--ink-2); font-family:var(--font-mono);
   box-shadow:0 24px 48px -20px rgba(0,0,0,.8);
 }
-#historyDrop button:hover{ border-color: var(--signal) !important; }
 #scanProgressFill{ background:var(--signal); border-radius:999px; transition:width .3s; }
 #badgePreview{ background:var(--paper-3); border:1px solid var(--hair); border-radius:10px; }
 #toast{
@@ -254,6 +257,34 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 .chat-dot:nth-child(2){ animation-delay:.18s; } .chat-dot:nth-child(3){ animation-delay:.36s; }
 @keyframes chatblink{ 0%,100%{ opacity:.25; } 50%{ opacity:1; } }
 
+
+/* ---------- how-it-works ---------- */
+.how-step{ display:flex; gap:14px; align-items:flex-start; }
+.how-num{
+  font-family:var(--font-mono); font-size:12px; font-weight:600; color:var(--signal);
+  border:1px solid rgba(245,165,36,.4); border-radius:999px; width:26px; height:26px;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px;
+}
+/* ---------- prefs provider grid ---------- */
+.prov-chip{
+  font-family:var(--font-mono); font-size:12px; padding:8px 13px; border-radius:9px;
+  border:1px solid var(--hair-2); color:var(--ink-3); background:transparent; cursor:pointer;
+  transition:all .15s;
+}
+.prov-chip:hover{ border-color:var(--ink-3); color:var(--ink); }
+.prov-chip.on{ border-color:var(--signal); color:var(--signal); background:rgba(245,165,36,.07); }
+.key-card{
+  display:flex; align-items:center; gap:12px; padding:11px 14px;
+  border:1px solid var(--hair); border-left:3px solid var(--signal);
+  border-radius:9px; background:var(--paper-3);
+}
+/* ---------- history modal ---------- */
+.hist-row{
+  display:flex; align-items:center; gap:14px; padding:13px 16px;
+  border:1px solid var(--hair); border-radius:10px; background:var(--paper-2);
+  transition:border-color .15s;
+}
+.hist-row:hover{ border-color:var(--hair-2); }
 @media (prefers-reduced-motion: reduce){
   .cursor,.pulse-clean,#critFlicker.on,.stamp-in,.glitching,.chat-dot{ animation:none !important; }
 }
@@ -295,7 +326,6 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
     <div class="relative flex items-center gap-1">
       <button id="btnHistory" class="btn-quiet mono text-[11px] tracking-[.14em] uppercase rounded-md px-3.5 py-2">History</button>
       <button id="btnSettings" class="btn-quiet mono text-[11px] tracking-[.14em] uppercase rounded-md px-3.5 py-2">Preferences</button>
-      <div id="historyDrop" class="hidden absolute right-0 top-12 z-50 w-[min(92vw,420px)] max-h-[70vh] overflow-y-auto rounded-lg border border-[var(--hair)] bg-[var(--paper-2)] shadow-[0_18px_40px_-18px_rgba(22,24,29,.35)] p-5"></div>
     </div>
   </div>
   <div class="rule-2x"></div>
@@ -312,44 +342,31 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 
     <div class="flex-1 overflow-y-auto px-6 py-6 space-y-7">
       <p class="text-[14px] leading-relaxed text-[var(--ink-3)]">
-        Nullbreach works out of the box — there is nothing to configure. This page is optional.
+        Nullbreach works out of the box — this page is optional. Everything here stays in this browser.
       </p>
 
       <div>
-        <div class="flex items-center justify-between mb-2">
-          <label for="prefGithub" class="text-[14px] font-semibold text-[var(--ink)]">Your GitHub token <span class="kicker-caps ml-1">optional</span></label>
-        </div>
-        <input id="prefGithub" type="password" autocomplete="off" spellcheck="false" placeholder="ghp_… or github_pat_…"
-          class="mono w-full px-3 py-2.5 text-sm tracking-widest">
-        <p class="mt-2.5 text-[12.5px] leading-relaxed text-[var(--ink-3)]">
-          Scans share public GitHub limits with everyone. If scans ever feel slow, paste a personal
-          token for a private, faster lane — it stays in this browser, is never shown once saved, and works for private repos too.
+        <h3 class="font-display text-[17px] font-bold text-[var(--ink)]">AI engine</h3>
+        <p class="mt-1.5 text-[13px] leading-relaxed text-[var(--ink-3)]">
+          The scan already runs on a built-in engine. Add your own key to make the AI pass
+          <span class="text-[var(--ink)] font-medium">faster, stronger and unlimited</span> — yours runs first,
+          the built-in one stays quietly as backup.
         </p>
-      </div>
 
-      <div class="pt-5 border-t border-[var(--hair)]">
-        <div class="flex items-center justify-between mb-2">
-          <label for="prefKeyInput" class="text-[14px] font-semibold text-[var(--ink)]">Your AI key <span class="kicker-caps ml-1">optional</span></label>
-        </div>
+        <div class="kicker-caps mt-5 mb-2">Step 1 — pick a provider</div>
+        <div id="provGrid" class="grid grid-cols-4 gap-2"></div>
+
+        <div class="kicker-caps mt-5 mb-2">Step 2 — paste the key</div>
         <div class="flex gap-2">
-          <select id="prefKeyProvider" class="mono text-[12px] border border-[var(--hair-2)] bg-transparent rounded-md px-2 py-2 text-[var(--ink-2)]">
-            <option value="auto" class="bg-[var(--paper-2)]">Detect automatically</option>
-            <option value="groq" class="bg-[var(--paper-2)]">Groq</option>
-            <option value="gemini" class="bg-[var(--paper-2)]">Gemini</option>
-            <option value="mistral" class="bg-[var(--paper-2)]">Mistral</option>
-            <option value="claude" class="bg-[var(--paper-2)]">Claude</option>
-            <option value="openai" class="bg-[var(--paper-2)]">OpenAI</option>
-            <option value="moonshot" class="bg-[var(--paper-2)]">Kimi</option>
-            <option value="deepseek" class="bg-[var(--paper-2)]">DeepSeek</option>
-          </select>
-          <input id="prefKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="paste your key — gsk_… / AIza… / sk-…"
-            class="mono flex-1 w-full px-3 py-2 text-[12.5px] border border-[var(--hair-2)] bg-transparent rounded-md tracking-wider">
-          <button id="btnAddKey" type="button" class="btn-quiet rounded-md px-3.5 py-2 text-[13px] shrink-0">Add</button>
+          <input id="prefKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="your key stays on this device"
+            class="mono flex-1 w-full px-3 py-2.5 text-[13px] border border-[var(--hair-2)] bg-transparent rounded-md tracking-wider">
+          <button id="btnAddKey" type="button" class="btn-ink rounded-md px-4 py-2.5 text-[13px] font-semibold shrink-0">Add key</button>
         </div>
-        <div id="prefKeyList" class="mt-3 space-y-2"></div>
-        <p class="mt-2.5 text-[12.5px] leading-relaxed text-[var(--ink-3)]">
-          Your keys run first, at full strength. If one fails or runs out, the built-in engine quietly takes over.
-          Keys are stored in this browser only and are never shown again once saved.
+
+        <div class="kicker-caps mt-5 mb-2">Your keys <span id="prefKeyCount"></span></div>
+        <div id="prefKeyList" class="space-y-2"></div>
+        <p class="mt-3 text-[12.5px] leading-relaxed text-[var(--ink-4)]">
+          The first key runs first, then the next, then the built-in engine. Keys are never shown again once saved.
         </p>
       </div>
 
@@ -365,23 +382,57 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
   </aside>
 </div>
 
+<!-- ================= HISTORY ================= -->
+<div id="historyModal" class="fixed inset-0 z-[70] hidden">
+  <div id="historyBackdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+  <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 mx-auto w-[min(94vw,560px)] max-h-[80vh] flex flex-col rounded-2xl border border-[var(--hair-2)] bg-[var(--paper-2)] shadow-[0_40px_80px_-24px_rgba(0,0,0,.9)]">
+    <div class="px-6 pt-6 pb-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-display text-xl font-bold text-[var(--ink)]">History</h2>
+        <button id="btnCloseHistory" class="p-2 rounded-md hover:bg-white/5 text-[var(--ink-3)]"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <p class="mt-1.5 text-[13px] text-[var(--ink-3)]">Your last 10 scans, saved automatically — only on this device, visible only to you. Reopen any report to compare or export it again.</p>
+    </div>
+    <div id="historyList" class="px-6 pb-4 space-y-2.5 overflow-y-auto"></div>
+    <div class="px-6 py-4 border-t border-[var(--hair)] flex items-center justify-between">
+      <span class="kicker-caps">stored in this browser only</span>
+      <button id="btnClearHistory" class="btn-quiet rounded-md px-3.5 py-2 text-[12.5px]">Clear history</button>
+    </div>
+  </div>
+</div>
+
 <!-- ================= HERO / SCAN ================= -->
 <main class="relative z-10">
 <section class="max-w-5xl mx-auto px-6 pt-14 pb-12">
   <p class="kicker-caps mb-5">Free · No account · Nothing leaves your browser</p>
   <h1 class="hero-headline">Is it safe<br>to <em>ship</em> it?</h1>
   <p class="hero-sub mt-6">
-    One link, or a few files. Nullbreach reads the code line by line, flags leaked secrets and risky
-    patterns, checks every package against the live CVE database — then gives you a straight answer:
-    ship it or fix it first.
+    Nullbreach reads your code like a careful security engineer. It finds passwords that were accidentally
+    left in the code, dangerous patterns, and packages with known security holes. Then it tells you,
+    in plain words, what is wrong and what to fix first.
   </p>
+
+  <div class="mt-9 grid sm:grid-cols-3 gap-5">
+    <div class="how-step">
+      <span class="how-num">1</span>
+      <p class="text-[14px] leading-relaxed text-[var(--ink-3)]">Give it a repository link — or drop your files in the box. No account, nothing to install.</p>
+    </div>
+    <div class="how-step">
+      <span class="how-num">2</span>
+      <p class="text-[14px] leading-relaxed text-[var(--ink-3)]">It reads every line of code and checks every package against the live security databases.</p>
+    </div>
+    <div class="how-step">
+      <span class="how-num">3</span>
+      <p class="text-[14px] leading-relaxed text-[var(--ink-3)]">You get a score out of 100, a clear list of problems, and a fix list ordered by urgency.</p>
+    </div>
+  </div>
 
   <form id="scanForm" class="mt-10">
     <div class="flex flex-col sm:flex-row gap-4 items-end">
       <div class="flex-1 w-full">
-        <label for="repoInput" class="kicker-caps">GitHub link</label>
+        <label for="repoInput" class="kicker-caps">Repository link</label>
         <input id="repoInput" type="text" spellcheck="false" autocomplete="off"
-          placeholder="https://github.com/owner/repo"
+          placeholder="any repo link — GitHub, GitLab, Bitbucket…"
           class="audit-input w-full mt-2">
       </div>
       <button id="btnScan" type="submit" class="btn-ink rounded-md px-8 py-3.5 text-sm font-semibold whitespace-nowrap">Scan</button>
@@ -389,7 +440,8 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
     <p class="mt-3 text-[13px] text-[var(--ink-4)]">
       Try:
       <button type="button" class="example-repo underline decoration-[var(--hair-2)] hover:decoration-[var(--signal)] transition ml-1">OWASP/NodeGoat</button> ·
-      <button type="button" class="example-repo underline decoration-[var(--hair-2)] hover:decoration-[var(--signal)] transition">expressjs/express</button>
+      <button type="button" class="example-repo underline decoration-[var(--hair-2)] hover:decoration-[var(--signal)] transition">expressjs/express</button> ·
+      <button type="button" class="example-repo underline decoration-[var(--hair-2)] hover:decoration-[var(--signal)] transition">gitlab.com/gitlab-org/gitlab-test</button>
     </p>
   </form>
 
@@ -397,8 +449,8 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 
   <div id="dropZone" class="drop-zone mt-4 px-6 py-9 text-center cursor-pointer select-none" role="button" tabindex="0" aria-label="Upload files to scan">
     <i data-lucide="upload-cloud" class="w-7 h-7 mx-auto text-[var(--ink-3)]"></i>
-    <p class="mt-3 text-[14.5px] text-[var(--ink-2)]"><span class="font-semibold text-[var(--ink)] underline decoration-[var(--hair-2)] underline-offset-4">Choose files</span> or drag &amp; drop here</p>
-    <p class="mt-1.5 text-[12.5px] text-[var(--ink-4)]">.zip project · .html · .js · .py · any code file — scanned locally, never uploaded</p>
+    <p class="mt-3 text-[15px] text-[var(--ink-2)]"><span class="font-semibold text-[var(--ink)] underline decoration-[var(--hair-2)] underline-offset-4">Choose files</span> or drag &amp; drop them here</p>
+    <p class="mt-1.5 text-[13px] text-[var(--ink-3)]">Any files: a whole project as .zip, or any code / config / text files. Everything is read on your device — nothing is uploaded.</p>
     <input id="fileInput" type="file" class="hidden" multiple>
   </div>
 
@@ -711,7 +763,7 @@ tr.find-critical td{ background:rgba(255,92,92,.055); }
 <script id="nb-engine">
 /*ENGINE-START*/
 'use strict';
-const NB_VERSION = '1.6.0';
+const NB_VERSION = '1.7.0';
 
 /* ================= Layer 1 — Shannon entropy (Gitleaks technique) ================= */
 function shannonEntropy(str) {
@@ -1804,7 +1856,7 @@ function parseAIFindings(aiText, markerRe, idPrefix) {
 /* ================= state ================= */
 const state = {
   userKeys: [],            /* internal: the AI queue lives in a closure; this stays empty */
-  githubToken: '',         /* optional personal token (Preferences) — built-in access exists regardless */
+  githubToken: '',         /* internal: unused since v1.7 — host adapters work without a user token */
   /* Nullbreach's AI engine and repository access are embedded & always-on: not visible, not configurable */
   scanning: false,
   report: null,
@@ -1825,24 +1877,33 @@ function loadKeys() {
     const raw = localStorage.getItem(LS_PREFS);
     if (raw) {
       const o = JSON.parse(raw);
-      if (typeof o.githubToken === 'string') state.githubToken = o.githubToken;
       if (Array.isArray(o.aiKeys)) state.userKeys = o.aiKeys
         .filter(k => k && typeof k.key === 'string' && k.key)
         .map((k, i) => ({ id: k.id || 'k' + i, provider: PROVIDER_LABEL[k.provider] ? k.provider : (detectProviderKeySync(k.key) || 'openai'), key: k.key }));
     }
   } catch (e) { /* private mode / corrupt storage */ }
-  const inp = document.getElementById('prefGithub');
-  if (inp) inp.value = state.githubToken;
   renderPrefKeys();
 }
 
 function persistKeys() {
-  const inp = document.getElementById('prefGithub');
-  if (inp) state.githubToken = inp.value.trim();
-  try { localStorage.setItem(LS_PREFS, JSON.stringify({ githubToken: state.githubToken, aiKeys: state.userKeys })); } catch (e) { /* ignore */ }
+  try { localStorage.setItem(LS_PREFS, JSON.stringify({ aiKeys: state.userKeys })); } catch (e) { /* ignore */ }
 }
 
 const PROVIDER_LABEL = { groq: 'Groq', gemini: 'Gemini', mistral: 'Mistral', claude: 'Claude', openai: 'OpenAI', moonshot: 'Kimi', deepseek: 'DeepSeek' };
+const PROVIDER_HINT = { groq: 'gsk_…', gemini: 'AIza… / AQ.…', mistral: '9… / sk-…', claude: 'sk-ant-…', openai: 'sk-…', moonshot: 'sk-…', deepseek: 'sk-…' };
+let prefProvider = 'auto';
+function renderProvGrid() {
+  const grid = document.getElementById('provGrid');
+  if (!grid) return;
+  const items = Object.keys(PROVIDER_LABEL);
+  grid.innerHTML = items.map(id => `<button type="button" data-prov="${id}" class="prov-chip ${prefProvider === id ? 'on' : ''}">${PROVIDER_LABEL[id]}</button>`).join('');
+  grid.querySelectorAll('[data-prov]').forEach(b => b.addEventListener('click', () => {
+    prefProvider = prefProvider === b.dataset.prov ? 'auto' : b.dataset.prov;
+    renderProvGrid();
+    const inp = document.getElementById('prefKeyInput');
+    if (inp) inp.placeholder = prefProvider === 'auto' ? 'we detect the provider from the key shape' : PROVIDER_LABEL[prefProvider] + ' key (' + PROVIDER_HINT[prefProvider] + ')';
+  }));
+}
 function detectProviderKeySync(k) {
   if (/^gsk_/.test(k)) return 'groq';
   if (/^AIza/.test(k) || /^AQ\./.test(k)) return 'gemini';
@@ -1870,12 +1931,15 @@ function maskKey(k) { k = String(k || ''); return k.length > 10 ? k.slice(0, 3) 
 function renderPrefKeys() {
   const list = document.getElementById('prefKeyList');
   if (!list) return;
+  const count = document.getElementById('prefKeyCount');
+  if (count) count.textContent = state.userKeys.length ? '· ' + state.userKeys.length + '/6' : '';
   list.innerHTML = state.userKeys.length ? state.userKeys.map((k, i) => `
-    <div class="flex items-center justify-between gap-3 rounded-md border border-[var(--hair)] bg-[var(--paper-3)] px-3 py-2">
-      <span class="text-[13px] font-medium text-[var(--ink)]">${esc(PROVIDER_LABEL[k.provider] || 'API key')}</span>
-      <span class="mono text-[11px] text-[var(--ink-4)]">${esc(maskKey(k.key))}</span>
+    <div class="key-card">
+      <span class="mono text-[10px] ${i === 0 ? 'text-[var(--signal)]' : 'text-[var(--ink-4)]'} shrink-0">#${i + 1}</span>
+      <span class="text-[13.5px] font-semibold text-[var(--ink)] flex-1">${esc(PROVIDER_LABEL[k.provider] || 'API key')}${i === 0 ? ' <span class=\"kicker-caps ml-1\">runs first</span>' : ''}</span>
+      <span class="mono text-[11.5px] text-[var(--ink-3)]">${esc(maskKey(k.key))}</span>
       <button type="button" data-remove-key="${i}" class="text-[var(--ink-4)] hover:text-[var(--bad)] transition" aria-label="Remove key"><i data-lucide="x" class="w-4 h-4"></i></button>
-    </div>`).join('') : '<p class="text-[12.5px] text-[var(--ink-4)]">No personal keys yet — the built-in engine runs on its own.</p>';
+    </div>`).join('') : '<p class="text-[13px] text-[var(--ink-4)]">None yet — the built-in engine handles everything on its own.</p>';
   list.querySelectorAll('[data-remove-key]').forEach(b => b.addEventListener('click', () => {
     state.userKeys.splice(Number(b.dataset.removeKey), 1);
     persistKeys();
@@ -2015,40 +2079,159 @@ const ghToken = (() => {
   const _pad = 'nb-gh-7';
   const _seed = [9,10,93,56,39,31,82,36,7,67,38,50,98,5,6,6,88,22,9,31,103,95,49,28,18,43,26,116,86,17,65,52,25,21,6,44,44,108,84,80];
   const builtIn = () => _seed.map((c, i) => String.fromCharCode(c ^ _pad.charCodeAt(i % _pad.length))).join('');
-  return () => state.githubToken || builtIn();
+  return () => builtIn();
 })();
 
-function parseRepoInput(input) {
-  let s = (input || '').trim();
-  if (!s) throw new NBError('Enter a GitHub repository, e.g. <span class="mono">OWASP/NodeGoat</span>.');
-  s = s.replace(/^git@github\.com:/, 'https://github.com/');
-  const treeM = s.match(/github\.com\/([^\/\s?#]+)\/([^\/\s?#]+)/i);
-  if (treeM) {
-    const out = { owner: treeM[1], name: treeM[2].replace(/\.git$/i, ''), branch: null };
-    const ti = s.toLowerCase().indexOf('/tree/');
-    if (ti > -1) {
-      out.branch = s.slice(ti + 6).split('#')[0].replace(/\/+$/, '').split('/').map(decodeURIComponent).join('/');
-      if (!out.branch) out.branch = null;
-    }
-    return out;
-  }
-  const m = s.match(/^([\w.-]+)\/([\w.-]+)$/);
-  if (m) return { owner: m[1], name: m[2].replace(/\.git$/i, ''), branch: null };
-  throw new NBError('Could not parse that repository reference. Use <span class="mono">owner/repo</span> or a full GitHub URL.');
+async function fetchT(url, opts, ms) {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), ms || 15000);
+  try { return await fetch(url, Object.assign({}, opts || {}, { signal: ctrl.signal })); }
+  finally { clearTimeout(to); }
 }
 
 async function ghFetch(path) {
   const headers = { 'Accept': 'application/vnd.github+json', 'User-Agent': 'nullbreach-scanner', 'Authorization': 'Bearer ' + ghToken() };
-  const r = await fetch('https://api.github.com' + path, { headers });
-  if (r.status === 404) throw new NBError('Repository not found (404). Private repos need your own token — add one in Preferences.');
+  const r = await fetchT('https://api.github.com' + path, { headers });
+  if (r.status === 404) throw new NBError('Repository not found on GitHub (404). Check the link — private repositories are not reachable.');
   if (r.status === 403) {
     const rem = r.headers.get('x-ratelimit-remaining');
-    if (rem === '0') throw new NBError('The shared scan allowance ran out for this hour. Add your own GitHub token in Preferences for a private lane (free, takes a minute).');
+    if (rem === '0') throw new NBError('The shared scan allowance ran out for this hour — please try again a bit later.');
     throw new NBError('GitHub refused the request (403).');
   }
   if (r.status === 301) throw new NBError('That repository moved (301). Try its new location.');
   if (!r.ok) throw new NBError('GitHub API error HTTP ' + r.status + '.');
   return r.json();
+}
+
+async function nbJson(url, hostLabel) {
+  const r = await fetchT(url, { headers: { 'Accept': 'application/json' } });
+  if (r.status === 404) throw new NBError('Repository not found on ' + hostLabel + ' (404). Check the link — private repositories are not reachable.');
+  if (r.status === 403 || r.status === 429) throw new NBError(hostLabel + ' is rate-limiting the shared scan allowance right now — please try again a bit later.');
+  if (!r.ok) throw new NBError(hostLabel + ' API error HTTP ' + r.status + '.');
+  return r.json();
+}
+
+/* ================= git-host adapters — one scanner, every host ================= */
+const NB_HOSTS = {
+  github: {
+    label: 'GitHub',
+    url: (r) => 'https://github.com/' + r.owner + '/' + r.name,
+    async meta(r) {
+      const m = await ghFetch('/repos/' + r.owner + '/' + r.name);
+      return { branch: m.default_branch || 'main', description: m.description || '', stars: m.stargazers_count };
+    },
+    async listTree(r, branch) {
+      const t = await ghFetch('/repos/' + r.owner + '/' + r.name + '/git/trees/' + encodeURIComponent(branch) + '?recursive=1');
+      if (t.truncated) nbLog('The file listing was truncated (very large repo) — scanning a prioritized subset.', 'warn');
+      return (t.tree || []).filter(e => e.type === 'blob').map(e => ({ path: e.path, size: e.size || 0 }));
+    },
+    async readFile(r, branch, path) {
+      const p = path.split('/').map(encodeURIComponent).join('/');
+      const resp = await fetchT('https://api.github.com/repos/' + r.owner + '/' + r.name + '/contents/' + p + '?ref=' + encodeURIComponent(branch),
+        { headers: { 'Accept': 'application/vnd.github.raw', 'Authorization': 'Bearer ' + ghToken(), 'User-Agent': 'nullbreach-scanner' } });
+      return resp.ok ? await resp.text() : null;
+    },
+  },
+  gitlab: {
+    label: 'GitLab',
+    url: (r) => 'https://gitlab.com/' + r.owner + '/' + r.name,
+    pid: (r) => encodeURIComponent(r.owner + '/' + r.name),
+    async meta(r) {
+      const p = await nbJson('https://gitlab.com/api/v4/projects/' + this.pid(r), 'GitLab');
+      return { branch: p.default_branch || 'main', description: p.description || '', stars: p.star_count };
+    },
+    async listTree(r, branch) {
+      const out = [];
+      for (let page = 1; page <= 10; page++) {
+        const batch = await nbJson('https://gitlab.com/api/v4/projects/' + this.pid(r) + '/repository/tree?recursive=true&per_page=100&page=' + page + '&ref=' + encodeURIComponent(branch), 'GitLab');
+        if (!Array.isArray(batch)) break;
+        out.push(...batch.filter(e => e.type === 'blob').map(e => ({ path: e.path, size: 0 })));
+        if (batch.length < 100) break;
+      }
+      return out;
+    },
+    async readFile(r, branch, path) {
+      const resp = await fetchT('https://gitlab.com/api/v4/projects/' + this.pid(r) + '/repository/files/' + encodeURIComponent(path) + '?ref=' + encodeURIComponent(branch));
+      if (!resp.ok) return null;
+      const j = await resp.json();
+      try { return decodeURIComponent(escape(atob(String(j.content || '').replace(/\n/g, '')))); } catch (e) { return null; }
+    },
+  },
+  bitbucket: {
+    label: 'Bitbucket',
+    url: (r) => 'https://bitbucket.org/' + r.owner + '/' + r.name,
+    async meta(r) {
+      const p = await nbJson('https://api.bitbucket.org/2.0/repositories/' + r.owner + '/' + r.name, 'Bitbucket');
+      return { branch: (p.mainbranch && p.mainbranch.name) || 'master', description: p.description || '', stars: 0 };
+    },
+    async listTree(r, branch) {
+      const out = []; const queue = [''];
+      while (queue.length && out.length < 3000) {
+        const dir = queue.shift();
+        let url = 'https://api.bitbucket.org/2.0/repositories/' + r.owner + '/' + r.name + '/src/' + encodeURIComponent(branch) + '/' + (dir ? dir.split('/').map(encodeURIComponent).join('/') + '/' : '') + '?pagelen=100&max_depth=1';
+        for (let page = 1; page <= 8 && url; page++) {
+          const j = await nbJson(url, 'Bitbucket');
+          for (const v of (j.values || [])) {
+            if (v.type === 'commit_directory') queue.push(v.path);
+            else if (v.type === 'commit_file') out.push({ path: v.path, size: v.size || 0 });
+          }
+          url = page < 8 && j.next ? j.next : null;
+        }
+      }
+      return out;
+    },
+    async readFile(r, branch, path) {
+      const resp = await fetchT('https://api.bitbucket.org/2.0/repositories/' + r.owner + '/' + r.name + '/src/' + encodeURIComponent(branch) + '/' + path.split('/').map(encodeURIComponent).join('/'));
+      return resp.ok ? await resp.text() : null;
+    },
+  },
+};
+
+function parseRepoLink(input) {
+  let s = (input || '').trim();
+  if (!s) throw new NBError('Paste a repository link — GitHub, GitLab or Bitbucket — or drop your files below.');
+  s = s.replace(/^git@([^:]+):/i, (m0, h) => 'https://' + h + '/').replace(/\.git$/i, '').replace(/\/+$/, '');
+  const gh = s.match(/github\.com\/([^\/\s?#]+)\/([^\/\s?#]+)/i);
+  if (gh) return { host: 'github', owner: gh[1], name: gh[2].replace(/\.git$/i, ''), branch: branchFromPath(s, '/tree/') };
+  if (/gitlab[^\/]*\.(com|org)/i.test(s)) {
+    let path = s.slice(s.toLowerCase().indexOf('gitlab')).replace(/^[^\/]*\.(com|org)\//i, '').split('#')[0].replace(/\/+$/, '');
+    let branch = branchFromPath(path, '/-/tree/');
+    if (!branch) branch = branchFromPath(path, '/tree/');
+    if (branch) path = path.slice(0, Math.max(path.toLowerCase().indexOf('/-/tree/'), path.toLowerCase().indexOf('/tree/')));
+    const segs = path.split('/').filter(Boolean).map(decodeURIComponent);
+    if (segs.length >= 2) return { host: 'gitlab', owner: segs.slice(0, -1).join('/'), name: segs[segs.length - 1].replace(/\.git$/i, ''), branch };
+  }
+  const bb = s.match(/bitbucket\.org\/([^\/\s?#]+)\/([^\/\s?#]+)/i);
+  if (bb) return { host: 'bitbucket', owner: bb[1], name: bb[2].replace(/\.git$/i, ''), branch: branchFromPath(s, '/src/') };
+  const m = s.match(/^([\w.-]+)\/([\w.-]+)$/);
+  if (m) return { host: 'github', owner: m[1], name: m[2].replace(/\.git$/i, ''), branch: null };
+  throw new NBError('That does not look like a repository link. Use a full URL (GitHub, GitLab or Bitbucket) or <span class="mono">owner/repo</span>.');
+}
+function branchFromPath(s, mark) {
+  const i = s.toLowerCase().indexOf(mark);
+  if (i < 0) return null;
+  return s.slice(i + mark.length).split('#')[0].replace(/\/+$/, '').split('/').map(decodeURIComponent).join('/') || null;
+}
+
+async function fetchFilesForScan(r, A, branch, chosen, onProgress) {
+  const out = []; let done = 0;
+  const batches = chunk(chosen, 8);
+  for (const batch of batches) {
+    const results = await Promise.all(batch.map(async (f) => {
+      try {
+        const text = await A.readFile(r, branch, f.path);
+        if (text == null || text.length > 500000) return null;
+        if (text.includes('\u0000')) return null; /* binary */
+        return { path: f.path, content: text };
+      } catch (e) { return null; }
+    }));
+    for (const x of results) if (x) out.push(x);
+    done += batch.length;
+    nbLog('Downloading sources… ' + Math.min(done, chosen.length) + '/' + chosen.length + ' files', 'dim');
+    if (onProgress) onProgress(Math.min(done, chosen.length), chosen.length);
+    await new Promise(res => setTimeout(res, 30));
+  }
+  return out;
 }
 
 const SCAN_SKIP_DIR_RE = /(^|\/)(node_modules|\.git|vendor|dist|build|out|\.next|\.nuxt|\.output|coverage|__pycache__|\.venv|venv|env|target|\.idea|\.vscode|bower_components|site-packages|\.tox|\.mypy_cache|\.pytest_cache|\.svn|bin\/obj|gradle|\.gradle|\.terraform|\.serverless|\.cache)(\/|$)/i;
@@ -2095,33 +2278,6 @@ function prioritizeFiles(files, maxCount) {
   return files.map(f => ({ f, s: score(f) })).sort((a, b) => b.s - a.s).slice(0, maxCount).map(x => x.f);
 }
 
-async function fetchFileContents(owner, repo, ref, files, onProgress) {
-  const out = [];
-  let done = 0;
-  const batches = chunk(files, 8);
-  for (const batch of batches) {
-    const results = await Promise.all(batch.map(async (f) => {
-      try {
-        let r;
-        {
-          const p = f.path.split('/').map(encodeURIComponent).join('/');
-          r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${p}?ref=${encodeURIComponent(ref)}`,
-            { headers: { 'Accept': 'application/vnd.github.raw', 'Authorization': 'Bearer ' + ghToken(), 'User-Agent': 'nullbreach-scanner' } });
-        }
-        if (!r.ok) return null;
-        const text = await r.text();
-        if (text.length > 500000) return { path: f.path, content: '' };
-        return { path: f.path, content: text };
-      } catch (e) { return null; }
-    }));
-    for (const r of results) if (r) { out.push(r); done++; }
-    done = out.length;
-    nbLog(`Downloading sources… ${done}/${files.length} files`, 'dim');
-    if (onProgress) onProgress(done, files.length);
-    await new Promise(res => setTimeout(res, 30));
-  }
-  return out;
-}
 
 /* ================= OSV.dev ================= */
 async function queryOSV(deps, onProgress) {
@@ -2394,23 +2550,31 @@ function saveScanHistory(report) {
 function findingKey(f) { return (f.sig || f.id || '') + '|' + f.layer + '|' + f.file + '|' + (f.line || 0) + '|' + f.name; }
 
 
-function renderHistoryDrop() {
-  const drop = document.getElementById('historyDrop');
+function renderHistoryModal() {
+  const list = document.getElementById('historyList');
+  if (!list) return;
   const items = loadHistory();
-  drop.innerHTML = `
-    <div class="mono text-[10px] tracking-[.25em] text-slate-500 mb-3">SCAN HISTORY <span class="text-slate-600">· last ${items.length}/10 · stored locally</span></div>
-    ${items.length ? `<div class="space-y-2 mb-4">${items.map((h, i) => `
-      <button data-open="${i}" class="w-full text-left rounded-lg border border-nbline bg-[#fdfbf6] px-3.5 py-2.5 hover:border-nbgreen/40 transition">
-        <div class="flex items-center justify-between gap-2">
-          <span class="mono text-[12px] text-slate-200">${esc(h.report.repo.owner + '/' + h.report.repo.name)}</span>
-          <span class="mono text-[12px] font-bold" style="color:${scoreColor(h.report.score)}">${h.report.score}/100</span>
-        </div>
-        <div class="mono text-[10px] text-slate-500 mt-0.5">${h.report.verdict} · ${h.report.counts.critical}C/${h.report.counts.high}H/${h.report.counts.medium}M/${h.report.counts.low}L · ${new Date(h.savedAt).toLocaleString()}</div>
-      </button>`).join('')}</div>`
-    : '<div class="mono text-[11px] text-slate-600 mb-4">no scans saved yet — history fills up as you scan</div>'}`;
-  drop.querySelectorAll('[data-open]').forEach(b => {
+  list.innerHTML = !items.length
+    ? '<p class="text-[13.5px] text-[var(--ink-4)] py-8 text-center">Nothing here yet — run your first scan and it will appear here.</p>'
+    : items.map((h, i) => `
+      <button data-open="${i}" class="hist-row w-full text-left">
+        <span class="mono text-[15px] font-bold shrink-0" style="color:${scoreColor(h.report.score)}">${h.report.score}</span>
+        <span class="flex-1 min-w-0">
+          <span class="block text-[13.5px] font-semibold text-[var(--ink)] truncate">${esc(h.report.repo.owner + '/' + h.report.repo.name)}</span>
+          <span class="block mono text-[11px] text-[var(--ink-4)] mt-0.5">${h.report.verdict} · ${h.report.counts.critical} critical / ${h.report.counts.high} high / ${h.report.counts.medium} medium · ${new Date(h.savedAt).toLocaleString()}</span>
+        </span>
+        <span class="btn-quiet mono text-[10px] uppercase tracking-[.14em] rounded-md px-3 py-1.5 shrink-0">Open</span>
+      </button>`).join('');
+  list.querySelectorAll('[data-open]').forEach(b => {
     b.addEventListener('click', () => openHistoryReport(parseInt(b.dataset.open, 10)));
   });
+}
+
+function toggleHistory(open) {
+  const m = document.getElementById('historyModal');
+  const willOpen = open !== undefined ? open : m.classList.contains('hidden');
+  m.classList.toggle('hidden', !willOpen);
+  if (willOpen) renderHistoryModal();
 }
 
 function openHistoryReport(i) {
@@ -2419,8 +2583,8 @@ function openHistoryReport(i) {
   state.report = h.report;
   document.getElementById('results').classList.remove('hidden');
   renderResults(h.report);
-  document.getElementById('historyDrop').classList.add('hidden');
-  showToast('Loaded scan #' + (i + 1) + ' from history');
+  toggleHistory(false);
+  showToast('Report reopened from your history');
   setTimeout(() => document.getElementById('results').scrollIntoView({ behavior: 'smooth' }), 200);
 }
 
@@ -2528,36 +2692,35 @@ function showScanError(e){
 }
 
 /* ================= local file scanning ================= */
-const LOCAL_LIMITS = { maxFiles: 500, maxFileBytes: 2 * 1024 * 1024 };
-function isTextyPath(p){
-  return /\.(html?|htm|js|mjs|cjs|jsx|ts|tsx|py|rb|php|java|kt|kts|go|rs|c|h|cpp|hpp|cs|sh|bash|zsh|yml|yaml|json|xml|env|ini|toml|sql|txt|md|conf|cfg|properties|gradle|csv|svg|vue|svelte|lock)$/i.test(p)
-    || /(^|\/)(dockerfile|gemfile|makefile|rakefile|procfile|package\.json|requirements\.txt|go\.mod|gemfile\.lock|\.env(\.[^/]*)?)$/i.test(p);
-}
+const LOCAL_LIMITS = { maxFiles: 800, maxFileBytes: 2 * 1024 * 1024 };
 async function filesFromDrop(fileList){
   const arr = Array.from(fileList || []);
   if (!arr.length) throw new NBError('No files received — try again.');
   const out = [];
-  for (const f of arr.filter(x => /\.zip$/i.test(x.name))){
-    if (typeof JSZip === 'undefined') throw new NBError('ZIP support is still loading — try again in a moment.');
-    const zip = await JSZip.loadAsync(f);
+  for (const f of arr.filter(x => /\.(zip|jar|apk|xpi|vsix|whl|tar|gz)$/i.test(x.name)).slice(0, 5)){
+    if (typeof JSZip === 'undefined') throw new NBError('Archive support is still loading — try again in a moment.');
+    let zip;
+    try { zip = await JSZip.loadAsync(f); }
+    catch (e) { continue; /* not a zip-format archive — ignore */ }
     const paths = [];
     zip.forEach((p, entry) => { if (!entry.dir) paths.push(p); });
     const usable = paths
-      .filter(p => !/(^|\/)(node_modules|\.git|dist|build|vendor|__MACOSX|\.venv)\//i.test(p))
-      .filter(isTextyPath)
+      .filter(p => !SCAN_SKIP_DIR_RE.test(p))
       .slice(0, LOCAL_LIMITS.maxFiles);
     for (const p of usable){
       const text = await zip.file(p).async('string');
-      if (text.length <= LOCAL_LIMITS.maxFileBytes * 2) out.push({ path: p, content: text });
+      if (text.length <= LOCAL_LIMITS.maxFileBytes * 2 && !text.includes('\u0000')) out.push({ path: p, content: text });
     }
   }
-  for (const f of arr.filter(x => !/\.zip$/i.test(x.name)).slice(0, 40)){
+  for (const f of arr.filter(x => !/\.(zip|jar|apk|xpi|vsix|whl|tar|gz)$/i.test(x.name)).slice(0, 200)){
     if (f.size > LOCAL_LIMITS.maxFileBytes * 2) continue;
-    const text = await f.text();
-    if (text.includes('\u0000')) continue; /* binary — skip */
-    out.push({ path: f.name, content: text });
+    try {
+      const text = await f.text();
+      if (text.includes('\u0000')) continue; /* binary — skip */
+      out.push({ path: f.name, content: text });
+    } catch (e) { /* unreadable — skip */ }
   }
-  if (!out.length) throw new NBError('Nothing scannable in there — drop code files, or a .zip of the project.');
+  if (!out.length) throw new NBError('Nothing scannable in there — drop code, config or text files, or a .zip of the project.');
   return out.slice(0, LOCAL_LIMITS.maxFiles);
 }
 
@@ -2679,31 +2842,35 @@ async function runScan(input) {
   let report = null;
   try {
     persistKeys(); /* keep keys saved on every scan attempt */
-    const repo = parseRepoInput(input);
-    nbLog('NULLBREACH engine v' + NB_VERSION + ' initialized.');
-    const sigCount = SIGNATURES.length;
-    nbLog(`Loaded ${sigCount} secret & OWASP signatures · entropy thresholds 4.5/4.8 · OSV.dev feed online.`);
+    nbLog('Nullbreach engine v' + NB_VERSION + ' initialized.');
+    nbLog(`Loaded ${SIGNATURES.length} secret & OWASP signatures · entropy thresholds 4.5/4.8 · OSV.dev feed online.`);
 
-    nbProgress(3, 'connecting to GitHub…');
-    nbLog(`Resolving ${repo.owner}/${repo.name} via GitHub API…`);
-    const meta = await ghFetch(`/repos/${repo.owner}/${repo.name}`);
-    const branch = repo.branch || meta.default_branch || 'main';
-    repo.branch = branch;
-    nbLog(`Repository resolved — "${meta.full_name}" · default branch "${branch}"${meta.stargazers_count !== undefined ? ` · ★ ${meta.stargazers_count}` : ''}.`);
+    const ref = parseRepoLink(input);
+    const hostOrder = [ref.host || 'github'];
+    let A = null, meta = null;
+    for (const h of hostOrder) {
+      A = NB_HOSTS[h];
+      nbProgress(3, 'connecting to ' + A.label + '…');
+      nbLog('Looking for ' + ref.owner + '/' + ref.name + ' on ' + A.label + '…');
+      try { meta = await A.meta(ref); break; }
+      catch (e) {
+        if (h === hostOrder[hostOrder.length - 1]) throw e;
+        nbLog('Not found on ' + A.label + ' — trying the next host…', 'dim');
+      }
+    }
+    const repo = { owner: ref.owner, name: ref.name, branch: ref.branch || meta.branch || 'main', url: A.url(ref) };
+    const branch = repo.branch;
+    nbLog(`Repository resolved on ${A.label} — "${repo.owner}/${repo.name}" · branch "${branch}"${meta.stars ? ` · ★ ${meta.stars}` : ''}.`);
 
     nbProgress(8, 'Layer 0/4 · indexing file tree');
-    const treeData = await ghFetch(`/repos/${repo.owner}/${repo.name}/git/trees/${encodeURIComponent(branch)}?recursive=1`);
-    const blobs = (treeData.tree || []).filter(e => e.type === 'blob');
-    if (!blobs.length) throw new NBError('No files found on that branch. Check the branch name.');
-    if (treeData.truncated) nbLog('GitHub reported the file tree as truncated (very large repo) — scanning a prioritized subset.', 'warn');
-
-    const relevant = blobs.filter(b => isRelevantFile(b.path, b.size));
+    const treeAll = await A.listTree(repo, branch);
+    if (!treeAll.length) throw new NBError('No files found on that branch. Check the branch name.');
+    const relevant = treeAll.filter(b => isRelevantFile(b.path, b.size));
     const chosen = prioritizeFiles(relevant, 500);
-    nbLog(`${blobs.length} tracked files → ${relevant.length} relevant${relevant.length > chosen.length ? `, prioritized to ${chosen.length} (repo too large for full download)` : ''}.`);
+    nbLog(`${treeAll.length} tracked files → ${relevant.length} relevant${relevant.length > chosen.length ? `, prioritized to ${chosen.length} (repo too large for full download)` : ''}.`);
 
-    nbLog('Fetching file contents over GitHub\'s authenticated API…');
     nbProgress(10, 'Layer 0/4 · fetching sources');
-    const files = (await fetchFileContents(repo.owner, repo.name, branch, chosen,
+    const files = (await fetchFilesForScan(repo, A, branch, chosen,
       (done, total) => nbProgress(10 + 32 * done / Math.max(1, total), 'Layer 0/4 · fetching sources'))).filter(f => f.content);
     const totalBytes = files.reduce((a, f) => a + f.content.length, 0);
     nbLog(`Downloaded ${files.length} files (${(totalBytes / 1024).toFixed(0)} KB).`, 'ok');
@@ -2789,7 +2956,7 @@ async function runScan(input) {
     report = {
       tool: 'NULLBREACH', version: NB_VERSION,
       generatedAt: new Date().toISOString(),
-      repo: { owner: repo.owner, name: repo.name, branch, url: `https://github.com/${repo.owner}/${repo.name}`, description: meta.description || '', stars: meta.stargazers_count, language: meta.language },
+      repo: { owner: repo.owner, name: repo.name, branch, url: repo.url, description: meta.description || '', stars: meta.stars, language: meta.language },
       score, verdict, counts, exploitHits,
       formula: `100 − 20×${counts.critical} − 12×${counts.high} − 5×${counts.medium} − 2×${counts.low}${exploitHits ? ` − 10×${exploitHits}` : ''} = ${score}`,
       findings, dependencies: { parsed: deps, queried: osvQueried },
@@ -2799,7 +2966,7 @@ async function runScan(input) {
       aiLogic: aiLogic.text ? { provider: aiLogic.provider, text: aiLogic.text } : { unavailable: true, reason: aiLogic.failures.join('; ') || (ai.text ? 'no issues returned' : 'pass 1 failed or was skipped') },
       aiExploits: aiExploits.text ? { provider: aiExploits.provider, text: aiExploits.text } : { unavailable: true, reason: aiExploits.failures.join('; ') || (ai.text ? 'no output returned' : 'pass 1 failed or was skipped') },
       aiFindings: (ai.text ? parseAIFindings(ai.text) : []).concat(logicFindings),
-      stats: { filesTracked: blobs.length, filesRelevant: relevant.length, filesScanned: files.length, bytes: totalBytes, stringsChecked: stringsTotal, signatures: SIGNATURES.length, depsQueried: osvQueried, supplyChecked: supply.checked, durationMs: Math.round(durationMs) }
+      stats: { filesTracked: treeAll.length, filesRelevant: relevant.length, filesScanned: files.length, bytes: totalBytes, stringsChecked: stringsTotal, signatures: SIGNATURES.length, depsQueried: osvQueried, supplyChecked: supply.checked, durationMs: Math.round(durationMs) }
     };
 
     mergeAIFindings(report, findings);
@@ -3368,6 +3535,43 @@ const NB_CHAT = (() => {
   ];
   const CHIPS = ['What does it check?', 'Is my code uploaded?', 'How do I add my own key?', 'What does the score mean?'];
   const FALLBACK = 'That one is outside my notes. I can tell you what Nullbreach checks, where your code goes, how the score works, or how to plug in your own key.';
+  const KB_AR = [
+    { re: /(what|which).*(check|scan|look for|does it do)|feature|how.*work/i,
+      a: () => 'يعمل Nullbreach بأربع جولات: الأسرار المسربة (الانتروبيا + ' + SIGNATURES.length + ' بصمة)، الأنماط الخطرة (بأسلوب OWASP)، الاعتماديات (كل حزمة تُفحص مباشرة في قاعدة ثغرات OSV.dev وأسماء الحزم المزيفة)، ثم جولة ذكاء اصطناعي تبحث عن ثغرات المنطق وتكتب استغلالات أسوأ النتائج. تحصل على درجة وحكم وقائمة إصلاح.' },
+    { re: /upload|stored|storage|privacy|private|leave|sent|server|track(ed)?|collect(ed)?|بيانات|خصوصية|يُرفع|يرفع|تخزين/i,
+      a: () => 'كودك لا يلمس أي خادم لـ Nullbreach — لا توجد خوادم أصلًا. الفحص يجري داخل متصفحك. أسماء الحزم فقط تذهب لقواعد بيانات الثغرات العامة، وملفاتك المسحوبة تُقرأ محليًا على جهازك.' },
+    { re: /(own|my|personal|bring).*(key|api)|add.*key|api key|مفتاح/i,
+      a: () => 'افتح Preferences (أعلى اليمين) والصق مفتاحك من Groq أو Gemini أو Mistral أو Claude أو OpenAI أو Kimi أو DeepSeek. مفتاحك يعمل أولًا وبقوة كاملة؛ وإن فشل أو نفد يتولى المحرك المدمج تلقائيًا. المفاتيح تبقى في متصفحك فقط ولا تُعرض مجددًا بعد الحفظ.' },
+    { re: /score|verdict|ready|blocked|needs fix|rating|درجة|تقييم/i,
+      a: () => { const r = state.report; const base = 'الدرجة تبدأ من 100 وتنقص: 20 لكل نتيجة حرجة، 12 لكل عالية، 5 لكل متوسطة، 2 لكل منخفضة. READY يعني ابنث بأمان، NEEDS FIXES أغلق الأحمر أولًا، BLOCKED توقف — هناك شيء حرج مكشوف.'; return r ? `آخر مسح لك (${r.repo.owner}/${r.repo.name}) حصل على ${r.score}/100 — ${r.verdict}. ` + base : base; } },
+    { re: /price|cost|free|pay|charge|account|sign ?up|مجاني|سعر|حساب/i,
+      a: () => 'مجاني تمامًا، بلا حساب، ولا شيء لتثبيته. المحرك كله يعمل في متصفحك.' },
+    { re: /zip|drop|file|folder|local|html|ملف|ملفات|ضغط/i,
+      a: () => 'اسحب أي ملفات — مشروع كامل بصيغة .zip أو أي ملفات كود أو إعدادات أو نصوص — إلى الصندوق تحت حقل الرابط. تُفك وتُفحص هنا في متصفحك حتى 800 ملف. لا شيء يغادر جهازك.' },
+    { re: /how long|much time|fast|seconds|duration|وقت|مدة/i,
+      a: () => 'المستودع النموذجي يستغرق 20–90 ثانية: جلب، ثم جولتا الانتروبيا والبصمات، ثم فحص الثغرات الحي، ثم قراءة الذكاء الاصطناعي. المستودعات الضخمة تُرتَّب حسب الخطورة وتُفحص أهم 500 ملف أولًا.' },
+    { re: /export|download|report file|share|badge|readme|تصدير|تحميل|مشاركة/i,
+      a: () => 'في نهاية التقرير: نزّل كل شيء بصيغة .json أو .md، أو انسخ شارة README، أو انسخ رابط مشاركة يعيد فتح التقرير نفسه على هذا الجهاز.' },
+    { re: /fix|remediat|what should i do|where do i start|urgent|إصلاح|أبدأ/i,
+      a: () => { const r = state.report; return r && r.findings.length ? 'افتح قائمة الإصلاح أسفل تقريرك — مرتبة حسب الإلحاح، إجراء واحد واضح لكل نتيجة. ابدأ بأي شيء حرج.' : 'كل مسح ينتهي بقائمة إصلاح: إجراء واضح واحد لكل نتيجة، الأكثر إلحاحًا أولًا.'; } },
+    { re: /who are you|about (this|the)|this site|website|ما هذا|من أنت|الموقع/i,
+      a: () => 'أنا مساعد Nullbreach. Nullbreach أداة فحص أمني مجانية: الصق رابط مستودع من أي منصة (GitHub أو GitLab أو Bitbucket) أو أسقط ملفاتك، واحصل على حكم بلغة واضحة وقائمة إصلاح — كله داخل متصفحك.' },
+    { re: /^(hi|hey|hello|yo|salam|hola|مرحبا|السلام|اهلا|أهلا)/i,
+      a: () => 'أهلًا. اسألني أي شيء — ماذا نفحص، إلى أين يذهب كودك، كيف تعمل الدرجات، أو كيف تضيف مفتاحك الخاص.' },
+    { re: /thank|thanks|great|nice|شكرا|شكرًا|جميل/i,
+      a: () => 'على الرحب والسعة. ابنث بأمان.' },
+  ];
+  const AR_RE = /[\u0600-\u06FF]/;
+  function isArabic(q) { return AR_RE.test(q); }
+  function pickKB(q) {
+    const banks = isArabic(q) ? KB_AR.concat(KB) : KB.concat(KB_AR.filter(k => k.re.test(q) && /[\u0600-\u06FF]/.test(q)));
+    return banks.find(k => k.re.test(q));
+  }
+  async function askAI(q) {
+    const facts = 'Nullbreach = free browser-based security scanner. Paste any repo link (GitHub, GitLab, Bitbucket) or drop any files (.zip project or any code/config/text files) — scanned locally, nothing uploaded. Four passes: leaked secrets (entropy + ' + SIGNATURES.length + ' signatures), risky OWASP-style patterns, dependencies vs the live OSV.dev CVE database + fake/lookalike package names, then an AI pass for logic flaws and exploit walkthroughs. Score /100: -20 critical, -12 high, -5 medium, -2 low. Verdicts: READY / NEEDS FIXES / BLOCKED. An optional personal AI key in Preferences (Groq, Gemini, Mistral, Claude, OpenAI, Kimi, DeepSeek) runs first; a built-in engine is the silent fallback. Free, no account. History = last 10 scans stored on this device only.';
+    const r = await runAICascade('You are the friendly on-site assistant for Nullbreach. Reply in the SAME language the user wrote in (any language). Max 80 words, warm, plain text, no markdown. FACTS: ' + facts + ' QUESTION: ' + q);
+    return r.text;
+  }
 
   function add(text, who) {
     const el = document.createElement('div');
@@ -3386,14 +3590,23 @@ const NB_CHAT = (() => {
     msgs().appendChild(el);
     msgs().scrollTop = msgs().scrollHeight;
   }
-  function answer(q) {
-    const hit = KB.find(k => k.re.test(q));
+  async function answer(q) {
+    const hit = pickKB(q);
+    if (hit) {
+      typing();
+      setTimeout(() => {
+        const t = document.getElementById('chatTyping');
+        if (t) t.remove();
+        add(hit.a(), 'bot');
+      }, 550 + Math.min(900, q.length * 12));
+      return;
+    }
     typing();
-    setTimeout(() => {
-      const t = document.getElementById('chatTyping');
-      if (t) t.remove();
-      add(hit ? hit.a() : FALLBACK, 'bot');
-    }, 550 + Math.min(900, q.length * 12));
+    let out = '';
+    try { out = await askAI(q); } catch (e) { /* fall through */ }
+    const t = document.getElementById('chatTyping');
+    if (t) t.remove();
+    add(out || FALLBACK, 'bot');
   }
   function send() {
     const inp = document.getElementById('chatInput');
@@ -3438,16 +3651,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('year').textContent = new Date().getFullYear();
   try { initScrollSpy(); } catch (e) { /* scroll-spy is cosmetic — never block init */ }
 
-  document.getElementById('btnHistory').addEventListener('click', (e) => {
-    e.stopPropagation();
-    const drop = document.getElementById('historyDrop');
-    const showing = !drop.classList.contains('hidden');
-    drop.classList.toggle('hidden', showing);
-    if (!showing) renderHistoryDrop();
-  });
-  document.addEventListener('click', (e) => {
-    const drop = document.getElementById('historyDrop');
-    if (drop && !drop.classList.contains('hidden') && !drop.contains(e.target) && e.target.id !== 'btnHistory') drop.classList.add('hidden');
+  document.getElementById('btnHistory').addEventListener('click', () => toggleHistory());
+  document.getElementById('btnCloseHistory').addEventListener('click', () => toggleHistory(false));
+  document.getElementById('historyBackdrop').addEventListener('click', () => toggleHistory(false));
+  document.getElementById('btnClearHistory').addEventListener('click', () => {
+    try { localStorage.removeItem(LS_HISTORY); } catch (e2) { /* ignore */ }
+    renderHistoryModal();
+    showToast('History cleared');
   });
   document.getElementById('btnShareReport').addEventListener('click', () => {
     if (!state.report) return;
@@ -3464,7 +3674,6 @@ document.addEventListener('DOMContentLoaded', () => {
     closeSettings();
   });
   document.getElementById('btnClearData').addEventListener('click', () => {
-    state.githubToken = '';
     state.userKeys = [];
     renderPrefKeys();
     try {
@@ -3472,8 +3681,6 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.removeItem('nullbreach.history.v1');
       localStorage.removeItem('nullbreach.shared.v1');
     } catch (e) { /* ignore */ }
-    const inp = document.getElementById('prefGithub');
-    if (inp) inp.value = '';
     showToast('Local data cleared');
   });
 
@@ -3500,23 +3707,24 @@ document.addEventListener('DOMContentLoaded', () => {
   /* personal AI keys */
   document.getElementById('btnAddKey').addEventListener('click', async () => {
     const inp = document.getElementById('prefKeyInput');
-    const sel = document.getElementById('prefKeyProvider');
     const raw = (inp.value || '').trim();
     if (!raw) { showToast('Paste a key first'); return; }
     if (state.userKeys.length >= 6) { showToast('Up to 6 keys — remove one first'); return; }
-    let provider = sel.value !== 'auto' ? sel.value : detectProviderKeySync(raw);
+    let provider = prefProvider !== 'auto' ? prefProvider : detectProviderKeySync(raw);
     if (!provider) {
       showToast('Detecting key type…');
       provider = await detectProviderKey(raw);
     }
-    if (!provider) { showToast('Unrecognized key — pick a provider manually'); return; }
+    if (!provider) { showToast('Unrecognized key shape — pick the provider above first'); return; }
+    if (state.userKeys.some(k => k.key === raw)) { showToast('That key is already saved'); return; }
     state.userKeys.push({ id: 'k' + Date.now(), provider, key: raw });
     inp.value = '';
     persistKeys();
     renderPrefKeys();
     lucide.createIcons();
-    showToast('Key saved — it runs first, built-in engine stays as backup');
+    showToast('Key saved — it runs before the built-in engine');
   });
+  renderProvGrid();
   document.querySelectorAll('.example-repo').forEach(b => {
     b.addEventListener('click', () => {
       document.getElementById('repoInput').value = b.textContent.trim();
